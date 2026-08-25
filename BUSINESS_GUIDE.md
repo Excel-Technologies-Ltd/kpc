@@ -1,20 +1,87 @@
 # KPC Operations — Business Guide
 
-This document is for someone who knows what they want the business to do, but not yet *why* the app asks for the fields it asks for. `README.md` documents what was built and verified; this document explains the petroleum-operations business itself — the physical and commercial reality each doctype is modelling — so the fields stop looking arbitrary.
+This document assumes you know ERPNext (doctypes, submit, workflows) but have **no background in the petroleum industry**. It starts from scratch on the industry itself, then works down to what every field on every document actually means and why it's there. `README.md` is the technical build log of what was implemented and verified; this document is the "explain the business to me like I've never worked in oil & gas" one.
 
-Read the concepts section once, top to bottom. Everything after it will make a lot more sense once you have.
+Read top to bottom the first time — each section leans on the one before it. After that, use it as a reference:
 
-## The business, in one paragraph
+- **[Petroleum Industry 101](#petroleum-industry-101--the-business-before-the-software)** — no background assumed; what this industry is and why it works the way it does.
+- **[From industry concept to actual field](#from-industry-concept-to-actual-field--how-the-fields-implement-what-you-just-read)** — the same ideas, pinned to exact field names.
+- **[Setting up the business](#setting-up-the-business-first-master-data--set-up-once-reused-everywhere)** — the master data you configure once (Terminal, Oil Tank, Product, Tariff, ...).
+- **[The Golden Thread: Journey](#the-golden-thread-journey)** — the ID that ties one cargo's whole story together.
+- **[Walking through a sale, document by document](#walking-through-a-sale-document-by-document)** — all 13 steps, field by field, with the business reason for each.
+- **[EAM, HSEQ & Human Capital](#eam-hseq--human-capital)** — equipment, certifications, and safety permits.
+- **[AI, Decision Intelligence & Security](#ai-decision-intelligence--security)** — the predictive-maintenance cascade and the permanent decision record.
+- **[Glossary](#glossary--quick-lookup-for-the-industry-terms-used-above)** — every industry term used above, one line each.
+
+## Petroleum Industry 101 — the business before the software
+
+### Where KPC sits in the bigger picture
+
+The petroleum industry is usually split into three stages:
+
+- **Upstream** — finding and pumping crude oil out of the ground. Not KPC.
+- **Refining** — turning raw crude into the actual usable products: petrol (called PMS, Premium Motor Spirit), diesel (AGO, Automotive Gas Oil), jet fuel (Jet A-1), kerosene, and so on. Not KPC either — Kenya doesn't have a working crude refinery, so these finished products arrive already refined, by ship.
+- **Midstream — this is KPC's whole business.** Once refined product exists, midstream is everything involved in getting it from where it entered the country to where it's actually sold: receive it from the ship, store it safely, prove it's really the quality it's supposed to be, sell it to fuel distributors under a commercial contract, physically move it hundreds of kilometres inland by pipeline, hand it over, and bill for it.
+
+That midstream chain — **receive → store → certify → sell → transport → deliver → bill** — is exactly the 13 steps this app models. Nothing here is about drilling or refining; it's all about the safe, accountable, fiscally-correct movement of already-refined fuel.
+
+### If you know ERPNext's sales flow, here's the bridge
+
+ERPNext's standard commercial tail — Sales Order → Delivery Note → Sales Invoice — maps almost directly onto the *back half* of this app:
+
+| ERPNext concept you already know | This app's equivalent |
+|---|---|
+| Sales Order (credit-checked customer order) | `Nomination` |
+| Reserving/confirming stock against an order | `Allocation` |
+| Delivery Note | `Dispatch` (and genuinely creates a real ERPNext Delivery Note) |
+| Sales Invoice | `Invoice` (and genuinely creates a real ERPNext Sales Invoice) |
+
+What's actually new to you, coming from ERPNext, is everything **before** that commercial tail: `Oil Shipment → Tank Measurement → Quality Result → Movement → Terminal Receipt → Reconciliation`. A typical ERPNext deployment doesn't need any of this, because most goods people sell through ERPNext don't physically expand with temperature, don't need to survive an independent lab test before they're even allowed to be listed for sale, and don't lose a small, expected percentage of themselves in transit every single time. Petroleum does all three — that's the entire reason this half of the app exists.
+
+### Why this industry is so obsessed with precise measurement
+
+Two reasons, both very concrete:
+
+1. **The volumes are enormous, so a tiny percentage is real money.** A single parcel in this app's own demo data is 2,000 KL (2 million litres). A "small" 0.5% discrepancy on that is 10,000 litres — nobody would call that a rounding error if it showed up as a shortfall on an invoice.
+2. **"Custody transfer" is a legal and financial moment, not just a stock movement.** Custody transfer is the industry's term for the exact point where legal ownership and risk pass from one party to another — vessel to KPC at the coast, KPC to the customer at delivery. Whatever gets measured *at that moment* is what gets paid for, insured, and argued over if a dispute ever happens. That's why a measurement in this app isn't just "type in a number" — it has to be defensible enough to survive a commercial dispute, which is why it's built from a calibrated instrument reading, a documented correction formula, a tracked uncertainty, and (once submitted) a record nobody can quietly go back and edit.
+
+Because oil physically expands when warm and contracts when cold, two people measuring the exact same batch of oil at different temperatures would get different readings — neither one "wrong," just measured under different conditions. The whole industry agrees to always convert every reading to what it would be at one fixed reference temperature (15°C) using a published, standardised formula (from API — the American Petroleum Institute — and ASTM), so a vessel's own numbers and KPC's own numbers can actually be compared fairly. That converted number is called **standard volume**, and it's the only volume that ever gets paid for, billed, or reconciled anywhere in this app.
+
+### Why quality is a hard gate, not a QA nicety
+
+Different grades of the same fuel — or, far worse, an entirely different fuel — can ruin an engine, void a warranty, or in aviation fuel's case, be genuinely dangerous. So a parcel isn't just "in the tank and ready to sell" the moment it's received; an independent lab result has to formally confirm it actually meets the specification for what it's labelled as. Selling unqualified fuel isn't just bad practice in this industry, it's the kind of thing that ends up in a lawsuit or a plane not taking off — which is why this app makes it structurally impossible to nominate (sell) product against a cargo whose Quality Result isn't Accepted.
+
+### Why one pipe carries many different products
+
+Building a dedicated pipeline for every single product would need an absurd amount of steel in the ground, so real pipelines instead pump different products one after another through the same pipe — like pouring different coloured liquids one after another into the same hose. Wherever two different products touch inside the pipe, they mix a little at the boundary; the industry calls that mixed boundary **transmix**, or an **interface**. Pipeline operators plan around this on purpose: some product pairs are fine to sit next to each other (the mixed boundary gets blended back in later without any real problem); others genuinely can't touch (imagine jet fuel picking up contamination from a dirtier product) and need either a large deliberate buffer slug pumped between them, or aren't allowed to be sequenced together at all. That planning is `Product Compatibility` and the `interface_cut_kl` field on `Pipeline Batch`.
+
+### Why there's always a small "loss," and why that's not automatically a red flag
+
+Oil evaporates a little in transit. Temperature swings genuinely change what the same physical oil reads as at each end. No metering instrument in the world is perfectly precise. Every pipeline company on earth reconciles a small percentage of "missing" product on every single movement as completely normal — physics and instrument tolerance, not theft. The actual red flag is a variance *bigger* than what the measurement uncertainty of both ends combined can honestly explain — which is exactly what "outside tolerance" means in this app, and why it demands a written explanation rather than either ignoring it or panicking over it.
+
+### Who does what — the real jobs behind this app's roles
+
+| Role in this app | What that person actually does, physically |
+|---|---|
+| Terminal Operator | On-site at the tank farm: takes dip readings, watches the physical tanks, records receipts and dispatches as they happen. |
+| Quality Analyst | Runs the actual lab tests on a product sample and records the raw numbers. |
+| Quality Manager | A more senior, *different* person who reviews those numbers against spec and makes the formal Accept/Quarantine call — deliberately not the same person who ran the test. |
+| Scheduler & Operations Controller | Plans pipeline capacity and the pumping sequence, watches a Movement's live telemetry for problems. |
+| Commercial Officer | Takes customer orders, allocates confirmed stock to them, arranges delivery. |
+| Finance Officer | Reconciles transit losses, handles invoicing and the accounting side. |
+| Maintenance Manager | Owns equipment reliability — reviews AI-flagged anomalies, approves the resulting maintenance work, issues safety permits before hazardous repairs. |
+
+### The business, in one paragraph (now that the context is there)
 
 Kenya Pipeline Company (KPC) receives petroleum products from a vessel at a coastal terminal, stores it in tanks, certifies its quality, sells it to customers under a commercial order, physically moves it inland by pipeline, accounts honestly for the small losses that are unavoidable at that scale, hands it over to the customer, and bills them for exactly what was delivered. Every one of those handoffs — vessel to tank, tank to pipeline, pipeline to destination tank, tank to customer — produces one document in this app, and every one of those documents shares a single ID (`journey_ref`, the "Golden Thread") so the whole chain, from the ship arriving to the invoice being paid, can always be traced as one story.
 
-## Concepts you need before the field tables make sense
+## From industry concept to actual field — how the fields implement what you just read
 
-A handful of ideas recur across almost every doctype below. Understanding them once here saves re-explaining them in every table.
+Same ideas as Industry 101 above, now pinned to the exact field names you'll see on screen — this is the layer to come back to while you're actually filling a form in.
 
-### 1. "Standard volume" — why the same tank of oil isn't always the same number of litres
+### 1. "Standard volume" — the three fields that do the temperature correction
 
-Petroleum expands and contracts noticeably with temperature. A tank measured on a hot afternoon reads a bigger volume than the same physical oil measured cold the next morning — not because any oil moved, but because it physically takes up more space when warm. Nobody in this industry buys, sells, or reconciles the *raw* reading for exactly this reason. Instead, every measurement is converted to a **standard volume at a fixed reference temperature (15°C)** using a **Volume Correction Factor (VCF)** — a standard industry table (API MPMS 11.1 / ASTM D1250) that answers "how much is this actually worth once you strip out the temperature effect."
+Recap: raw dip readings aren't trustworthy on their own because oil's volume changes with temperature (see Industry 101). Every measurement gets converted to a **standard volume at a fixed reference temperature (15°C)** using a **Volume Correction Factor (VCF)** — API MPMS 11.1 / ASTM D1250, the industry-standard table for this.
 
 Three raw numbers go in, one trustworthy number comes out:
 
@@ -32,17 +99,13 @@ Every real storage tank accumulates a thin layer of water at the very bottom, be
 
 The VCF calculation needs a density to work at all. Rather than typing it in fresh on every single measurement, each **Product** (a standard ERPNext `Item`, extended — see below) carries a reference `density_at_15c` that every new Tank Measurement or Terminal Receipt defaults to. A lab can still override it on a specific reading with an actual tested density; the master value is just the sensible starting point. `api_gravity` is the same density expressed on the industry's other common scale (higher API = a lighter product) — it's informational, nothing calculates from it.
 
-### 4. Pipeline batching and interface cuts — why you can't just pump anything after anything
+### 4. Pipeline batching and interface cuts — the fields that implement the "cushion slug" idea
 
-A pipeline moves one continuous column of liquid. When two *different* products are pumped back-to-back through the same line (each one is a "batch" or "slug"), they physically smear together a little at the boundary where they touch — that mixed boundary is called **transmix**, or an **interface cut**. For some product pairs that's harmless and gets blended back in later (e.g. two grades of the same diesel). For others it's a real safety or quality problem — jet fuel touching a dirtier product, for instance — and either the pairing is outright forbidden, or a deliberately larger buffer slug has to be pumped between them to absorb the contamination.
+Recap: different products pumped back-to-back through one pipe mix a little at the boundary (transmix/interface — see Industry 101). `Product Compatibility` is the master record of which pairs are fine, which need a cut (and how big — `minimum_interface_cut_kl`), and which are forbidden outright. `Pipeline Batch.interface_cut_kl` is where a Scheduler proves, in numbers, that they planned for it — checked automatically against whichever batch is scheduled immediately before/after it on the same route (via `batch_sequence_no`).
 
-`Product Compatibility` is the master record of which pairs are fine, which need a cut (and how big), and which are forbidden outright. `Pipeline Batch.interface_cut_kl` is where a Scheduler proves, in numbers, that they planned for it — and the system checks it against whichever batch is scheduled immediately before/after on the same route.
+### 5. Transit loss and "tolerance" — the calculation, not just the concept
 
-### 5. Transit loss and "tolerance" — why the acceptable variance isn't just a round number someone picked
-
-No metering system is perfect, and a small amount of product genuinely doesn't survive a long pipeline journey unaccounted-for (evaporation, temperature-driven line-fill changes, small measurement disagreement between two independent gauges at either end). The honest question every time is: *is this difference normal measurement noise, or a real loss worth investigating?*
-
-The correct, defensible answer comes from **metrology, not policy**: every dip measurement carries its own uncertainty (how precise that instrument's calibration actually is), and the acceptable disagreement between two *independent* measurements is the statistical combination of both their uncertainties — not a flat number someone picked once and never revisited. `Reconciliation.tolerance_percent` is calculated this way automatically. A variance that falls outside that calculated tolerance either gets a written explanation (`justification`) before it can be accepted, or gets investigated as a real `Variance`.
+Recap: a small, expected variance is normal (evaporation, temperature, instrument precision — see Industry 101); the question is always whether a specific variance is bigger than that. The defensible answer comes from **metrology, not policy**: every dip measurement carries its own uncertainty (how precise that instrument's calibration actually is), and the acceptable disagreement between two *independent* measurements is the statistical combination of both their uncertainties — not a flat number someone picked once and never revisited. `Reconciliation.tolerance_percent` is calculated this way automatically. A variance that falls outside that calculated tolerance either gets a written explanation (`justification`) before it can be accepted, or gets investigated as a real `Variance`.
 
 ### 6. Credit and stock ownership — the two questions every sale has to answer honestly
 
@@ -323,3 +386,29 @@ Not something you create by hand — one entry is written automatically the mome
 | `decided_by` / `decided_on` / `rationale` | Who made the call, when, and — for anything that needed one — their written reasoning (e.g. a Reconciliation's justification). |
 
 This record can never be edited or deleted by anyone, including a System Manager — that's the point of an audit ledger.
+
+## Glossary — quick lookup for the industry terms used above
+
+| Term | Plain-English meaning |
+|---|---|
+| **Midstream** | The part of the oil industry between refining and the fuel pump: storage, pipeline transport, and wholesale distribution of already-refined product. This is KPC's whole business. |
+| **Custody transfer** | The specific legal/financial moment ownership and risk of a quantity of product pass from one party to another (vessel → KPC, KPC → customer). Whatever is measured at that moment is what gets paid for and disputed over. |
+| **Standard volume** | A volume that's been mathematically corrected to a fixed reference temperature (15°C), so it can be fairly compared/traded regardless of what temperature it was actually measured at. |
+| **VCF (Volume Correction Factor)** | The multiplier, looked up from a standardised industry table (API MPMS 11.1 / ASTM D1250), that converts an observed volume at its actual temperature into standard volume at 15°C. |
+| **Dip / gauging** | Physically measuring how full a tank is — historically by lowering a graduated tape or rod ("dipping") through a hatch; the reading is the **dip** or **gauge**. |
+| **Free water** | A layer of water that settles at the bottom of a storage tank, below the oil — not product, and excluded from every volume calculation. |
+| **API Gravity** | An alternative scale (from the American Petroleum Institute) for expressing how dense a product is — the higher the number, the lighter the product. |
+| **Transmix / interface (cut)** | The mixed boundary layer that forms where two different products touch inside a pipeline that's carrying them back-to-back. |
+| **Batch / slug** | One contiguous quantity of a single product being pumped through a pipeline as part of a sequence of different products. |
+| **Nomination** | The industry's term (borrowed directly into this app's doctype name) for a customer formally declaring/booking the quantity of product they want, against a specific available parcel. |
+| **Allocation** | Formally assigning a confirmed, reconciled quantity of product to a specific customer's order — the moment KPC-custody stock becomes that customer's stock on paper. |
+| **Reconciliation** | Comparing what was dispatched against what actually arrived, to confirm (or explain) any difference. |
+| **Variance** | The actual numeric difference found during reconciliation, once it's being investigated/classified rather than just calculated. |
+| **Tolerance** | The variance big enough to still be considered normal measurement noise rather than a real loss — calculated from measurement uncertainty, not a fixed policy number. |
+| **Line fill** | The volume of product already sitting inside the pipeline itself at any given time (a long pipeline is never empty) — one of the normal, non-alarming reasons a small variance shows up during reconciliation. |
+| **HSEQ** | Health, Safety, Environment, Quality — the umbrella term for the safety/compliance side of operations (permits, certifications, quality gates all sit under this). |
+| **Permit to Work (PTW)** | A formal, time-boxed authorisation required before hazardous work (e.g. entering a confined space, hot work near flammable product) can begin, naming exactly who is authorised and what precautions are required. |
+| **SCADA** | Supervisory Control and Data Acquisition — the industrial systems that monitor and (in a full deployment) control pipeline/plant equipment in real time. This app only ever *reads* from a SCADA-style source (`OT Telemetry Log`) — see `README.md`'s OT Safety Boundary notes for why it deliberately never writes back to one. |
+| **Tariff** | A published rate card: a fixed price per unit volume for moving/selling a specific product over a specific route, valid for a specific period. |
+| **Terminal** | A physical site where product is received, stored, and/or dispatched — a coastal discharge jetty or an inland depot, in this app's terms. |
+| **Bill of Lading** | The vessel's own shipping document proving what cargo it's carrying and for whom — the shipment's legal paper trail, independent of anything KPC measures itself. |
