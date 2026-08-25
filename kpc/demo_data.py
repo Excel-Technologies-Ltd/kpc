@@ -41,6 +41,7 @@ _SUBMITTABLE_DOWNSTREAM_DOCTYPES = [
 	"Dispatch",
 	"Allocation",
 	"Reconciliation",
+	"Permit to Work",
 	"Maintenance Work Order",
 	"Terminal Receipt",
 	"Pipeline Batch",
@@ -49,6 +50,12 @@ _SUBMITTABLE_DOWNSTREAM_DOCTYPES = [
 ]
 _NON_SUBMITTABLE_DOWNSTREAM_DOCTYPES = [
 	"Financial Posting",
+	# Decision Ledger entries are otherwise immutable and undeletable through
+	# the desk (see decision_ledger.json's permissions) - deleted here only
+	# via force=True, so a demo reset doesn't leave orphaned entries pointing
+	# at Variance/Quality Result/AI Recommendation/Reconciliation records
+	# that reset_demo_data is about to delete too.
+	"Decision Ledger",
 	"Variance",
 	"AI Recommendation",
 	"AI Prediction",
@@ -75,24 +82,70 @@ def _journey_is_fully_built(journey_ref: str) -> bool:
 def create_demo_data():
 	frappe.set_user("Administrator")
 
+	_ensure_erpnext_prerequisites()
 	terminals = _create_terminals()
 	product = _create_product()
 	tanks = _create_tanks(terminals, product)
 	customer = _create_customer()
 	tariff = _create_tariff(terminals, product)
+	maintenance_crew = _create_maintenance_crew()
+	plant_asset = _create_plant_asset(terminals)
 
-	journey_ref = _run_golden_thread(terminals, product, tanks, customer, tariff)
+	journey_ref = _run_golden_thread(terminals, product, tanks, customer, tariff, maintenance_crew, plant_asset)
 
 	frappe.db.commit()
 	_print_summary(journey_ref)
 	return journey_ref
 
 
-def reset_demo_data(vessel_name: str = "MT African Pride"):
+def seed_if_ready():
+	"""Called from kpc.install.after_install, once the app's own structural
+	setup (roles, custom fields, Kilolitre UOM, Workflows, Workspace - see
+	kpc.install) has already run. Never called directly by hooks.py.
+
+	Still deliberately defensive on top of that: create_demo_data() also
+	assumes a Company with a Chart of Accounts, a Cost Center, an Item
+	Group, a Customer Group, a Territory, and a Selling Price List already
+	exist - true once ERPNext's setup wizard has run, not necessarily true
+	the instant an app installs. A raised exception here would abort the
+	*entire app installation*, not just the seeding, so failures are caught
+	and reported, never raised - worst case, demo data doesn't appear and
+	it's created the same way as on any other site:
+	`bench execute kpc.demo_data.create_demo_data`.
+	"""
+	if not frappe.defaults.get_global_default("company"):
+		print(
+			"kpc: skipping demo data - no default Company found yet (run the ERPNext setup wizard "
+			"first, then `bench execute kpc.demo_data.create_demo_data` whenever you're ready)."
+		)
+		return
+
+	try:
+		create_demo_data()
+	except Exception:
+		frappe.db.rollback()
+		frappe.log_error(title="KPC demo data seeding failed during after_install")
+		print(
+			"kpc: demo data seeding failed during install (see Error Log) - the app itself installed "
+			"fine. Fix the underlying issue, then run `bench execute kpc.demo_data.create_demo_data` "
+			"manually; if it left a partial Journey, run `bench execute kpc.demo_data.reset_demo_data` first."
+		)
+
+
+def reset_demo_data(vessel_name: str = "MT African Pride", force: bool = False):
 	"""Cancel and delete everything downstream of the demo Oil Shipment so
 	create_demo_data() can rebuild Steps 2-13 cleanly. The Oil Shipment and
 	Journey themselves are kept (Oil Shipment cannot be deleted by design);
-	the Journey's audit log is rewound to just its Step 1 entry."""
+	the Journey's audit log is rewound to just its Step 1 entry.
+
+	Pass force=True to rebuild an already-complete journey anyway. The
+	"already complete, nothing to reset" check exists so a routine
+	create_demo_data() call is a cheap no-op on a healthy site, not to
+	protect a journey someone is deliberately rebuilding - which is exactly
+	what's needed the first time this runs after a feature is added that the
+	existing demo journey predates and never exercised (e.g. the Decision
+	Ledger, added in Phase 6: a journey built before that code existed has
+	no Decision Ledger entries and never will unless rebuilt)."""
 	frappe.set_user("Administrator")
 
 	journey_ref = frappe.db.get_value("Oil Shipment", {"vessel_name": vessel_name}, "journey_ref")
@@ -101,8 +154,8 @@ def reset_demo_data(vessel_name: str = "MT African Pride"):
 		return
 
 	journey = frappe.get_doc("Journey", journey_ref)
-	if _journey_is_fully_built(journey_ref):
-		print(f"Journey {journey_ref} is already complete - nothing to reset.")
+	if _journey_is_fully_built(journey_ref) and not force:
+		print(f"Journey {journey_ref} is already complete - nothing to reset. Pass force=True to rebuild anyway.")
 		return
 
 	capacity_assessment = frappe.db.get_value(
@@ -137,6 +190,57 @@ def reset_demo_data(vessel_name: str = "MT African Pride"):
 # ---------------------------------------------------------------------------
 
 
+def _ensure_erpnext_prerequisites():
+	"""Root nodes (Item Group / Customer Group / Territory) and a default
+	Selling Price List are normally seeded by ERPNext's setup wizard, which
+	a Company existing doesn't actually guarantee happened - the wizard is
+	a manual, human-driven step (see kpc.install for the analogous problem
+	with `bench install-app` and patches.txt). Rather than assume, create
+	whatever's missing so this script only ever depends on the one thing
+	that genuinely can't be faked: a Company with a Chart of Accounts.
+
+	Also aligns System Settings.currency to the Company's currency: it's a
+	site-wide global that Frappe otherwise leaves at its own default (INR)
+	until someone changes it, and several ERPNext controllers fall back to
+	it when a document's own currency isn't explicit enough for them -
+	setting it explicitly on each document (Invoice, Delivery Note, ...)
+	isn't sufficient on its own to avoid a spurious cross-currency Exchange
+	Rate requirement everywhere that global default disagrees.
+	"""
+	company_currency = frappe.db.get_value("Company", COMPANY, "default_currency")
+
+	if not frappe.get_all("Item Group", filters={"is_group": 1, "parent_item_group": ""}, limit=1):
+		frappe.get_doc({"doctype": "Item Group", "item_group_name": "All Item Groups", "is_group": 1}).insert()
+
+	if not frappe.db.exists("Customer Group", "All Customer Groups"):
+		frappe.get_doc(
+			{"doctype": "Customer Group", "customer_group_name": "All Customer Groups", "is_group": 1}
+		).insert()
+
+	if not frappe.db.exists("Territory", "All Territories"):
+		frappe.get_doc({"doctype": "Territory", "territory_name": "All Territories", "is_group": 1}).insert()
+
+	if frappe.db.exists("Price List", "Standard Selling"):
+		frappe.db.set_value("Price List", "Standard Selling", "currency", company_currency)
+	else:
+		frappe.get_doc(
+			{
+				"doctype": "Price List",
+				"price_list_name": "Standard Selling",
+				"selling": 1,
+				"currency": company_currency,
+			}
+		).insert()
+	if not frappe.db.get_single_value("Selling Settings", "selling_price_list"):
+		frappe.db.set_single_value("Selling Settings", "selling_price_list", "Standard Selling")
+
+	# Not a System Settings field - Frappe's global "currency" default lives
+	# in the generic key/value defaults store (frappe.db.get_default /
+	# set_default), separate from any single doctype.
+	if frappe.db.get_default("currency") != company_currency:
+		frappe.db.set_default("currency", company_currency)
+
+
 def _create_terminals():
 	defs = {
 		"MSA-01": {
@@ -161,6 +265,21 @@ def _create_terminals():
 
 
 def _create_product():
+	# Not a standard ERPNext fixture - it's normally seeded by the setup
+	# wizard's demo data, which a fresh install may never have run. Create
+	# it directly rather than assuming it's there, same as the Kilolitre
+	# UOM (see patches/v0_0/add_stock_custom_fields.py).
+	item_group = "Products"
+	if not frappe.db.exists("Item Group", item_group):
+		frappe.get_doc(
+			{
+				"doctype": "Item Group",
+				"item_group_name": item_group,
+				"parent_item_group": frappe.db.get_value("Item Group", {"is_group": 1, "parent_item_group": ""}),
+				"is_group": 0,
+			}
+		).insert()
+
 	item_code = "AGO-DIESEL"
 	if not frappe.db.exists("Item", item_code):
 		frappe.get_doc(
@@ -168,7 +287,7 @@ def _create_product():
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": "Automotive Gas Oil (Diesel)",
-				"item_group": "Products",
+				"item_group": item_group,
 				"stock_uom": "Kilolitre",
 				"density_at_15c": 0.8300,
 				"reference_temperature_c": 15,
@@ -227,6 +346,11 @@ def _create_customer():
 				"customer_name": CUSTOMER,
 				"customer_group": "All Customer Groups",
 				"territory": "All Territories",
+				# Explicit rather than inherited from System Settings.currency,
+				# which defaults to INR on a fresh site until someone changes
+				# it - leaving this blank forces an INR/KES Exchange Rate
+				# lookup (which won't exist) the moment Invoice bills in KES.
+				"default_currency": "KES",
 			}
 		).insert()
 	return CUSTOMER
@@ -251,12 +375,84 @@ def _create_tariff(terminals, product):
 	return tariff.name
 
 
+def _create_maintenance_crew():
+	"""Two Employees, illustrating both sides of the HSEQ certification gate
+	(Phase 5): James holds current certifications and is the one actually
+	assigned to the demo Work Order and Permit to Work below; Peter's
+	Confined Space Entry certification is deliberately expired and left
+	untouched as reference data - open his record, or try assigning him to
+	a Work Order requiring that certification, to see assert_certification_current
+	block it."""
+	if not frappe.db.exists("Company", COMPANY):
+		return None, None
+
+	def _employee(first_name, last_name):
+		existing = frappe.db.get_value("Employee", {"first_name": first_name, "last_name": last_name})
+		if existing:
+			return existing
+		employee = frappe.get_doc(
+			{
+				"doctype": "Employee",
+				"first_name": first_name,
+				"last_name": last_name,
+				"gender": "Male",
+				"date_of_birth": add_days(today(), -365 * 30),
+				"date_of_joining": add_days(today(), -365 * 3),
+				"company": COMPANY,
+			}
+		).insert()
+		return employee.name
+
+	def _certification(employee, certification_type, expiry_date):
+		if frappe.db.exists("Employee Certification", {"employee": employee, "certification_type": certification_type}):
+			return
+		frappe.get_doc(
+			{
+				"doctype": "Employee Certification",
+				"employee": employee,
+				"certification_type": certification_type,
+				"certificate_number": f"{certification_type[:3].upper()}-{employee}",
+				"issuing_authority": "KPC HSEQ Department",
+				"issue_date": add_days(expiry_date, -365 * 2),
+				"expiry_date": expiry_date,
+			}
+		).insert()
+
+	james = _employee("James", "Mwangi")
+	_certification(james, "Pipeline Operations", add_days(today(), 365))
+	_certification(james, "Confined Space Entry", add_days(today(), 365))
+
+	peter = _employee("Peter", "Otieno")
+	_certification(peter, "Confined Space Entry", add_days(today(), -30))  # deliberately expired
+
+	return james, peter
+
+
+def _create_plant_asset(terminals):
+	asset_tag = "PMP-KP2"
+	if frappe.db.exists("Plant Asset", asset_tag):
+		return asset_tag
+	frappe.get_doc(
+		{
+			"doctype": "Plant Asset",
+			"asset_tag": asset_tag,
+			"asset_name": "Line 1 Pump Station KP2",
+			"asset_type": "Pump Station",
+			"terminal": terminals["MSA-01"],
+			"status": "Operational",
+			"criticality": "High",
+			"commissioning_date": add_days(today(), -365 * 5),
+		}
+	).insert()
+	return asset_tag
+
+
 # ---------------------------------------------------------------------------
 # The Golden Thread - one journey, all 13 steps
 # ---------------------------------------------------------------------------
 
 
-def _run_golden_thread(terminals, product, tanks, customer, tariff) -> str:
+def _run_golden_thread(terminals, product, tanks, customer, tariff, maintenance_crew, plant_asset) -> str:
 	"""Steps 2-13 below assume nothing downstream of the Oil Shipment exists
 	yet - true on a first run, and true again after reset_demo_data() has
 	cancelled/deleted everything downstream of an incomplete journey (Oil
@@ -423,19 +619,42 @@ def _run_golden_thread(terminals, product, tanks, customer, tariff) -> str:
 	ai_recommendation.workflow_state = "Approved"
 	ai_recommendation.save()
 
+	james, _peter = maintenance_crew
 	work_order = frappe.get_doc(
 		{
 			"doctype": "Maintenance Work Order",
 			"ai_recommendation": ai_recommendation.name,
 			"journey_ref": journey_ref,
+			"asset": plant_asset,
 			"work_order_type": "Corrective Maintenance",
 			"description": "Inspect and calibrate Line 1 pump station KP2 following pressure/vibration alert.",
 			"scheduled_date": add_days(today(), 1),
+			"assigned_employee": james,
+			"required_certification_type": "Pipeline Operations",
 			"execution_status": "Completed",
 			"completion_notes": "Pump seal replaced; vibration back within normal range on re-test.",
 		}
 	).insert()
 	work_order.submit()
+
+	# Step 7 (HSEQ): Permit to Work - the pump seal replacement required
+	# opening the pump housing, a Confined Space Entry job. James holds a
+	# current certification for it (see _create_maintenance_crew), so the
+	# permit issues cleanly; closed once the work order's own execution was
+	# marked Completed above.
+	permit = frappe.get_doc(
+		{
+			"doctype": "Permit to Work",
+			"work_order": work_order.name,
+			"permit_type": "Confined Space Entry",
+			"issued_to": james,
+			"valid_from": now_datetime(),
+			"valid_until": add_to_date(now_datetime(), hours=8),
+			"precautions": "Isolate and lock out pump motor; continuous gas monitoring; standby attendant at all times.",
+		}
+	).insert()
+	permit.submit()
+	permit.close_permit()
 
 	movement.reload()
 	movement.movement_status = "Completed"
@@ -551,6 +770,16 @@ def _print_summary(journey_ref: str):
 		print(f"  {row.step:<26} {row.reference_doctype:<22} {row.reference_name}")
 
 	print("-" * 72)
+	print("EAM, HSEQ & Human Capital (Phase 5):")
+	for row in frappe.get_all("Plant Asset", fields=["asset_tag", "asset_name", "status"]):
+		print(f"  Plant Asset          {row.asset_tag:<22} {row.asset_name} ({row.status})")
+	for row in frappe.get_all(
+		"Employee Certification", fields=["employee", "certification_type", "status"], order_by="creation"
+	):
+		employee_name = frappe.db.get_value("Employee", row.employee, "employee_name") or row.employee
+		print(f"  Certification        {employee_name:<22} {row.certification_type} ({row.status})")
+
+	print("-" * 72)
 	print("ERPNext Stock & Accounts (created alongside the KPC records above):")
 	tank_names = ("TK-101", "TK-201")
 	warehouses = frappe.get_all("Warehouse", filters={"warehouse_name": ["in", tank_names]}, pluck="name")
@@ -558,22 +787,43 @@ def _print_summary(journey_ref: str):
 		qty = frappe.db.get_value("Bin", {"warehouse": name, "item_code": "AGO-DIESEL"}, "actual_qty") or 0
 		print(f"  Warehouse            {name:<22} {qty} KL on hand")
 
+	# docstatus=1 only: a journey rebuilt via reset_demo_data(force=True)
+	# leaves its earlier generation's Stock Entries/Delivery Notes on the
+	# books as cancelled history (correctly reversed, not deleted - that's
+	# real accounting/stock-ledger practice), but this summary is about what
+	# currently backs the journey, not its full edit history.
 	stock_entries = frappe.get_all(
 		"Stock Entry",
-		filters={"journey_ref": journey_ref},
+		filters={"journey_ref": journey_ref, "docstatus": 1},
 		fields=["name", "stock_entry_type"],
 		order_by="creation",
 	)
 	for row in stock_entries:
 		print(f"  Stock Entry          {row.stock_entry_type:<22} {row.name}")
 	for row in frappe.get_all(
-		"Delivery Note", filters={"journey_ref": journey_ref}, fields=["name", "grand_total"], order_by="creation"
+		"Delivery Note",
+		filters={"journey_ref": journey_ref, "docstatus": 1},
+		fields=["name", "grand_total"],
+		order_by="creation",
 	):
 		print(f"  Delivery Note        {row.name:<22} KES {row.grand_total:,.2f}")
 	invoice = frappe.db.get_value("Invoice", {"journey_ref": journey_ref}, "sales_invoice")
-	if invoice:
+	if invoice and frappe.db.get_value("Sales Invoice", invoice, "docstatus") == 1:
 		si = frappe.db.get_value("Sales Invoice", invoice, "grand_total")
 		print(f"  Sales Invoice        {invoice:<22} KES {si:,.2f}")
+
+	decisions = frappe.get_all(
+		"Decision Ledger",
+		filters={"journey_ref": journey_ref},
+		fields=["name", "decision_type", "decision_outcome", "is_ai_assisted"],
+		order_by="creation",
+	)
+	if decisions:
+		print("-" * 72)
+		print("Decision Ledger (Phase 6 - immutable, one entry per decision below):")
+		for row in decisions:
+			flag = "AI-assisted" if row.is_ai_assisted else "manual"
+			print(f"  {row.name:<10} {row.decision_type:<34} {row.decision_outcome:<20} ({flag})")
 
 	print("=" * 72)
 	print(f"Open the KPC workspace in Desk, or go straight to /app/journey/{journey_ref}")

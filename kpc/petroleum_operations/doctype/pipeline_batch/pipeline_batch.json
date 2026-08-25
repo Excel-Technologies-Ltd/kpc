@@ -17,6 +17,7 @@
   "volume_section",
   "planned_volume_kl",
   "capacity_assessment",
+  "interface_cut_kl",
   "schedule_section",
   "scheduled_start",
   "column_break_2",
@@ -77,7 +78,8 @@
    "fieldname": "batch_sequence_no",
    "fieldtype": "Int",
    "label": "Pumping Sequence No",
-   "description": "Position of this slug in the pipeline interface (pumping) sequence."
+   "reqd": 1,
+   "description": "Position of this slug in the pipeline interface (pumping) sequence, unique within a route. Required so batch adjacency can be determined for the Product Compatibility check."
   },
   {
    "fieldname": "volume_section",
@@ -98,6 +100,13 @@
    "label": "Capacity Assessment",
    "options": "Capacity Assessment",
    "description": "Route capacity plan this batch is validated against."
+  },
+  {
+   "fieldname": "interface_cut_kl",
+   "fieldtype": "Float",
+   "label": "Interface Cut Volume (KL)",
+   "precision": "3",
+   "description": "Transmix/interface cut volume planned at this batch's boundary. Required when the Product Compatibility rule against an adjacent batch is 'Requires Interface Cut'; must meet that rule's minimum."
   },
   {
    "fieldname": "schedule_section",
@@ -143,8 +152,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
-   "cancel": 1,
    "write": 1
   },
   {

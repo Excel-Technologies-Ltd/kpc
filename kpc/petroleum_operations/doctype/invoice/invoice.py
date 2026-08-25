@@ -7,11 +7,12 @@ from frappe.model.document import Document
 from frappe.utils import flt, today
 
 from kpc.petroleum_operations.integrations.accounts import create_and_submit_sales_invoice
-from kpc.petroleum_operations.utils import log_journey_step
+from kpc.petroleum_operations.utils import assert_journey_ref_immutable, log_journey_step
 
 
 class Invoice(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.apply_lines()
 		self.calculate_grand_total()
 

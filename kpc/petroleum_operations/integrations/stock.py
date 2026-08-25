@@ -191,6 +191,11 @@ def create_and_submit_delivery_note(dispatch) -> frappe.model.document.Document:
 			"doctype": "Delivery Note",
 			"customer": dispatch.customer,
 			"company": nomination.company,
+			# Explicit rather than left to fall back through Customer/System
+			# Settings defaults - a fresh site's System Settings.currency is
+			# INR until someone changes it, which trips ERPNext's exchange
+			# rate check the instant it disagrees with the Company/Price List.
+			"currency": frappe.db.get_value("Company", nomination.company, "default_currency"),
 			"posting_date": dispatch.dispatch_datetime,
 			"journey_ref": dispatch.journey_ref,
 			"items": [

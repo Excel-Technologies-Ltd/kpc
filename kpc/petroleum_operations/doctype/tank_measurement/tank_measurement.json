@@ -20,11 +20,13 @@
   "density_at_15c",
   "column_break_2",
   "tank_state_at_measurement",
+  "measurement_uncertainty_percent",
   "calc_section",
   "volume_correction_factor",
   "gross_observed_volume_kl",
   "column_break_3",
   "net_standard_volume_kl",
+  "stock_entry",
   "remarks"
  ],
  "fields": [
@@ -117,6 +119,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "measurement_uncertainty_percent",
+   "fieldtype": "Float",
+   "label": "Measurement Uncertainty (%)",
+   "default": "0.15",
+   "precision": "3",
+   "description": "Standard uncertainty of this dip/temperature/density measurement, from the instrument's calibration certificate. Feeds Reconciliation's combined measurement uncertainty (Phase 4)."
+  },
+  {
    "fieldname": "calc_section",
    "fieldtype": "Section Break",
    "label": "Calculated Standard Volume"
@@ -148,6 +158,14 @@
    "bold": 1
   },
   {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry",
+   "read_only": 1,
+   "description": "The Material Receipt Stock Entry this Closing reading posted, if any - reversed automatically if this Tank Measurement is cancelled."
+  },
+  {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
@@ -170,8 +188,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
-   "cancel": 1,
    "write": 1
   },
   {

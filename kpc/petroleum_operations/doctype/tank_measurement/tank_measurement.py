@@ -7,11 +7,17 @@ from frappe.model.document import Document
 from frappe.utils import flt
 
 from kpc.petroleum_operations.integrations.stock import post_material_receipt
-from kpc.petroleum_operations.utils import assert_tank_available, calculate_standard_volume, log_journey_step
+from kpc.petroleum_operations.utils import (
+	assert_journey_ref_immutable,
+	assert_tank_available,
+	calculate_standard_volume,
+	log_journey_step,
+)
 
 
 class TankMeasurement(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.validate_tank_state()
 		self.apply_standard_volume()
 
@@ -57,4 +63,14 @@ class TankMeasurement(Document):
 		# history) - a real deployment would use a landed-cost figure.
 		rate = flt(frappe.db.get_value("Item", product, "standard_rate")) or None
 
-		post_material_receipt(tank.warehouse, product, self.net_standard_volume_kl, self.journey_ref, rate=rate)
+		entry = post_material_receipt(tank.warehouse, product, self.net_standard_volume_kl, self.journey_ref, rate=rate)
+		self.db_set("stock_entry", entry.name, update_modified=False)
+
+	def on_cancel(self):
+		"""The Stock Entry this Closing reading posted (if any) must reverse
+		too, or cancelling the Tank Measurement of record would silently
+		leave stock the physical event never actually delivered - same
+		link-integrity reasoning as Dispatch/Invoice cancelling their
+		Delivery Note/Sales Invoice."""
+		if self.stock_entry and frappe.db.get_value("Stock Entry", self.stock_entry, "docstatus") == 1:
+			frappe.get_doc("Stock Entry", self.stock_entry).cancel()

@@ -8,6 +8,7 @@ from frappe.utils import flt
 
 from kpc.petroleum_operations.integrations.stock import post_material_transfer, resolve_origin_tank
 from kpc.petroleum_operations.utils import (
+	assert_journey_ref_immutable,
 	assert_tank_available,
 	calculate_standard_volume,
 	log_journey_step,
@@ -17,6 +18,7 @@ from kpc.petroleum_operations.utils import (
 
 class TerminalReceipt(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.validate_tank_state()
 		self.apply_standard_volume()
 		self.fetch_dispatched_quantity()
@@ -60,6 +62,13 @@ class TerminalReceipt(Document):
 		destination_tank = frappe.get_doc("Oil Tank", self.destination_tank)
 		product = frappe.db.get_value("Movement", self.movement, "product")
 
-		post_material_transfer(
+		entry = post_material_transfer(
 			origin_tank.warehouse, destination_tank.warehouse, product, self.net_standard_volume_kl, self.journey_ref
 		)
+		self.db_set("stock_entry", entry.name, update_modified=False)
+
+	def on_cancel(self):
+		"""Reverse the Material Transfer this Terminal Receipt posted, if
+		any - same reasoning as Tank Measurement/Dispatch/Invoice."""
+		if self.stock_entry and frappe.db.get_value("Stock Entry", self.stock_entry, "docstatus") == 1:
+			frappe.get_doc("Stock Entry", self.stock_entry).cancel()

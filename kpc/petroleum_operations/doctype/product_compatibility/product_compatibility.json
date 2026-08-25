@@ -1,0 +1,132 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "PCM-.YYYY.-.#####",
+ "creation": "2026-08-20 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "product_a",
+  "product_b",
+  "column_break_1",
+  "compatibility",
+  "is_active",
+  "cut_section",
+  "minimum_interface_cut_kl",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "product_a",
+   "fieldtype": "Link",
+   "label": "Product A",
+   "options": "Item",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "product_b",
+   "fieldtype": "Link",
+   "label": "Product B",
+   "options": "Item",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "Order doesn't matter - A/B and B/A are the same pair; a duplicate reverse entry is blocked."
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "compatibility",
+   "fieldtype": "Select",
+   "label": "Compatibility",
+   "options": "Compatible\nRequires Interface Cut\nIncompatible",
+   "default": "Compatible",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active",
+   "default": "1",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "cut_section",
+   "fieldtype": "Section Break",
+   "label": "Interface Cut",
+   "depends_on": "eval:doc.compatibility == 'Requires Interface Cut'"
+  },
+  {
+   "fieldname": "minimum_interface_cut_kl",
+   "fieldtype": "Float",
+   "label": "Minimum Interface Cut (KL)",
+   "precision": "3",
+   "mandatory_depends_on": "eval:doc.compatibility == 'Requires Interface Cut'",
+   "description": "Minimum buffer slug volume required between these two products when sequenced adjacently in the same pipeline batch run."
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Petroleum Operations",
+ "name": "Product Compatibility",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Quality Analyst",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Scheduler & Operations Controller",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Terminal Operator"
+  },
+  {
+   "read": 1,
+   "role": "Commercial Officer"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

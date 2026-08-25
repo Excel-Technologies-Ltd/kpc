@@ -6,7 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime
 
-from kpc.petroleum_operations.utils import log_journey_step
+from kpc.petroleum_operations.utils import assert_journey_ref_immutable, log_journey_step
 
 
 class OilShipment(Document):
@@ -14,6 +14,7 @@ class OilShipment(Document):
 		self.create_journey()
 
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.stamp_workflow_timestamps()
 
 	def on_update(self):

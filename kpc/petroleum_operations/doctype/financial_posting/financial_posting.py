@@ -3,6 +3,8 @@
 
 from frappe.model.document import Document
 
+from kpc.petroleum_operations.utils import assert_journey_ref_immutable
+
 
 class FinancialPosting(Document):
 	"""System-generated only, like Journey - created exclusively from
@@ -11,4 +13,5 @@ class FinancialPosting(Document):
 	(kpc.petroleum_operations.integrations.accounts). Not meant to be
 	created or edited by hand."""
 
-	pass
+	def validate(self):
+		assert_journey_ref_immutable(self)

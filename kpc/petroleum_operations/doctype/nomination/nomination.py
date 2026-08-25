@@ -6,11 +6,12 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from kpc.petroleum_operations.utils import log_journey_step
+from kpc.petroleum_operations.utils import assert_journey_ref_immutable, log_journey_step
 
 
 class Nomination(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.validate_quality_release()
 
 	def validate_quality_release(self):

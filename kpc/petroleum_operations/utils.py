@@ -20,7 +20,7 @@ import math
 
 import frappe
 from frappe import _
-from frappe.utils import flt, now_datetime
+from frappe.utils import flt, getdate, now_datetime, today
 
 # Tank operational states that must block any transaction which would move
 # product into/out of the tank (receipts, dispatches, position updates).
@@ -64,6 +64,133 @@ def assert_tank_available(tank: str, action: str = "record this transaction agai
 				action, frappe.bold(tank), frappe.bold(state)
 			),
 			title=_("Tank Unavailable"),
+		)
+
+
+def assert_journey_ref_immutable(doc) -> None:
+	"""The Golden Thread is write-once: once a transaction is saved with a
+	journey_ref, nothing may ever change it - not a user with the right
+	field permission, not a script calling .save(ignore_permissions=True).
+	`read_only` on the field stops the ordinary form UI, but it's a display
+	property, not a server-side guarantee; call this from validate() on
+	every doctype that carries journey_ref for the guarantee itself.
+	"""
+	if doc.is_new():
+		return
+	if doc.has_value_changed("journey_ref"):
+		frappe.throw(
+			_("journey_ref is write-once and cannot be changed after {0} is created.").format(doc.name),
+			title=_("Golden Thread Violation"),
+		)
+
+
+def get_product_compatibility(product_a: str, product_b: str) -> dict:
+	"""Look up the Product Compatibility rule for a pair of products,
+	regardless of which order they're asked about in. Open-world by
+	design: two products with no rule on file are treated as Compatible
+	rather than blocked, since a compatibility matrix realistically starts
+	sparse and only needs entries for the pairs that actually matter
+	(incompatible pairs, or ones needing an interface cut).
+
+	Used from Pipeline Batch (Phase 2) to enforce sequencing adjacency
+	against this master; kept here rather than duplicated because both
+	this module and demo/test code need the identical lookup direction
+	handling.
+	"""
+	if product_a == product_b:
+		return {"compatibility": "Compatible", "minimum_interface_cut_kl": 0}
+
+	row = frappe.db.get_value(
+		"Product Compatibility",
+		{
+			"is_active": 1,
+			"product_a": ["in", (product_a, product_b)],
+			"product_b": ["in", (product_a, product_b)],
+		},
+		["compatibility", "minimum_interface_cut_kl"],
+		as_dict=True,
+	)
+	return row or {"compatibility": "Compatible", "minimum_interface_cut_kl": 0}
+
+
+def assert_document_immutable(doc) -> None:
+	"""For records that must never be edited after creation at all - a
+	tamper-evident historian/audit trail, a stronger guarantee than
+	:func:`assert_journey_ref_immutable`'s single-field write-once rule.
+	Used by ``OT Telemetry Log`` (Phase 3's read-only ingest boundary) and
+	will back the ``Decision Ledger`` in Phase 6.
+	"""
+	if doc.is_new():
+		return
+	frappe.throw(
+		_("{0} {1} is an immutable record and cannot be modified after creation.").format(doc.doctype, doc.name),
+		title=_("Immutable Record"),
+	)
+
+
+def raise_ai_alert(journey_ref: str, movement: str, result: dict) -> str | None:
+	"""Create an AI Alert from an :func:`assess_pipeline_anomaly` result, if
+	the result is alertable and no Alert is already Open for this Movement.
+
+	Shared by ``Movement`` (telemetry entered directly on the movement
+	record) and ``OT Telemetry Log`` (secure SCADA/historian ingest) so both
+	sources funnel through the identical dedup rule and AI Alert shape,
+	regardless of which one actually observed the breach first.
+	"""
+	if not result or not result.get("is_alertable"):
+		return None
+	if frappe.db.exists("AI Alert", {"movement": movement, "status": "Open"}):
+		return None
+
+	alert = frappe.get_doc(
+		{
+			"doctype": "AI Alert",
+			"journey_ref": journey_ref,
+			"movement": movement,
+			"anomaly_score": result["score"],
+			"severity": result["severity"],
+			"parameter_breached": ", ".join(result["parameters"]) or "Multiple",
+			"description": result["basis"],
+		}
+	)
+	alert.insert(ignore_permissions=True)
+	return alert.name
+
+
+def assert_certification_current(employee: str, certification_type: str, action: str) -> None:
+	"""HSEQ gate: block assigning a Work Order or issuing a Permit to Work to
+	an employee whose relevant certification is missing or expired.
+
+	Freshness is computed directly from ``expiry_date`` against today, not
+	from Employee Certification's own cached ``status`` field - that field
+	is only re-evaluated when the certification record is next saved, so a
+	certification that has quietly lapsed since its last edit would
+	otherwise still read as "Valid" here. Used by both ``Maintenance Work
+	Order`` and ``Permit to Work``, so both funnel through the same rule.
+	"""
+	if not employee or not certification_type:
+		return
+
+	certs = frappe.get_all(
+		"Employee Certification",
+		filters={"employee": employee, "certification_type": certification_type},
+		fields=["expiry_date"],
+		order_by="expiry_date desc",
+		limit=1,
+	)
+	if not certs:
+		frappe.throw(
+			_("{0} has no {1} certification on file. Required before they can {2}.").format(
+				employee, certification_type, action
+			),
+			title=_("Certification Required"),
+		)
+	if not certs[0].expiry_date or getdate(certs[0].expiry_date) < getdate(today()):
+		frappe.throw(
+			_("{0}'s {1} certification expired on {2}. Required before they can {3}.").format(
+				employee, certification_type, certs[0].expiry_date, action
+			),
+			title=_("Certification Expired"),
 		)
 
 

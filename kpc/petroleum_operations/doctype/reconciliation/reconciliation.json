@@ -16,14 +16,21 @@
   "variance_kl",
   "variance_percent",
   "column_break_2",
-  "tolerance_percent",
   "within_tolerance",
+  "uncertainty_section",
+  "coverage_factor",
+  "origin_measurement_uncertainty_percent",
+  "column_break_4",
+  "destination_measurement_uncertainty_percent",
+  "combined_uncertainty_percent",
+  "tolerance_percent",
   "justification_section",
   "justification",
   "approval_section",
   "reconciled_by",
   "column_break_3",
   "reconciled_on",
+  "stock_entry",
   "remarks"
  ],
  "fields": [
@@ -93,19 +100,61 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "tolerance_percent",
-   "fieldtype": "Percent",
-   "label": "Tolerance (%)",
-   "default": "0.5",
-   "reqd": 1,
-   "description": "Standard fiscal custody-transfer tolerance for pipeline transport."
-  },
-  {
    "fieldname": "within_tolerance",
    "fieldtype": "Check",
    "label": "Within Tolerance",
    "read_only": 1,
    "in_list_view": 1
+  },
+  {
+   "fieldname": "uncertainty_section",
+   "fieldtype": "Section Break",
+   "label": "Measurement Uncertainty",
+   "description": "Tolerance is auto-calculated (GUM-style) from the combined standard uncertainty of the two dip measurements bracketing this parcel, not a flat constant."
+  },
+  {
+   "fieldname": "coverage_factor",
+   "fieldtype": "Float",
+   "label": "Coverage Factor (k)",
+   "default": "2",
+   "reqd": 1,
+   "precision": "1",
+   "description": "GUM expanded-uncertainty coverage factor. k=2 approximates ~95% confidence; raise it for a more conservative (wider) tolerance band."
+  },
+  {
+   "fieldname": "origin_measurement_uncertainty_percent",
+   "fieldtype": "Float",
+   "label": "Origin Measurement Uncertainty (%)",
+   "read_only": 1,
+   "precision": "3",
+   "description": "From the latest submitted Tank Measurement on this Journey (the parcel's volume of record entering KPC custody)."
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "destination_measurement_uncertainty_percent",
+   "fieldtype": "Float",
+   "label": "Destination Measurement Uncertainty (%)",
+   "read_only": 1,
+   "fetch_from": "terminal_receipt.measurement_uncertainty_percent",
+   "precision": "3"
+  },
+  {
+   "fieldname": "combined_uncertainty_percent",
+   "fieldtype": "Float",
+   "label": "Combined Standard Uncertainty (%)",
+   "read_only": 1,
+   "precision": "3",
+   "description": "Root-sum-square of the origin and destination uncertainties: sqrt(origin^2 + destination^2)."
+  },
+  {
+   "fieldname": "tolerance_percent",
+   "fieldtype": "Percent",
+   "label": "Tolerance (%)",
+   "read_only": 1,
+   "description": "Auto-calculated: Coverage Factor x Combined Standard Uncertainty."
   },
   {
    "fieldname": "justification_section",
@@ -142,6 +191,14 @@
    "read_only": 1
   },
   {
+   "fieldname": "stock_entry",
+   "fieldtype": "Link",
+   "label": "Stock Entry",
+   "options": "Stock Entry",
+   "read_only": 1,
+   "description": "The Material Issue Stock Entry this Reconciliation posted for a recognised transit loss, if any - reversed automatically if this Reconciliation is cancelled."
+  },
+  {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
    "label": "Remarks"
@@ -164,8 +221,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
-   "cancel": 1,
    "write": 1
   },
   {

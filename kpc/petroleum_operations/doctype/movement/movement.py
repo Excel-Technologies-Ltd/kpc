@@ -5,7 +5,12 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from kpc.petroleum_operations.utils import assess_pipeline_anomaly, log_journey_step
+from kpc.petroleum_operations.utils import (
+	assert_journey_ref_immutable,
+	assess_pipeline_anomaly,
+	log_journey_step,
+	raise_ai_alert,
+)
 
 VALID_TRANSITIONS = {
 	"Draft": {"In Transit", "Halted"},
@@ -17,6 +22,7 @@ VALID_TRANSITIONS = {
 
 class Movement(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.validate_batch_approved()
 		self.validate_status_transition()
 		self.evaluate_telemetry()
@@ -56,27 +62,9 @@ class Movement(Document):
 
 	def raise_ai_alert_if_needed(self):
 		result = getattr(self, "_anomaly_result", None)
-		if not result or not result["is_alertable"]:
+		alert_name = raise_ai_alert(self.journey_ref, self.name, result)
+		if not alert_name:
 			return
-
-		# Don't spam a new Alert on every subsequent save while the same
-		# breach persists - only raise while none is currently Open for this
-		# Movement.
-		if frappe.db.exists("AI Alert", {"movement": self.name, "status": "Open"}):
-			return
-
-		alert = frappe.get_doc(
-			{
-				"doctype": "AI Alert",
-				"journey_ref": self.journey_ref,
-				"movement": self.name,
-				"anomaly_score": result["score"],
-				"severity": result["severity"],
-				"parameter_breached": ", ".join(result["parameters"]) or "Multiple",
-				"description": result["basis"],
-			}
-		)
-		alert.insert(ignore_permissions=True)
 
 		# db_set (not frappe.db.set_value) keeps this in-memory document's
 		# own `modified` timestamp in sync with what was just written, so a

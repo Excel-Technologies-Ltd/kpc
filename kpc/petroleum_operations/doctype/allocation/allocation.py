@@ -6,11 +6,12 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from kpc.petroleum_operations.utils import log_journey_step
+from kpc.petroleum_operations.utils import assert_journey_ref_immutable, log_journey_step
 
 
 class Allocation(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.validate_reconciliation_accepted()
 		self.validate_quantity()
 

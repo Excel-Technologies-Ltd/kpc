@@ -10,10 +10,12 @@
   "journey_ref",
   "ai_recommendation",
   "movement",
+  "asset",
   "column_break_1",
   "work_order_type",
   "scheduled_date",
-  "assigned_to",
+  "assigned_employee",
+  "required_certification_type",
   "detail_section",
   "description",
   "execution_section",
@@ -49,6 +51,13 @@
    "fetch_from": "ai_recommendation.movement"
   },
   {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "label": "Asset",
+   "options": "Plant Asset",
+   "in_list_view": 1
+  },
+  {
    "fieldname": "column_break_1",
    "fieldtype": "Column Break"
   },
@@ -66,10 +75,18 @@
    "label": "Scheduled Date"
   },
   {
-   "fieldname": "assigned_to",
+   "fieldname": "assigned_employee",
    "fieldtype": "Link",
-   "label": "Assigned To",
-   "options": "User"
+   "label": "Assigned Employee",
+   "options": "Employee",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "required_certification_type",
+   "fieldtype": "Select",
+   "label": "Required Certification Type",
+   "options": "\nPipeline Operations\nConfined Space Entry\nHot Work\nWorking at Height\nElectrical Isolation\nExcavation\nCrane Operation\nGeneral HSEQ\nOther",
+   "description": "Leave blank if this Work Order needs no specific HSEQ certification. If set, Assigned Employee must hold a current certification of this exact type."
   },
   {
    "fieldname": "detail_section",
@@ -125,8 +142,6 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
-   "cancel": 1,
    "write": 1
   },
   {

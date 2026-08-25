@@ -65,7 +65,15 @@ app_license = "MIT"
 # ------------
 
 # before_install = "kpc.install.before_install"
-# after_install = "kpc.install.after_install"
+# Runs this app's structural setup (roles, custom fields, Kilolitre UOM,
+# Workflows, Workspace) and then seeds the demo Golden Thread - on a fresh
+# `bench install-app kpc` only, never on `bench migrate`, and never
+# retroactively on a site the app was already installed on before this hook
+# existed. `bench install-app` marks every patch as already-applied without
+# running it (see kpc.install's docstring), so this is the only chance a
+# fresh install gets at any of it. Defensive throughout: never aborts the
+# install itself if a step fails - see kpc.install.after_install.
+after_install = "kpc.install.after_install"
 
 # Uninstallation
 # ------------
@@ -120,6 +128,15 @@ app_license = "MIT"
 # Hook on document methods and events
 
 doc_events = {
+	"*": {
+		# Segregation of Duties (Phase 6): a document's owner cannot also
+		# submit/approve it. Scoped internally, inside sod.block_self_submit
+		# itself, to only this app's own doctypes - see kpc.petroleum_operations.sod
+		# for why a wildcard hook is safe here and why it's paired with
+		# explicit per-doctype calls for the few doctypes whose "approval"
+		# is a workflow_state change rather than a submit.
+		"before_submit": "kpc.petroleum_operations.sod.block_self_submit",
+	},
 	"Sales Invoice": {
 		# Stamps journey_ref (a custom field, see patches/v0_0/add_accounts_custom_fields)
 		# onto this Sales Invoice's GL Entries once ERPNext has created them,

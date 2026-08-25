@@ -1,0 +1,176 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "OTL-.YYYY.-.#####",
+ "creation": "2026-08-24 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "movement",
+  "journey_ref",
+  "column_break_1",
+  "reading_datetime",
+  "ingest_channel",
+  "source_tag",
+  "readings_section",
+  "pressure_bar",
+  "flow_rate_m3h",
+  "vibration_mm_s",
+  "assessment_section",
+  "anomaly_score",
+  "anomaly_severity",
+  "column_break_2",
+  "alert_triggered",
+  "boundary_note"
+ ],
+ "fields": [
+  {
+   "fieldname": "movement",
+   "fieldtype": "Link",
+   "label": "Movement",
+   "options": "Movement",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "description": "The pipeline Movement this reading was captured against."
+  },
+  {
+   "fieldname": "journey_ref",
+   "fieldtype": "Link",
+   "label": "Journey Reference",
+   "options": "Journey",
+   "read_only": 1,
+   "fetch_from": "movement.journey_ref",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reading_datetime",
+   "fieldtype": "Datetime",
+   "label": "Reading Date/Time",
+   "reqd": 1,
+   "default": "Now",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "ingest_channel",
+   "fieldtype": "Select",
+   "label": "Ingest Channel",
+   "options": "SCADA Historian API\nIoT Gateway\nManual Backfill",
+   "default": "SCADA Historian API",
+   "reqd": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "source_tag",
+   "fieldtype": "Data",
+   "label": "Source Instrument Tag",
+   "description": "The SCADA/historian tag ID this reading was ingested from, e.g. PT-2101."
+  },
+  {
+   "fieldname": "readings_section",
+   "fieldtype": "Section Break",
+   "label": "Readings"
+  },
+  {
+   "fieldname": "pressure_bar",
+   "fieldtype": "Float",
+   "label": "Pressure (bar)",
+   "precision": "2",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "flow_rate_m3h",
+   "fieldtype": "Float",
+   "label": "Flow Rate (m3/h)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "vibration_mm_s",
+   "fieldtype": "Float",
+   "label": "Vibration (mm/s)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "assessment_section",
+   "fieldtype": "Section Break",
+   "label": "AI Assessment"
+  },
+  {
+   "fieldname": "anomaly_score",
+   "fieldtype": "Float",
+   "label": "Anomaly Score (0-100)",
+   "read_only": 1,
+   "precision": "1"
+  },
+  {
+   "fieldname": "anomaly_severity",
+   "fieldtype": "Select",
+   "label": "Anomaly Severity",
+   "options": "Nominal\nLow\nMedium\nHigh\nCritical",
+   "read_only": 1,
+   "in_list_view": 1,
+   "bold": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "alert_triggered",
+   "fieldtype": "Check",
+   "label": "AI Alert Raised",
+   "read_only": 1
+  },
+  {
+   "fieldname": "boundary_note",
+   "fieldtype": "HTML",
+   "options": "<div class='text-muted small'>This is a read-only ingest record: it carries sensor readings only, has no control/setpoint fields, and no code path in this app writes back to an industrial control system. Records are immutable once created.</div>"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "Petroleum Operations",
+ "name": "OT Telemetry Log",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Terminal Operator",
+   "share": 1
+  },
+  {
+   "read": 1,
+   "role": "Scheduler & Operations Controller"
+  },
+  {
+   "read": 1,
+   "role": "Maintenance Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

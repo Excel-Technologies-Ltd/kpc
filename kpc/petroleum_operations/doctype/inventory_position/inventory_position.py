@@ -4,11 +4,16 @@
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from kpc.petroleum_operations.utils import assert_tank_available, log_journey_step
+from kpc.petroleum_operations.utils import (
+	assert_journey_ref_immutable,
+	assert_tank_available,
+	log_journey_step,
+)
 
 
 class InventoryPosition(Document):
 	def validate(self):
+		assert_journey_ref_immutable(self)
 		self.validate_tank_state()
 		self.calculate_closing_volume()
 
