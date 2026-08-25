@@ -4,6 +4,8 @@ An end-to-end Petroleum Operations Platform for Kenya Pipeline Company (KPC) —
 
 It tracks physical petroleum cargo from vessel arrival through to financial posting, across 13 steps, with an integrated AI predictive-maintenance event during pipeline movement. A single **Golden Thread** ID (`journey_ref`) is enforced on every transaction in the chain, so any cargo can be traced end to end.
 
+**New to the business, not just the code?** See [`BUSINESS_GUIDE.md`](BUSINESS_GUIDE.md) — it explains the petroleum-operations concepts behind the workflow (standard volume/VCF, interface cuts, reconciliation tolerance, credit/stock checks, ...) and, doctype by doctype, what every field actually means and why the app asks for it. This document (`README.md`) is the technical/architecture record of what was built; that one is the functional/business explainer.
+
 ## The Golden Thread
 
 Every transaction doctype in this app carries a mandatory `journey_ref` — a `Link` to a **Journey** record, not a free-text string. `Journey` is the golden-thread master: it's created automatically the moment an `Oil Shipment` is first saved, and every subsequent step appends an audit row to its `journey_log` child table via one shared helper:
@@ -38,7 +40,7 @@ Supporting masters that aren't part of the numbered sequence: `Terminal`, `Oil T
 
 ### Walking through the workflow, step by step
 
-Written for someone using the app, not just reading its code: what to create, in what order, who normally does it, and what has to be true already before the system will let you move on. Every step below shares one `journey_ref` — the Golden Thread ID that first appears at Step 1 and rides along, unchangeable, all the way to Step 13.
+Written for someone using the app, not just reading its code: what to create, in what order, who normally does it, and what has to be true already before the system will let you move on. Every step below shares one `journey_ref` — the Golden Thread ID that first appears at Step 1 and rides along, unchangeable, all the way to Step 13. For *why* each field exists — the underlying petroleum-operations business concepts (standard volume, interface cuts, reconciliation tolerance, and so on) — see [`BUSINESS_GUIDE.md`](BUSINESS_GUIDE.md), which walks the same 13 steps at the field level.
 
 1. **Shipment — create an `Oil Shipment`.** The starting point: a Terminal Operator records a vessel (name, product, nominated quantity) the moment it's expected or arrives. Saving it silently creates the `Journey` behind the scenes — you don't create that yourself. The Shipment then moves through its own mini-workflow as the vessel physically progresses: **Draft → Vessel Arrived → Discharging → Received**, each transition timestamped automatically. Nothing downstream can start until a Shipment exists.
 2. **Receipt — create a `Tank Measurement`.** Once product is flowing into a tank, a Terminal Operator takes a dip reading (level, temperature, density) and records it here, tagged to the same tank and Shipment. A **Closing** reading is the one that counts as "received" — it calculates a standard volume at 15°C and, behind the scenes, posts a real stock receipt into that tank's warehouse. You can't measure into a tank that's under Maintenance or Quarantine.
