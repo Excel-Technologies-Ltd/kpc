@@ -42,7 +42,7 @@
   {
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
-   "label": "ERPNext Sales Invoice",
+   "label": "ArcApps Sales Invoice",
    "options": "Sales Invoice",
    "reqd": 1,
    "read_only": 1,

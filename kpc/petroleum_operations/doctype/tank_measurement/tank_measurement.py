@@ -49,8 +49,8 @@ class TankMeasurement(Document):
 
 	def post_stock_receipt(self):
 		"""A Closing reading is the confirmed-received event for this tank -
-		post it into the ERPNext Stock Ledger via the tank's Warehouse, so
-		the physical custody chain and the ERPNext stock ledger agree from
+		post it into the ArcApps Stock Ledger via the tank's Warehouse, so
+		the physical custody chain and the ArcApps stock ledger agree from
 		the very first step."""
 		if self.measurement_type != "Closing":
 			return
@@ -59,7 +59,7 @@ class TankMeasurement(Document):
 		product = frappe.db.get_value("Oil Shipment", self.shipment, "product")
 
 		# Illustrative valuation only, for the very first stock movement of
-		# this item (ERPNext needs a basic_rate with no prior stock
+		# this item (ArcApps needs a basic_rate with no prior stock
 		# history) - a real deployment would use a landed-cost figure.
 		rate = flt(frappe.db.get_value("Item", product, "standard_rate")) or None
 

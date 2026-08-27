@@ -3,7 +3,7 @@
 """Extend the standard Item doctype with petroleum product properties.
 
 Per the architecture, "Product" is not a new doctype - it is the standard
-ERPNext Item extended with the density/temperature attributes needed for
+ArcApps Item extended with the density/temperature attributes needed for
 volumetric conversion (see kpc.petroleum_operations.utils.calculate_vcf).
 """
 

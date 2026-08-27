@@ -12,7 +12,7 @@ different ways:
   model acceptance as a docstatus submit. :func:`block_self_submit` is wired
   as a global ``before_submit`` hook (see hooks.py's ``"*"`` doc_events
   entry) and is scoped, internally, to only this app's own doctypes - never
-  ERPNext/Frappe core or another installed app.
+  ArcApps/Frappe core or another installed app.
 - A handful of non-submittable doctypes (Quality Result, Variance, AI
   Recommendation) model their decision as a ``workflow_state`` transition
   instead. There is no safe, generic way to detect "this workflow_state
@@ -61,7 +61,7 @@ def block_self_submit(doc, method=None):
 	"""Wired as ``"*": {"before_submit": ...}`` in hooks.py. Scoped here,
 	not in hooks.py, to only this app's own module - a wildcard doc_event
 	fires for every doctype in every installed app, and this must never
-	reach ERPNext's or Frappe's own submittable doctypes (Sales Invoice,
+	reach ArcApps's or Frappe's own submittable doctypes (Sales Invoice,
 	Stock Entry, ...), whose documents are routinely created and submitted
 	by the same user as a matter of normal, unrelated business process."""
 	if frappe.get_meta(doc.doctype).module != "Petroleum Operations":

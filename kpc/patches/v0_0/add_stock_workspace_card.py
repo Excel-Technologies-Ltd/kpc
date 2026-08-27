@@ -1,7 +1,7 @@
 # Copyright (c) 2026, ArcApps and contributors
 # For license information, please see license.txt
 """Extend the KPC Workspace (created by create_kpc_workspace) with the
-standard ERPNext doctypes the Stock/Accounts integration now touches -
+standard ArcApps doctypes the Stock/Accounts integration now touches -
 Warehouse, Stock Entry, Delivery Note, Sales Invoice - plus a Delivery
 Note quick-access shortcut, so the workspace stays a complete map of
 everything the Golden Thread creates, not just this app's own doctypes.
@@ -19,7 +19,7 @@ import json
 import frappe
 
 WORKSPACE_NAME = "KPC"
-CARD_LABEL = "ERPNext Integration (Accounts & Stock)"
+CARD_LABEL = "ArcApps Integration (Accounts & Stock)"
 CARD_ITEMS = ["Warehouse", "Stock Entry", "Delivery Note", "Sales Invoice"]
 SHORTCUT_LABEL = "Delivery Note"
 

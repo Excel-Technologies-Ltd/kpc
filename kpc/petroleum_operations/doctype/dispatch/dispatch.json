@@ -109,7 +109,7 @@
   {
    "fieldname": "delivery_note",
    "fieldtype": "Link",
-   "label": "ERPNext Delivery Note",
+   "label": "ArcApps Delivery Note",
    "options": "Delivery Note",
    "read_only": 1,
    "description": "Created and submitted automatically on Dispatch submit; posts the actual Stock Ledger movement."

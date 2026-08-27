@@ -1,6 +1,6 @@
 # Copyright (c) 2026, ArcApps and contributors
 # For license information, please see license.txt
-"""Extend standard ERPNext Stock doctypes for the Golden Thread - the same
+"""Extend standard ArcApps Stock doctypes for the Golden Thread - the same
 pattern as add_accounts_custom_fields, applied to the stock side of the
 integration (Delivery Note / Stock Entry / Stock Ledger Entry).
 """

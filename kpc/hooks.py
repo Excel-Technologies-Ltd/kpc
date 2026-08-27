@@ -139,7 +139,7 @@ doc_events = {
 	},
 	"Sales Invoice": {
 		# Stamps journey_ref (a custom field, see patches/v0_0/add_accounts_custom_fields)
-		# onto this Sales Invoice's GL Entries once ERPNext has created them,
+		# onto this Sales Invoice's GL Entries once ArcApps has created them,
 		# and again on cancellation for the reversal entries.
 		"on_submit": "kpc.petroleum_operations.integrations.accounts.propagate_journey_ref_to_gl_entries",
 		"on_cancel": "kpc.petroleum_operations.integrations.accounts.reverse_financial_posting",

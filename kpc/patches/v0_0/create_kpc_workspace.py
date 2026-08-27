@@ -46,7 +46,7 @@ CARDS = [
 	("Phase 4 - Reconciliation & Outbound", ["Reconciliation", "Variance", "Allocation", "Dispatch"]),
 	("Phase 5 - Billing & Financials", ["Tariff", "Invoice", "Financial Posting"]),
 	(
-		"ERPNext Integration (Accounts & Stock)",
+		"ArcApps Integration (Accounts & Stock)",
 		["Warehouse", "Stock Entry", "Delivery Note", "Sales Invoice"],
 	),
 ]

@@ -99,7 +99,7 @@
   {
    "fieldname": "sales_invoice",
    "fieldtype": "Link",
-   "label": "ERPNext Sales Invoice",
+   "label": "ArcApps Sales Invoice",
    "options": "Sales Invoice",
    "read_only": 1,
    "description": "Created and submitted automatically on Invoice submit; carries this Golden Thread through to the GL."

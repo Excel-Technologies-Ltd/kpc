@@ -1,7 +1,7 @@
 # Copyright (c) 2026, ArcApps and contributors
 # For license information, please see license.txt
 """Terminal.company is new (added to support Warehouse provisioning for
-the ERPNext Stock integration) - backfill it on any Terminal created
+the ArcApps Stock integration) - backfill it on any Terminal created
 before the field existed, using the site's single default Company. Runs
 post_model_sync (after the new column is synced into the DB).
 """

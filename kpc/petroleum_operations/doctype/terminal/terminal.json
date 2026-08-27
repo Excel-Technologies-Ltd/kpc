@@ -48,7 +48,7 @@
    "label": "Company",
    "options": "Company",
    "reqd": 1,
-   "description": "Used to resolve the ERPNext Warehouse/Company context for every Oil Tank at this Terminal."
+   "description": "Used to resolve the ArcApps Warehouse/Company context for every Oil Tank at this Terminal."
   },
   {
    "fieldname": "column_break_1",

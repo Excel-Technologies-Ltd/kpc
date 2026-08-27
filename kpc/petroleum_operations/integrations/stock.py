@@ -1,9 +1,9 @@
 # Copyright (c) 2026, ArcApps and contributors
 # For license information, please see license.txt
-"""Integration with standard ERPNext Stock.
+"""Integration with standard ArcApps Stock.
 
 Same philosophy as integrations.accounts: this module never edits a Stock
-Ledger Entry itself. It maps each Oil Tank to a dedicated ERPNext Warehouse
+Ledger Entry itself. It maps each Oil Tank to a dedicated ArcApps Warehouse
 and posts standard Stock Entries / a standard Delivery Note at the exact
 points physical custody actually changes hands in the Golden Thread -
 
@@ -12,7 +12,7 @@ points physical custody actually changes hands in the Golden Thread -
 - Reconciliation (recognised transit loss)  -> Material Issue
 - Dispatch (delivery to customer)           -> a real Delivery Note
 
-- and lets ERPNext's own Stock Ledger do everything it already does well
+- and lets ArcApps's own Stock Ledger do everything it already does well
 (valuation, Bin quantities, Delivery Note -> Sales Invoice billing) instead
 of a second, parallel accounting of the same physical stock.
 """
@@ -193,7 +193,7 @@ def create_and_submit_delivery_note(dispatch) -> frappe.model.document.Document:
 			"company": nomination.company,
 			# Explicit rather than left to fall back through Customer/System
 			# Settings defaults - a fresh site's System Settings.currency is
-			# INR until someone changes it, which trips ERPNext's exchange
+			# INR until someone changes it, which trips ArcApps's exchange
 			# rate check the instant it disagrees with the Company/Price List.
 			"currency": frappe.db.get_value("Company", nomination.company, "default_currency"),
 			"posting_date": dispatch.dispatch_datetime,
@@ -219,7 +219,7 @@ def resolve_delivery_rate(product: str, origin_terminal: str, destination_termin
 	"""The commercial Tariff (Step 12/Invoice's actual billing rate) if one
 	is already on file for this route, else the Item's reference rate.
 
-	Getting this right matters beyond cosmetics: ERPNext's Sales Invoice
+	Getting this right matters beyond cosmetics: ArcApps's Sales Invoice
 	blocks billing a Delivery Note line for meaningfully more than that
 	line's own amount (over-billing protection). If the two rates are
 	wildly different - a raw reference rate vs. a real commercial tariff
@@ -227,7 +227,7 @@ def resolve_delivery_rate(product: str, origin_terminal: str, destination_termin
 	fails downstream with a confusing "Cannot overbill" error. Tariffs are
 	rate cards that normally exist before a delivery happens, not decided
 	per-invoice, so preferring one here reflects how this actually runs in
-	practice, not just papering over the ERPNext check.
+	practice, not just papering over the ArcApps check.
 	"""
 	tariff_rate = frappe.db.get_value(
 		"Tariff",
@@ -249,7 +249,7 @@ def propagate_journey_ref_to_stock_ledger(doc, method=None):
 	"""doc_events hook: Stock Entry / Delivery Note on_submit.
 
 	Mirrors integrations.accounts.propagate_journey_ref_to_gl_entries: runs
-	after ERPNext has already created the Stock Ledger Entries, purely to
+	after ArcApps has already created the Stock Ledger Entries, purely to
 	stamp journey_ref onto rows that already exist.
 	"""
 	journey_ref = doc.get("journey_ref")

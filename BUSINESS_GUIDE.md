@@ -1,6 +1,6 @@
 # KPC Operations — Business Guide
 
-This document assumes you know ERPNext (doctypes, submit, workflows) but have **no background in the petroleum industry**. It starts from scratch on the industry itself, then works down to what every field on every document actually means and why it's there. `README.md` is the technical build log of what was implemented and verified; this document is the "explain the business to me like I've never worked in oil & gas" one.
+This document assumes you know a standard ERP system (doctypes, submit, workflows) but have **no background in the petroleum industry**. It starts from scratch on the industry itself, then works down to what every field on every document actually means and why it's there. `README.md` is the technical build log of what was implemented and verified; this document is the "explain the business to me like I've never worked in oil & gas" one.
 
 Read top to bottom the first time — each section leans on the one before it. After that, use it as a reference:
 
@@ -25,18 +25,18 @@ The petroleum industry is usually split into three stages:
 
 That midstream chain — **receive → store → certify → sell → transport → deliver → bill** — is exactly the 13 steps this app models. Nothing here is about drilling or refining; it's all about the safe, accountable, fiscally-correct movement of already-refined fuel.
 
-### If you know ERPNext's sales flow, here's the bridge
+### If you know a standard ERP sales flow, here's the bridge
 
-ERPNext's standard commercial tail — Sales Order → Delivery Note → Sales Invoice — maps almost directly onto the *back half* of this app:
+The familiar ERP commercial tail — Sales Order → Delivery Note → Sales Invoice — maps almost directly onto the *back half* of this app:
 
-| ERPNext concept you already know | This app's equivalent |
+| The ERP flow you already know | This app's equivalent |
 |---|---|
 | Sales Order (credit-checked customer order) | `Nomination` |
 | Reserving/confirming stock against an order | `Allocation` |
-| Delivery Note | `Dispatch` (and genuinely creates a real ERPNext Delivery Note) |
-| Sales Invoice | `Invoice` (and genuinely creates a real ERPNext Sales Invoice) |
+| Delivery Note | `Dispatch` (and genuinely creates a real ArcApps Delivery Note) |
+| Sales Invoice | `Invoice` (and genuinely creates a real ArcApps Sales Invoice) |
 
-What's actually new to you, coming from ERPNext, is everything **before** that commercial tail: `Oil Shipment → Tank Measurement → Quality Result → Movement → Terminal Receipt → Reconciliation`. A typical ERPNext deployment doesn't need any of this, because most goods people sell through ERPNext don't physically expand with temperature, don't need to survive an independent lab test before they're even allowed to be listed for sale, and don't lose a small, expected percentage of themselves in transit every single time. Petroleum does all three — that's the entire reason this half of the app exists.
+What's actually new to you is everything **before** that commercial tail: `Oil Shipment → Tank Measurement → Quality Result → Movement → Terminal Receipt → Reconciliation`. A typical sales-and-inventory system doesn't need any of this, because most goods people sell through one don't physically expand with temperature, don't need to survive an independent lab test before they're even allowed to be listed for sale, and don't lose a small, expected percentage of themselves in transit every single time. Petroleum does all three — that's the entire reason this half of the app exists.
 
 ### Why this industry is so obsessed with precise measurement
 
@@ -97,7 +97,7 @@ Every real storage tank accumulates a thin layer of water at the very bottom, be
 
 ### 3. Why every Product needs a density on file
 
-The VCF calculation needs a density to work at all. Rather than typing it in fresh on every single measurement, each **Product** (a standard ERPNext `Item`, extended — see below) carries a reference `density_at_15c` that every new Tank Measurement or Terminal Receipt defaults to. A lab can still override it on a specific reading with an actual tested density; the master value is just the sensible starting point. `api_gravity` is the same density expressed on the industry's other common scale (higher API = a lighter product) — it's informational, nothing calculates from it.
+The VCF calculation needs a density to work at all. Rather than typing it in fresh on every single measurement, each **Product** (a standard ArcApps `Item`, extended — see below) carries a reference `density_at_15c` that every new Tank Measurement or Terminal Receipt defaults to. A lab can still override it on a specific reading with an actual tested density; the master value is just the sensible starting point. `api_gravity` is the same density expressed on the industry's other common scale (higher API = a lighter product) — it's informational, nothing calculates from it.
 
 ### 4. Pipeline batching and interface cuts — the fields that implement the "cushion slug" idea
 
@@ -130,7 +130,7 @@ These aren't part of the 13-step sale itself; they're the physical/commercial fa
 |---|---|
 | `terminal_code` / `terminal_name` | The site's short code and full name, e.g. `MSA-01` / "Mombasa Terminal". |
 | `terminal_type` | Loading, Discharge, Storage, or Multi-Purpose — what kind of activity happens here. |
-| `company` | Which ERPNext Company this terminal belongs to — this is what lets every Oil Tank at this terminal resolve the right Warehouse/accounting context automatically. |
+| `company` | Which ArcApps Company this terminal belongs to — this is what lets every Oil Tank at this terminal resolve the right Warehouse/accounting context automatically. |
 | `is_active` | Turn a decommissioned terminal off without deleting its history. |
 
 ### Oil Tank — one physical storage tank at a Terminal
@@ -139,14 +139,14 @@ These aren't part of the 13-step sale itself; they're the physical/commercial fa
 |---|---|
 | `tank_code` | Its physical ID, e.g. `TK-101`. |
 | `product` | Leave blank for a segregated/multi-product tank; set it if the tank is dedicated to one product. |
-| `warehouse` | Auto-created, one-to-one, the moment the tank is saved — this is the real ERPNext Warehouse every stock movement against this tank actually posts to. You never set this by hand. |
+| `warehouse` | Auto-created, one-to-one, the moment the tank is saved — this is the real ArcApps Warehouse every stock movement against this tank actually posts to. You never set this by hand. |
 | `current_state` | **Active / Maintenance / Quarantine / Decommissioned.** This is a real operational lock, not just a label — while a tank is in Maintenance or Quarantine, the app refuses to record a receipt or dispatch against it, full stop. |
 | `capacity_kl` / `reference_height_mm` | The tank's calibration: how many KL it holds at its full/reference dip height. Every standard-volume calculation for this tank is a straight-line ratio against these two numbers — get them wrong and every measurement against this tank is wrong. |
 | `safe_fill_capacity_kl` / `dead_stock_kl` | Operational limits — the safe practical fill level, and the unusable volume below the outlet that never actually gets drawn down. The tank record itself won't save if these are inconsistent with `capacity_kl` (e.g. a safe-fill above shell capacity); a specific Tank Measurement reading isn't currently blocked from implying a fill above the safe level. |
 
 ### Product — not a separate doctype
 
-"Product" is the standard ERPNext **Item**, with four extra fields (`density_at_15c`, `reference_temperature_c`, `api_gravity`, `is_petroleum_product`) added under a "Petroleum Properties" tab — see Concept 3 above. Set these once per product (e.g. AGO-DIESEL, PMS-PETROL) and every downstream measurement, batch, and tariff references this same Item.
+"Product" is the standard ArcApps **Item**, with four extra fields (`density_at_15c`, `reference_temperature_c`, `api_gravity`, `is_petroleum_product`) added under a "Petroleum Properties" tab — see Concept 3 above. Set these once per product (e.g. AGO-DIESEL, PMS-PETROL) and every downstream measurement, batch, and tariff references this same Item.
 
 ### Tariff — a rate card
 
@@ -316,7 +316,7 @@ The physical delivery.
 | `dispatch_mode` | Truck, Rail, or Ex-Pipeline — how the product physically left KPC's custody. |
 | `dispatched_quantity_kl` | Checked against the Allocation's own quantity — can't dispatch more than was allocated. |
 | `vehicle_or_vessel_ref` / `driver_or_agent` | The delivery's own paper trail — truck plate, rail wagon number, who took custody. |
-| `delivery_note` | Not something you fill in — a real ERPNext Delivery Note is created and submitted automatically the moment you submit this Dispatch. This *is* the delivery chalan. |
+| `delivery_note` | Not something you fill in — a real ArcApps Delivery Note is created and submitted automatically the moment you submit this Dispatch. This *is* the delivery chalan. |
 
 ### 12. Invoice (`Invoice`)
 
@@ -324,7 +324,7 @@ The physical delivery.
 |---|---|
 | `lines` | One row per Dispatch being billed, each priced against an active Tariff (Concept 7) — the quantity on each line is fetched from the Dispatch itself, never typed in, so you cannot bill more than was physically delivered. |
 | `grand_total` | Calculated from the lines. |
-| `sales_invoice` | Not something you fill in — a real ERPNext Sales Invoice is created and submitted automatically, and this is what actually posts to the General Ledger. |
+| `sales_invoice` | Not something you fill in — a real ArcApps Sales Invoice is created and submitted automatically, and this is what actually posts to the General Ledger. |
 
 ### 13. Financial Posting (`Financial Posting`)
 
@@ -342,7 +342,7 @@ Not part of the numbered 13 steps — these support the *equipment and people* s
 | `status` | Operational / Under Maintenance / Decommissioned. |
 | `criticality` | How much it would hurt if this specific piece of equipment failed — informs maintenance prioritisation. |
 
-This is deliberately separate from ERPNext's own `Asset` doctype, which is a financial/depreciation record for accounting purposes — this one is for maintenance and reliability, not the balance sheet.
+This is deliberately separate from ArcApps's own `Asset` doctype, which is a financial/depreciation record for accounting purposes — this one is for maintenance and reliability, not the balance sheet.
 
 ### Employee Certification — who's qualified to do what
 

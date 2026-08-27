@@ -7,7 +7,7 @@ every one of an app's patches as already-applied the moment it's freshly
 installed (frappe.installer.set_all_patches_as_completed), on the
 assumption that a brand new site has no pre-existing data for a patch to
 migrate. That assumption doesn't hold for most of this app's patches: RBAC
-roles, custom fields on standard ERPNext doctypes, the Kilolitre UOM,
+roles, custom fields on standard ArcApps doctypes, the Kilolitre UOM,
 Workflows, and the KPC Workspace aren't migrations of old data - they're
 first-run setup a fresh install needs exactly as much as an upgrading site
 does. Because they're already logged as "complete", `bench migrate` will

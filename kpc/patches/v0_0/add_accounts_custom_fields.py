@@ -1,6 +1,6 @@
 # Copyright (c) 2026, ArcApps and contributors
 # For license information, please see license.txt
-"""Extend standard ERPNext Accounts doctypes for the Golden Thread, and add
+"""Extend standard ArcApps Accounts doctypes for the Golden Thread, and add
 the Kilolitre UOM every petroleum Product/Invoice line relies on.
 
 - Sales Invoice.journey_ref: set when the Invoice (Step 12) creates it.

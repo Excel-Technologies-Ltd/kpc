@@ -61,7 +61,7 @@
    "label": "Warehouse",
    "options": "Warehouse",
    "read_only": 1,
-   "description": "Auto-provisioned ERPNext Warehouse mirroring this tank's physical stock, one-to-one."
+   "description": "Auto-provisioned ArcApps Warehouse mirroring this tank's physical stock, one-to-one."
   },
   {
    "fieldname": "column_break_1",

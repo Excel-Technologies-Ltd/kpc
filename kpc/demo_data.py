@@ -70,7 +70,7 @@ def _journey_is_fully_built(journey_ref: str) -> bool:
 	"""'Complete' means more than reaching Step 13 - a journey built by an
 	older version of this script can be at Step 13 while still missing a
 	feature added since (e.g. Dispatch.delivery_note, added when the
-	ERPNext Stock integration was introduced). Check for that explicitly
+	ArcApps Stock integration was introduced). Check for that explicitly
 	rather than trusting current_step alone."""
 	if frappe.db.get_value("Journey", journey_ref, "current_step") != "13. Financial Posting":
 		return False
@@ -106,7 +106,7 @@ def seed_if_ready():
 	Still deliberately defensive on top of that: create_demo_data() also
 	assumes a Company with a Chart of Accounts, a Cost Center, an Item
 	Group, a Customer Group, a Territory, and a Selling Price List already
-	exist - true once ERPNext's setup wizard has run, not necessarily true
+	exist - true once ArcApps's setup wizard has run, not necessarily true
 	the instant an app installs. A raised exception here would abort the
 	*entire app installation*, not just the seeding, so failures are caught
 	and reported, never raised - worst case, demo data doesn't appear and
@@ -115,7 +115,7 @@ def seed_if_ready():
 	"""
 	if not frappe.defaults.get_global_default("company"):
 		print(
-			"kpc: skipping demo data - no default Company found yet (run the ERPNext setup wizard "
+			"kpc: skipping demo data - no default Company found yet (run the ArcApps setup wizard "
 			"first, then `bench execute kpc.demo_data.create_demo_data` whenever you're ready)."
 		)
 		return
@@ -192,7 +192,7 @@ def reset_demo_data(vessel_name: str = "MT African Pride", force: bool = False):
 
 def _ensure_erpnext_prerequisites():
 	"""Root nodes (Item Group / Customer Group / Territory) and a default
-	Selling Price List are normally seeded by ERPNext's setup wizard, which
+	Selling Price List are normally seeded by ArcApps's setup wizard, which
 	a Company existing doesn't actually guarantee happened - the wizard is
 	a manual, human-driven step (see kpc.install for the analogous problem
 	with `bench install-app` and patches.txt). Rather than assume, create
@@ -201,7 +201,7 @@ def _ensure_erpnext_prerequisites():
 
 	Also aligns System Settings.currency to the Company's currency: it's a
 	site-wide global that Frappe otherwise leaves at its own default (INR)
-	until someone changes it, and several ERPNext controllers fall back to
+	until someone changes it, and several ArcApps controllers fall back to
 	it when a document's own currency isn't explicit enough for them -
 	setting it explicitly on each document (Invoice, Delivery Note, ...)
 	isn't sufficient on its own to avoid a spurious cross-currency Exchange
@@ -265,7 +265,7 @@ def _create_terminals():
 
 
 def _create_product():
-	# Not a standard ERPNext fixture - it's normally seeded by the setup
+	# Not a standard ArcApps fixture - it's normally seeded by the setup
 	# wizard's demo data, which a fresh install may never have run. Create
 	# it directly rather than assuming it's there, same as the Kilolitre
 	# UOM (see patches/v0_0/add_stock_custom_fields.py).
@@ -780,7 +780,7 @@ def _print_summary(journey_ref: str):
 		print(f"  Certification        {employee_name:<22} {row.certification_type} ({row.status})")
 
 	print("-" * 72)
-	print("ERPNext Stock & Accounts (created alongside the KPC records above):")
+	print("ArcApps Stock & Accounts (created alongside the KPC records above):")
 	tank_names = ("TK-101", "TK-201")
 	warehouses = frappe.get_all("Warehouse", filters={"warehouse_name": ["in", tank_names]}, pluck="name")
 	for name in warehouses:

@@ -91,7 +91,7 @@ class Invoice(Document):
 		self.grand_total = flt(sum(flt(line.amount) for line in self.lines), 2)
 
 	def before_submit(self):
-		"""Create and submit the real ERPNext Sales Invoice as part of this
+		"""Create and submit the real ArcApps Sales Invoice as part of this
 		same submit - if Accounts setup is incomplete (missing income
 		account, etc.) the whole Invoice submit aborts rather than leaving a
 		KPC Invoice submitted with no corresponding GL posting."""
