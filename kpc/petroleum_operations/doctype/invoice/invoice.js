@@ -3,7 +3,16 @@
 
 frappe.ui.form.on("Invoice", {
 	setup(frm) {
-		frm.set_query("lines", "dispatch", () => ({ filters: { docstatus: 1 } }));
+		// set_query(<field inside the child row>, <parent's fieldname for
+		// that child table>, query) - "dispatch" first, "lines" second, not
+		// the other way round. Getting this backwards makes Frappe look for
+		// a top-level field called "dispatch" (there isn't one - it only
+		// exists inside the "lines" child table), find nothing, and throw
+		// on the very first form load, aborting the rest of the form's
+		// setup/refresh pipeline - which is why the whole form used to
+		// render blank instead of just the dispatch filter silently not
+		// applying.
+		frm.set_query("dispatch", "lines", () => ({ filters: { docstatus: 1 } }));
 	},
 
 	refresh(frm) {

@@ -56,7 +56,13 @@ class Movement(Document):
 		self._anomaly_result = result  # stashed for on_update, not persisted
 
 	def on_update(self):
-		if self.has_value_changed("movement_status"):
+		# flags.in_insert guard, not is_new() - see Oil Shipment for why:
+		# movement_status defaults to "Draft" at insert, which
+		# has_value_changed() alone reports as a "change" too (nothing to
+		# compare a brand-new value against). Without this guard, every
+		# Movement would log an extra "7. Movement" entry for simply being
+		# created.
+		if not self.flags.in_insert and self.has_value_changed("movement_status"):
 			log_journey_step(self.journey_ref, "7. Movement", self)
 		self.raise_ai_alert_if_needed()
 

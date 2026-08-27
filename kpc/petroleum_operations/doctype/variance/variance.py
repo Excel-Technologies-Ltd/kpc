@@ -39,5 +39,6 @@ class Variance(Document):
 			)
 
 	def on_update(self):
-		if self.has_value_changed("workflow_state"):
+		# flags.in_insert guard, not is_new() - see Oil Shipment for why.
+		if not self.flags.in_insert and self.has_value_changed("workflow_state"):
 			log_journey_step(self.journey_ref, "9. Reconciliation", self)

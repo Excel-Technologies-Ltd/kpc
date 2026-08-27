@@ -56,7 +56,16 @@ class OilShipment(Document):
 		# before this Shipment had a name).
 		if not frappe.db.get_value("Journey", self.journey_ref, "origin_shipment"):
 			frappe.db.set_value("Journey", self.journey_ref, "origin_shipment", self.name)
-		if self.has_value_changed("workflow_state"):
+		# flags.in_insert guard: has_value_changed() alone returns True on
+		# the very first insert too (nothing to compare the brand-new
+		# default value against - see Document.has_value_changed), which
+		# would log a spurious "1. Shipment" entry for the record simply
+		# being created, on top of the real Draft->Vessel Arrived->
+		# Discharging->Received transitions. is_new() doesn't distinguish
+		# this - Frappe has already cleared it by the time on_update() runs,
+		# even on the very first save - flags.in_insert is the flag that's
+		# actually still True at exactly this point during insert().
+		if not self.flags.in_insert and self.has_value_changed("workflow_state"):
 			log_journey_step(self.journey_ref, "1. Shipment", self)
 
 	def on_trash(self):

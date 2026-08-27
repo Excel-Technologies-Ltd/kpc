@@ -60,7 +60,12 @@ class QualityResult(Document):
 			)
 
 	def on_update(self):
-		if self.journey_ref and self.has_value_changed("workflow_state"):
+		# flags.in_insert guard, not is_new() - see Oil Shipment for why:
+		# has_value_changed() alone is also True on the very first insert
+		# (Pending is a default, not a real transition into it), which would
+		# double up the audit trail alongside the genuine
+		# Pending->Accepted/Quarantined entry.
+		if self.journey_ref and not self.flags.in_insert and self.has_value_changed("workflow_state"):
 			log_journey_step(self.journey_ref, "3. Quality Result", self)
 
 		# Quarantine feeds back to the physical asset: a Fail/Quarantined

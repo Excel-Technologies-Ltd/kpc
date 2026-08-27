@@ -25,7 +25,10 @@ class AIRecommendation(Document):
 			self.approved_on = now_datetime()
 
 	def on_update(self):
-		if self.has_value_changed("workflow_state"):
+		# flags.in_insert guard, not is_new() - see Oil Shipment for why:
+		# without it, "Pending Approval" being the default at insert would
+		# also log a spurious entry alongside the real Approved/Rejected one.
+		if not self.flags.in_insert and self.has_value_changed("workflow_state"):
 			log_journey_step(self.journey_ref, "7. Movement", self)
 			if self.workflow_state in ("Approved", "Rejected"):
 				decision_type = (
