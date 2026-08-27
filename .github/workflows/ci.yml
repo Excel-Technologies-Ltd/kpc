@@ -31,7 +31,11 @@ jobs:
         run: |
           export APPS_JSON='[
             {"url": "https://github.com/frappe/erpnext", "branch": "version-14"},
-            {"url": "https://github.com/Excel-Technologies-Ltd/KPC.git", "branch": "master"}
+            {"url": "https://github.com/Excel-Technologies-Ltd/KPC.git", "branch": "master"},
+            {
+              "url": "https://gitlab.com/excel.azmin/whitelabel.git",
+              "branch": "main"
+            }
           ]
           '
 
