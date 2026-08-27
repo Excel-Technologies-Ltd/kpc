@@ -20,5 +20,14 @@ frappe.ui.form.on("Nomination", {
 				frappe.set_route("Form", "Journey", frm.doc.journey_ref);
 			});
 		}
+
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Pipeline Batch"), () => {
+				frappe.new_doc("Pipeline Batch", { nomination: frm.doc.name });
+			}, __("Create"));
+			frm.add_custom_button(__("Allocation"), () => {
+				frappe.new_doc("Allocation", { nomination: frm.doc.name });
+			}, __("Create"));
+		}
 	},
 });

@@ -4,6 +4,14 @@
 frappe.ui.form.on("Terminal", {
 	refresh(frm) {
 		frm.trigger("set_indicator");
+
+		if (frm.is_new()) return;
+		frm.add_custom_button(__("Oil Tank"), () => {
+			frappe.new_doc("Oil Tank", { terminal: frm.doc.name });
+		}, __("Create"));
+		frm.add_custom_button(__("Oil Shipment"), () => {
+			frappe.new_doc("Oil Shipment", { terminal: frm.doc.name });
+		}, __("Create"));
 	},
 
 	is_active(frm) {

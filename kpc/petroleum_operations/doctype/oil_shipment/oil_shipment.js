@@ -10,6 +10,13 @@ frappe.ui.form.on("Oil Shipment", {
 				frappe.set_route("Form", "Journey", frm.doc.journey_ref);
 			});
 		}
+
+		frm.add_custom_button(__("Tank Measurement"), () => {
+			frappe.new_doc("Tank Measurement", { shipment: frm.doc.name, journey_ref: frm.doc.journey_ref });
+		}, __("Create"));
+		frm.add_custom_button(__("Quality Result"), () => {
+			frappe.new_doc("Quality Result", { shipment: frm.doc.name, journey_ref: frm.doc.journey_ref });
+		}, __("Create"));
 	},
 
 	set_indicator(frm) {

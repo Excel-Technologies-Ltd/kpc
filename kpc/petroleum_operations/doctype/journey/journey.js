@@ -9,5 +9,24 @@ frappe.ui.form.on("Journey", {
 				frm.doc.name,
 			])
 		);
+
+		// Only doctypes where journey_ref is a real, directly-settable field
+		// (not fetched from another link) belong here - the rest of the
+		// 13 steps get their journey_ref from the document *before* them in
+		// the chain, not from Journey directly, so a shortcut here would
+		// just be overwritten or left blank.
+		const creatable = [
+			["Tank Measurement", "journey_ref"],
+			["Quality Result", "journey_ref"],
+			["Inventory Position", "journey_ref"],
+			["Nomination", "journey_ref"],
+			["Maintenance Work Order", "journey_ref"],
+			["Invoice", "journey_ref"],
+		];
+		creatable.forEach(([doctype, fieldname]) => {
+			frm.add_custom_button(__(doctype), () => {
+				frappe.new_doc(doctype, { [fieldname]: frm.doc.name });
+			}, __("Create"));
+		});
 	},
 });

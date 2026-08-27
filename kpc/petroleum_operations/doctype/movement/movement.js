@@ -30,5 +30,13 @@ frappe.ui.form.on("Movement", {
 				frappe.set_route("Form", "Journey", frm.doc.journey_ref);
 			});
 		}
+
+		// AI Alert/Prediction/Recommendation are deliberately not offered
+		// here - the anomaly cascade creates those automatically (see
+		// utils.raise_ai_alert); a manual "Create" shortcut would just
+		// invite duplicates alongside the real ones.
+		frm.add_custom_button(__("Terminal Receipt"), () => {
+			frappe.new_doc("Terminal Receipt", { movement: frm.doc.name });
+		}, __("Create"));
 	},
 });

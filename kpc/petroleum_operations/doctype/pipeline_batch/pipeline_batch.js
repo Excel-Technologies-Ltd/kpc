@@ -12,5 +12,11 @@ frappe.ui.form.on("Pipeline Batch", {
 				frappe.set_route("Form", "Journey", frm.doc.journey_ref);
 			});
 		}
+
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Movement"), () => {
+				frappe.new_doc("Movement", { pipeline_batch: frm.doc.name });
+			}, __("Create"));
+		}
 	},
 });

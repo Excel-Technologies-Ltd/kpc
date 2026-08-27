@@ -7,6 +7,9 @@ frappe.ui.form.on("Capacity Assessment", {
 			frm.add_custom_button(__("Recalculate Committed Volume"), () => {
 				frm.call("refresh_commitment").then(() => frm.refresh());
 			});
+			frm.add_custom_button(__("Pipeline Batch"), () => {
+				frappe.new_doc("Pipeline Batch", { capacity_assessment: frm.doc.name });
+			}, __("Create"));
 		}
 	},
 });

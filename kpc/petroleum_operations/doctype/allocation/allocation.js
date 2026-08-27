@@ -7,6 +7,14 @@ frappe.ui.form.on("Allocation", {
 		frm.set_query("reconciliation", () => ({ filters: { docstatus: 1 } }));
 	},
 
+	refresh(frm) {
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Dispatch"), () => {
+				frappe.new_doc("Dispatch", { allocation: frm.doc.name });
+			}, __("Create"));
+		}
+	},
+
 	reconciliation(frm) {
 		if (!frm.doc.reconciliation) return;
 		frappe.db.get_value("Reconciliation", frm.doc.reconciliation, "received_quantity_kl").then((r) => {

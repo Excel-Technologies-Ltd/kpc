@@ -6,6 +6,14 @@ frappe.ui.form.on("Terminal Receipt", {
 		frm.set_query("movement", () => ({ filters: { movement_status: ["in", ["In Transit", "Completed"]] } }));
 	},
 
+	refresh(frm) {
+		if (frm.doc.docstatus === 1) {
+			frm.add_custom_button(__("Reconciliation"), () => {
+				frappe.new_doc("Reconciliation", { terminal_receipt: frm.doc.name });
+			}, __("Create"));
+		}
+	},
+
 	movement(frm) {
 		if (!frm.doc.movement) return;
 		frappe.db.get_value("Movement", frm.doc.movement, "destination_terminal").then((r) => {

@@ -209,6 +209,30 @@ Every doctype that has other documents pointing back to it has a `<doctype>_dash
 
 This is scoped to the app's own 26 doctypes. Extending a *standard* ArcApps doctype's Connections tab (e.g. showing Nomination/Dispatch on `Customer`) can't be done by editing ArcApps's own files — that gets overwritten on upgrade — but Frappe has a clean hook for exactly this: `override_doctype_dashboards` in `hooks.py`, which lets this app extend another doctype's dashboard without touching its source.
 
+### Create buttons
+
+The Connections tab's small "+" icons work, but they're easy to miss. Every doctype above that has a genuine, human-initiated next step also has a proper **Create ▾** split button in the page toolbar (the same pattern ArcApps's own Sales Invoice uses for "Create → Payment/Delivery Note"), so the next document in the chain is one click away with the relevant link field already filled in:
+
+| Source | Create ▾ offers | Gated on |
+|---|---|---|
+| `Terminal` | Oil Tank, Oil Shipment | — |
+| `Oil Tank` | Tank Measurement, Quality Result, Inventory Position, Terminal Receipt, Dispatch | — |
+| `Oil Shipment` | Tank Measurement, Quality Result | — |
+| `Nomination` | Pipeline Batch, Allocation | submitted |
+| `Capacity Assessment` | Pipeline Batch | saved (not new) |
+| `Pipeline Batch` | Movement | submitted |
+| `Movement` | Terminal Receipt | — |
+| `AI Recommendation` | Maintenance Work Order | `workflow_state == "Approved"` |
+| `Terminal Receipt` | Reconciliation | submitted |
+| `Reconciliation` | Variance, Allocation | submitted |
+| `Allocation` | Dispatch | submitted |
+| `Dispatch` | Invoice | submitted |
+| `Journey` | Tank Measurement, Quality Result, Inventory Position, Nomination, Maintenance Work Order, Invoice | — |
+
+**Deliberately excluded, not overlooked:** `AI Alert` → `AI Prediction` and `AI Prediction` → `AI Recommendation` (both are auto-created by the anomaly cascade itself — see `utils.raise_ai_alert` — a manual "Create" shortcut here would just invite duplicates alongside the real, system-generated ones); `Invoice` → `Financial Posting` (system-generated only, no business role even has create permission on it); `Tariff` → `Invoice` (a Tariff is a rate card looked up per invoice line, not something anyone starts an invoice *from*). `Journey`'s own list is shorter than its Connections tab because most of the chain fetches `journey_ref` from the document *before* it, not directly from Journey — only the doctypes where `journey_ref` is a real, directly-settable field are offered here.
+
+`Dispatch → Invoice` is the one non-trivial case: Invoice references a Dispatch from inside its `lines` child table (`Invoice Line.dispatch`), not a direct field, so that button pre-populates a new Invoice with one `Invoice Line` row already pointing at the Dispatch, using `frappe.model.get_new_doc` / `frappe.model.add_child` directly rather than the simpler `frappe.new_doc(doctype, {field: value})` idiom used everywhere else.
+
 ## Installation
 
 ```bash

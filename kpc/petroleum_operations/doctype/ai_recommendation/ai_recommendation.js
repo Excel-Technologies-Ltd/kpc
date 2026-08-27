@@ -9,9 +9,9 @@ frappe.ui.form.on("AI Recommendation", {
 			frm.page.set_indicator(frm.doc.workflow_state, colors[frm.doc.workflow_state] || "blue");
 		}
 		if (frm.doc.workflow_state === "Approved") {
-			frm.add_custom_button(__("Create Maintenance Work Order"), () => {
+			frm.add_custom_button(__("Maintenance Work Order"), () => {
 				frappe.new_doc("Maintenance Work Order", { ai_recommendation: frm.doc.name });
-			});
+			}, __("Create"));
 		}
 	},
 });
