@@ -6,7 +6,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from kpc.petroleum_operations.integrations.stock import create_and_submit_delivery_note
+from kpc.petroleum_operations.integrations.stock import (
+	cancel_stock_voucher,
+	create_and_submit_delivery_note,
+)
 from kpc.petroleum_operations.utils import (
 	assert_journey_ref_immutable,
 	assert_tank_available,
@@ -72,5 +75,5 @@ class Dispatch(Document):
 		"""Same link-integrity reasoning as Invoice/Sales Invoice: cancel the
 		Delivery Note through cancelling this Dispatch, not the other way
 		round."""
-		if self.delivery_note and frappe.db.get_value("Delivery Note", self.delivery_note, "docstatus") == 1:
-			frappe.get_doc("Delivery Note", self.delivery_note).cancel()
+		if self.delivery_note:
+			cancel_stock_voucher("Delivery Note", self.delivery_note)

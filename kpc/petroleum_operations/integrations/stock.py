@@ -23,7 +23,140 @@ import frappe
 from frappe import _
 from frappe.utils import flt, today
 
+from kpc.compat import patch_get_desk_link
+
+patch_get_desk_link()
+
 TANK_WAREHOUSE_GROUP = "Petroleum Tanks"
+
+
+def _insert_and_submit(doc, *, item_code, warehouse, qty, action):
+	"""Insert+submit a stock voucher, replacing ArcApps TypeError / negative
+	stock noise with an operator-facing shortage message."""
+	try:
+		doc.insert()
+		doc.submit()
+		return doc
+	except Exception as exc:
+		_rethrow_as_readable_stock_error(
+			exc, item_code, warehouse, qty, action
+		)
+
+
+def cancel_stock_voucher(doctype: str, name: str | None):
+	"""Cancel a submitted Stock Entry / Delivery Note with the same readable
+	shortage message used on submit. No-op if the voucher is missing or
+	already cancelled."""
+	if not name:
+		return
+	if frappe.db.get_value(doctype, name, "docstatus") != 1:
+		return
+	doc = frappe.get_doc(doctype, name)
+	try:
+		doc.cancel()
+	except Exception as exc:
+		item, warehouse, qty, action = voucher_shortage_context(doc)
+		_rethrow_as_readable_stock_error(exc, item, warehouse, qty, action)
+
+
+def wrap_stock_method(doc, method):
+	"""Run Stock Entry / Delivery Note submit or cancel; rewrite shortage
+	and get_desk_link TypeErrors into an operator-facing message."""
+	from kpc.compat import patch_get_desk_link
+
+	patch_get_desk_link()
+	try:
+		return method()
+	except Exception as exc:
+		item, warehouse, qty, action = voucher_shortage_context(doc)
+		_rethrow_as_readable_stock_error(exc, item, warehouse, qty, action)
+
+
+def voucher_shortage_context(doc):
+	"""Best-effort item / tank / qty / action from a stock voucher."""
+	row = doc.items[0] if getattr(doc, "items", None) else None
+	if doc.doctype == "Delivery Note":
+		return (
+			row.item_code if row else None,
+			row.warehouse if row else None,
+			flt(row.qty) if row else 0,
+			_("dispatch"),
+		)
+
+	purpose = doc.get("purpose") or doc.get("stock_entry_type") or ""
+	action = {
+		"Material Issue": _("write off as transit loss"),
+		"Material Transfer": _("transfer"),
+		"Material Receipt": _("receive"),
+	}.get(purpose, _("post"))
+	warehouse = None
+	if row:
+		warehouse = row.get("s_warehouse") or row.get("t_warehouse")
+	return (
+		row.item_code if row else None,
+		warehouse,
+		flt(row.qty) if row else 0,
+		action,
+	)
+
+
+def _rethrow_as_readable_stock_error(exc, item_code, warehouse, qty, action):
+	if _already_readable_shortage(exc) or not _is_stock_shortage(exc):
+		raise
+
+	frappe.clear_last_message()
+	location = _tank_label(warehouse) or warehouse or _("the selected tank")
+	frappe.throw(
+		_(
+			"Not enough stock of {0} in {1} to {2} {3} KL. "
+			"Confirm the tank has sufficient volume before retrying."
+		).format(
+			frappe.bold(item_code or _("this product")),
+			frappe.bold(location),
+			action,
+			flt(qty),
+		),
+		title=_("Insufficient Stock"),
+	)
+
+
+def _already_readable_shortage(exc: BaseException) -> bool:
+	return (
+		isinstance(exc, frappe.ValidationError)
+		and "Confirm the tank has sufficient volume" in str(exc)
+	)
+
+
+def _is_stock_shortage(exc: BaseException) -> bool:
+	message = str(exc)
+	if isinstance(exc, TypeError) and (
+		"show_title_with_name" in message or "get_desk_link" in message
+	):
+		return True
+
+	try:
+		from erpnext.stock.stock_ledger import NegativeStockError
+	except ImportError:
+		NegativeStockError = ()
+
+	if isinstance(exc, NegativeStockError):
+		return True
+
+	if isinstance(exc, frappe.ValidationError) and (
+		"needed in" in message or "Insufficient Stock" in message
+	):
+		return True
+
+	return False
+
+
+def _tank_label(warehouse: str) -> str | None:
+	if not warehouse:
+		return None
+	tank = frappe.db.get_value(
+		"Oil Tank", {"warehouse": warehouse}, "tank_code"
+	)
+	return tank or warehouse
 
 
 def get_or_create_tank_warehouse(oil_tank) -> str:
@@ -109,9 +242,13 @@ def post_material_receipt(
 			],
 		}
 	)
-	entry.insert()
-	entry.submit()
-	return entry
+	return _insert_and_submit(
+		entry,
+		item_code=item_code,
+		warehouse=warehouse,
+		qty=qty,
+		action=_("receive"),
+	)
 
 
 def post_material_transfer(
@@ -139,9 +276,13 @@ def post_material_transfer(
 			],
 		}
 	)
-	entry.insert()
-	entry.submit()
-	return entry
+	return _insert_and_submit(
+		entry,
+		item_code=item_code,
+		warehouse=source_warehouse,
+		qty=qty,
+		action=_("transfer"),
+	)
 
 
 def post_material_issue(warehouse: str, item_code: str, qty: float, journey_ref: str):
@@ -167,9 +308,13 @@ def post_material_issue(warehouse: str, item_code: str, qty: float, journey_ref:
 			],
 		}
 	)
-	entry.insert()
-	entry.submit()
-	return entry
+	return _insert_and_submit(
+		entry,
+		item_code=item_code,
+		warehouse=warehouse,
+		qty=qty,
+		action=_("write off as transit loss"),
+	)
 
 
 def create_and_submit_delivery_note(dispatch) -> frappe.model.document.Document:
@@ -210,9 +355,13 @@ def create_and_submit_delivery_note(dispatch) -> frappe.model.document.Document:
 			],
 		}
 	)
-	delivery_note.insert()
-	delivery_note.submit()
-	return delivery_note
+	return _insert_and_submit(
+		delivery_note,
+		item_code=product,
+		warehouse=warehouse,
+		qty=dispatch.dispatched_quantity_kl,
+		action=_("dispatch"),
+	)
 
 
 def resolve_delivery_rate(product: str, origin_terminal: str, destination_terminal: str) -> float:

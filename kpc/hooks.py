@@ -118,10 +118,15 @@ after_install = "kpc.install.after_install"
 # DocType Class
 # ---------------
 # Override standard doctype classes
-
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+# ---------------------------------
+# Rewrite ArcApps stock-shortage TypeErrors (get_desk_link kwargs) into
+# a readable message on every Stock Entry / Delivery Note submit or
+# cancel: Reconciliation, Terminal Receipt, Tank Measurement, Dispatch,
+# and any voucher opened from the desk.
+override_doctype_class = {
+	"Stock Entry": "kpc.petroleum_operations.integrations.stock_vouchers.KPCStockEntry",
+	"Delivery Note": "kpc.petroleum_operations.integrations.stock_vouchers.KPCDeliveryNote",
+}
 
 # Document Events
 # ---------------
@@ -207,12 +212,15 @@ doc_events = {
 
 # Request Events
 # ----------------
-# before_request = ["kpc.utils.before_request"]
+# ERPNext stock messages pass show_title_with_name into get_desk_link;
+# older Frappe rejects that kwarg. Re-apply the shim every request/job
+# in case another app replaced the function.
+before_request = ["kpc.compat.patch_get_desk_link"]
 # after_request = ["kpc.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["kpc.utils.before_job"]
+before_job = ["kpc.compat.patch_get_desk_link"]
 # after_job = ["kpc.utils.after_job"]
 
 # User Data Protection

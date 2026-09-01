@@ -6,7 +6,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt
 
-from kpc.petroleum_operations.integrations.stock import post_material_receipt
+from kpc.petroleum_operations.integrations.stock import (
+	cancel_stock_voucher,
+	post_material_receipt,
+)
 from kpc.petroleum_operations.utils import (
 	assert_journey_ref_immutable,
 	assert_tank_available,
@@ -72,5 +75,5 @@ class TankMeasurement(Document):
 		leave stock the physical event never actually delivered - same
 		link-integrity reasoning as Dispatch/Invoice cancelling their
 		Delivery Note/Sales Invoice."""
-		if self.stock_entry and frappe.db.get_value("Stock Entry", self.stock_entry, "docstatus") == 1:
-			frappe.get_doc("Stock Entry", self.stock_entry).cancel()
+		if self.stock_entry:
+			cancel_stock_voucher("Stock Entry", self.stock_entry)

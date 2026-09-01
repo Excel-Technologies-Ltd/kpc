@@ -9,7 +9,11 @@ from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 
 from kpc.petroleum_operations.decision_ledger import log_decision
-from kpc.petroleum_operations.integrations.stock import post_material_issue, resolve_origin_tank
+from kpc.petroleum_operations.integrations.stock import (
+	cancel_stock_voucher,
+	post_material_issue,
+	resolve_origin_tank,
+)
 from kpc.petroleum_operations.utils import assert_journey_ref_immutable, log_journey_step
 
 
@@ -131,5 +135,5 @@ class Reconciliation(Document):
 		"""Reverse the Material Issue this Reconciliation posted, if any (a
 		positive variance doesn't always create one - see post_transit_loss) -
 		same reasoning as Tank Measurement/Terminal Receipt/Dispatch/Invoice."""
-		if self.stock_entry and frappe.db.get_value("Stock Entry", self.stock_entry, "docstatus") == 1:
-			frappe.get_doc("Stock Entry", self.stock_entry).cancel()
+		if self.stock_entry:
+			cancel_stock_voucher("Stock Entry", self.stock_entry)
