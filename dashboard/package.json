@@ -1,0 +1,27 @@
+{
+  "name": "dashboard",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build --base=/assets/kpc/dashboard/ && yarn copy-html-entry",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "copy-html-entry": "cp ../kpc/public/dashboard/index.html ../kpc/www/dashboard.html"
+  },
+  "dependencies": {
+    "frappe-react-sdk": "^1.17.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "oxlint": "^1.79.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}

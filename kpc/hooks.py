@@ -253,3 +253,5 @@ before_job = ["kpc.compat.patch_get_desk_link"]
 # auth_hooks = [
 # 	"kpc.auth.validate"
 # ]
+
+website_route_rules = [{'from_route': '/dashboard/<path:app_path>', 'to_route': 'dashboard'},]
