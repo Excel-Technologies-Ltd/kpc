@@ -1,8 +1,8 @@
+import { FrappeProvider } from 'frappe-react-sdk'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { FrappeProvider } from 'frappe-react-sdk'
-import './index.css'
 import App from './App.tsx'
+import './index.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
