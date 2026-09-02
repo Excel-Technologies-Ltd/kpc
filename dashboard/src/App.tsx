@@ -1,38 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
-import { FrappeProvider } from 'frappe-react-sdk'
-function App() {
-  const [count, setCount] = useState(0)
+import { useFrappeAuth } from "frappe-react-sdk";
+import { useState } from "react";
+import { AISection } from "./components/AIReconciliation/AISection";
+import { CommercialSection } from "./components/Commercial/CommercialSection";
+import { Footer } from "./components/Footer/Footer";
+import { ThreadTracker } from "./components/GoldenThread/ThreadTracker";
+import { HSEQSection } from "./components/HSEQ/HSEQSection";
+import { DecisionLedger } from "./components/Ledger/DecisionLedger";
+import { Rail } from "./components/Navigation/Rail";
+import { Topbar } from "./components/Navigation/Topbar";
+import { HeroKpi } from "./components/Overview/HeroKpi";
+import { TankFarmSection } from "./components/TankFarm/TankFarmSection";
+
+export function App() {
+  const { currentUser } = useFrappeAuth();
+  const [activeSection, setActiveSection] = useState("overview");
 
   return (
-	<div className="App">
-	  <FrappeProvider>
-		<div>
-	  <div>
-		<a href="https://vitejs.dev" target="_blank">
-		  <img src="/vite.svg" className="logo" alt="Vite logo" />
-		</a>
-		<a href="https://reactjs.org" target="_blank">
-		  <img src={reactLogo} className="logo react" alt="React logo" />
-		</a>
-	  </div>
-	  <h1>Vite + React + Frappe</h1>
-	  <div className="card">
-		<button onClick={() => setCount((count) => count + 1)}>
-		  count is {count}
-		</button>
-		<p>
-		  Edit <code>src/App.jsx</code> and save to test HMR
-		</p>
-	  </div>
-	  <p className="read-the-docs">
-		Click on the Vite and React logos to learn more
-	  </p>
-	  </div>
-	  </FrappeProvider>
-	</div>
-  )
+    <>
+      {/* Left Icon Rail */}
+      <Rail activeSection={activeSection} setActiveSection={setActiveSection} />
+
+      {/* Topbar */}
+      <Topbar currentUser={currentUser} />
+
+      {/* Main Container */}
+      <main>
+        <HeroKpi />
+        <ThreadTracker />
+        <TankFarmSection />
+        <AISection />
+        <CommercialSection />
+        <HSEQSection />
+        <DecisionLedger />
+      </main>
+
+      {/* Footer */}
+      <Footer />
+    </>
+  );
 }
 
-export default App
+export default App;
