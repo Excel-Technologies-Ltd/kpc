@@ -1,10 +1,14 @@
-import { AISection } from '@/features/ai-reconciliation';
-import { CommercialSection } from '@/features/commercial';
-import { ThreadTracker } from '@/features/golden-thread';
-import { HSEQSection } from '@/features/hseq';
-import { DecisionLedger } from '@/features/ledger';
-import { HeroKpi, StockMovementCard } from '@/features/overview';
-import { TankFarm3DSection, TankFarmSection } from '@/features/tank-farm';
+import {
+  AISection,
+  CommercialSection,
+  DecisionLedger,
+  HeroKpi,
+  HSEQSection,
+  StockMovementCard,
+  TankFarm3DSection,
+  TankFarmSection,
+  ThreadTracker,
+} from '@/features/overview';
 
 export default function OverviewPage() {
   return (
