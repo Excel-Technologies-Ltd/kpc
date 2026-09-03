@@ -10,8 +10,6 @@ import { TankFarmPage } from "./pages/TankFarmPage";
 import { ThreadPage } from "./pages/ThreadPage";
 import { CosmicDashboard } from "./pages/new-dashboard/dashboard";
 
-
-
 function RootLayout() {
   const { currentUser } = useFrappeAuth();
   return <DashboardLayout currentUser={currentUser} />;
@@ -63,7 +61,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    basename: "/",
+    basename: "/dashboard",
   },
 );
 
