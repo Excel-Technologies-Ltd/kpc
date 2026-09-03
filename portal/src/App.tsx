@@ -1,15 +1,8 @@
-import { useFrappeAuth } from 'frappe-react-sdk';
+import { router } from '@/router';
+import { RouterProvider } from 'react-router-dom';
 
 function App() {
-  const { currentUser } = useFrappeAuth();
-
-  console.log(currentUser);
-
-  return (
-    <div className='App'>
-      <h1>Hello World</h1>
-    </div>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
