@@ -1,6 +1,80 @@
-import React from "react";
+import { useFrappeGetDocList } from "frappe-react-sdk";
+import React, { useMemo } from "react";
+
+interface OilTankDoc {
+  name: string;
+  tank_name?: string;
+  tank_code?: string;
+  terminal?: string;
+  product?: string;
+  current_state?: "Active" | "Maintenance" | "Quarantine" | "Decommissioned" | string;
+  capacity_kl?: number;
+  safe_fill_capacity_kl?: number;
+  reference_height_mm?: number;
+}
+
+interface TankMeasurementDoc {
+  name: string;
+  tank: string;
+  observed_level_mm?: number;
+  observed_temperature_c?: number;
+  net_standard_volume_kl?: number;
+  measurement_datetime?: string;
+}
 
 export const TankFarmSection: React.FC = () => {
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>(
+    "Oil Tank",
+    {
+      fields: [
+        "name",
+        "tank_name",
+        "tank_code",
+        "terminal",
+        "product",
+        "current_state",
+        "capacity_kl",
+        "safe_fill_capacity_kl",
+        "reference_height_mm",
+      ],
+      limit: 100,
+    },
+  );
+
+  const { data: measurements, isLoading: measurementsLoading } = useFrappeGetDocList<TankMeasurementDoc>(
+    "Tank Measurement",
+    {
+      fields: [
+        "name",
+        "tank",
+        "observed_level_mm",
+        "observed_temperature_c",
+        "net_standard_volume_kl",
+        "measurement_datetime",
+      ],
+      orderBy: {
+        field: "measurement_datetime",
+        order: "desc",
+      },
+      limit: 500,
+    },
+  );
+
+  // Map each tank to its latest measurement
+  const latestMeasurementMap = useMemo(() => {
+    const map = new Map<string, TankMeasurementDoc>();
+    if (measurements) {
+      for (const m of measurements) {
+        if (m.tank && !map.has(m.tank)) {
+          map.set(m.tank, m);
+        }
+      }
+    }
+    return map;
+  }, [measurements]);
+
+  const isLoading = tanksLoading || measurementsLoading;
+
   return (
     <section id="tanks">
       <div className="section-head">
@@ -12,191 +86,129 @@ export const TankFarmSection: React.FC = () => {
           </div>
         </div>
       </div>
+
       <div className="grid-4">
-        {/* Tank 1 */}
-        <div className="panel tank-card">
-          <div className="tank-svg-wrap">
-            <svg viewBox="0 0 56 96" width="56" height="96">
-              <rect
-                x="4"
-                y="4"
-                width="48"
-                height="88"
-                rx="6"
-                fill="none"
-                stroke="#233252"
-                strokeWidth="2"
-              />
-              <clipPath id="clip1">
-                <rect x="4" y="4" width="48" height="88" rx="6" />
-              </clipPath>
-              <rect
-                x="4"
-                y="30"
-                width="48"
-                height="62"
-                fill="#33C9B7"
-                opacity="0.85"
-                clipPath="url(#clip1)"
-              />
-            </svg>
-          </div>
-          <div className="tank-info">
-            <div className="tank-name">Tank MB-01</div>
-            <div className="tank-terminal">Mombasa · AGO</div>
-            <div className="tank-stats">
-              <div>
-                LEVEL<b>68%</b>
+        {isLoading ? (
+          // Loading skeleton cards
+          Array.from({ length: 4 }).map((_, idx) => (
+            <div key={idx} className="panel tank-card animate-pulse opacity-60">
+              <div className="tank-svg-wrap">
+                <div style={{ width: 56, height: 96, background: "rgba(35, 50, 82, 0.4)", borderRadius: 6 }} />
               </div>
-              <div>
-                TEMP<b>28.4°C</b>
+              <div className="tank-info" style={{ width: "100%" }}>
+                <div style={{ height: 14, background: "rgba(255,255,255,0.1)", borderRadius: 4, width: "60%", marginBottom: 8 }} />
+                <div style={{ height: 10, background: "rgba(255,255,255,0.06)", borderRadius: 4, width: "40%", marginBottom: 12 }} />
+                <div style={{ height: 24, background: "rgba(255,255,255,0.08)", borderRadius: 4, width: "80%" }} />
               </div>
             </div>
-            <span className="badge active">
-              <span className="bdot" />
-              Active
-            </span>
+          ))
+        ) : !tanks || tanks.length === 0 ? (
+          <div className="panel col-span-4 p-8 text-center text-gray-400">
+            No tank records found in the system.
           </div>
-        </div>
+        ) : (
+          tanks.map((tank) => {
+            const measurement = latestMeasurementMap.get(tank.name);
+            const state = tank.current_state || "Active";
 
-        {/* Tank 2 */}
-        <div className="panel tank-card">
-          <div className="tank-svg-wrap">
-            <svg viewBox="0 0 56 96" width="56" height="96">
-              <rect
-                x="4"
-                y="4"
-                width="48"
-                height="88"
-                rx="6"
-                fill="none"
-                stroke="#233252"
-                strokeWidth="2"
-              />
-              <clipPath id="clip2">
-                <rect x="4" y="4" width="48" height="88" rx="6" />
-              </clipPath>
-              <rect
-                x="4"
-                y="12"
-                width="48"
-                height="80"
-                fill="#F0A83C"
-                opacity="0.85"
-                clipPath="url(#clip2)"
-              />
-            </svg>
-          </div>
-          <div className="tank-info">
-            <div className="tank-name">Tank MB-03</div>
-            <div className="tank-terminal">Mombasa · PMS</div>
-            <div className="tank-stats">
-              <div>
-                LEVEL<b>91%</b>
-              </div>
-              <div>
-                TEMP<b>27.1°C</b>
-              </div>
-            </div>
-            <span className="badge maint">
-              <span className="bdot" />
-              Maintenance
-            </span>
-          </div>
-        </div>
+            // Calculate level percentage
+            let levelPercent = 0;
+            if (measurement) {
+              if (tank.reference_height_mm && measurement.observed_level_mm) {
+                levelPercent = Math.min(100, Math.max(0, Math.round((measurement.observed_level_mm / tank.reference_height_mm) * 100)));
+              } else if (tank.capacity_kl && measurement.net_standard_volume_kl) {
+                levelPercent = Math.min(100, Math.max(0, Math.round((measurement.net_standard_volume_kl / tank.capacity_kl) * 100)));
+              }
+            }
 
-        {/* Tank 3 */}
-        <div className="panel tank-card">
-          <div className="tank-svg-wrap">
-            <svg viewBox="0 0 56 96" width="56" height="96">
-              <rect
-                x="4"
-                y="4"
-                width="48"
-                height="88"
-                rx="6"
-                fill="none"
-                stroke="#233252"
-                strokeWidth="2"
-              />
-              <clipPath id="clip3">
-                <rect x="4" y="4" width="48" height="88" rx="6" />
-              </clipPath>
-              <rect
-                x="4"
-                y="50"
-                width="48"
-                height="42"
-                fill="#33C9B7"
-                opacity="0.85"
-                clipPath="url(#clip3)"
-              />
-            </svg>
-          </div>
-          <div className="tank-info">
-            <div className="tank-name">Tank NB-02</div>
-            <div className="tank-terminal">Nairobi · Jet A-1</div>
-            <div className="tank-stats">
-              <div>
-                LEVEL<b>46%</b>
-              </div>
-              <div>
-                TEMP<b>24.8°C</b>
-              </div>
-            </div>
-            <span className="badge active">
-              <span className="bdot" />
-              Active
-            </span>
-          </div>
-        </div>
+            const tempDisplay =
+              measurement?.observed_temperature_c !== undefined
+                ? `${measurement.observed_temperature_c.toFixed(1)}°C`
+                : "—";
 
-        {/* Tank 4 */}
-        <div className="panel tank-card">
-          <div className="tank-svg-wrap">
-            <svg viewBox="0 0 56 96" width="56" height="96">
-              <rect
-                x="4"
-                y="4"
-                width="48"
-                height="88"
-                rx="6"
-                fill="none"
-                stroke="#233252"
-                strokeWidth="2"
-              />
-              <clipPath id="clip4">
-                <rect x="4" y="4" width="48" height="88" rx="6" />
-              </clipPath>
-              <rect
-                x="4"
-                y="60"
-                width="48"
-                height="32"
-                fill="#E5555C"
-                opacity="0.85"
-                clipPath="url(#clip4)"
-              />
-            </svg>
-          </div>
-          <div className="tank-info">
-            <div className="tank-name">Tank NB-04</div>
-            <div className="tank-terminal">Nairobi · IK</div>
-            <div className="tank-stats">
-              <div>
-                LEVEL<b>34%</b>
+            // State badge & theme
+            let badgeClass = "badge";
+            let stateColor = "#33C9B7"; // cyan for Active
+            let stateLabel = state;
+
+            if (state.toLowerCase() === "active") {
+              badgeClass = "badge active";
+              stateColor = "#33C9B7";
+            } else if (state.toLowerCase().includes("maint")) {
+              badgeClass = "badge maint";
+              stateColor = "#F0A83C";
+              stateLabel = "Maintenance";
+            } else if (state.toLowerCase().includes("quarant")) {
+              badgeClass = "badge quarantine";
+              stateColor = "#E5555C";
+              stateLabel = "Quarantined";
+            } else {
+              badgeClass = "badge";
+              stateColor = "#5A6D8C";
+            }
+
+            const fillHeight = Math.max(0, Math.round((levelPercent / 100) * 88));
+            const fillY = 4 + (88 - fillHeight);
+            const clipId = `clip-${tank.name.replace(/[^a-zA-Z0-9-_]/g, "")}`;
+
+            return (
+              <div key={tank.name} className="panel tank-card">
+                <div className="tank-svg-wrap">
+                  <svg viewBox="0 0 56 96" width="56" height="96">
+                    <rect
+                      x="4"
+                      y="4"
+                      width="48"
+                      height="88"
+                      rx="6"
+                      fill="none"
+                      stroke="#233252"
+                      strokeWidth="2"
+                    />
+                    <clipPath id={clipId}>
+                      <rect x="4" y="4" width="48" height="88" rx="6" />
+                    </clipPath>
+                    {fillHeight > 0 && (
+                      <rect
+                        x="4"
+                        y={fillY}
+                        width="48"
+                        height={fillHeight}
+                        fill={stateColor}
+                        opacity="0.85"
+                        clipPath={`url(#${clipId})`}
+                      />
+                    )}
+                  </svg>
+                </div>
+                <div className="tank-info">
+                  <div className="tank-name" title={tank.tank_name || tank.name}>
+                    {tank.tank_name || tank.name}
+                  </div>
+                  <div className="tank-terminal">
+                    {tank.terminal || "Terminal"} · {tank.product || "All Products"}
+                  </div>
+                  <div className="tank-stats">
+                    <div>
+                      LEVEL<b>{levelPercent}%</b>
+                    </div>
+                    <div>
+                      TEMP<b>{tempDisplay}</b>
+                    </div>
+                  </div>
+                  <span className={badgeClass}>
+                    <span className="bdot" />
+                    {stateLabel}
+                  </span>
+                </div>
               </div>
-              <div>
-                TEMP<b>25.9°C</b>
-              </div>
-            </div>
-            <span className="badge quarantine">
-              <span className="bdot" />
-              Quarantined
-            </span>
-          </div>
-        </div>
+            );
+          })
+        )}
       </div>
     </section>
   );
 };
+
+export default TankFarmSection;
+

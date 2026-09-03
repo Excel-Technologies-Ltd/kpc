@@ -4,6 +4,7 @@ import { DashboardLayout } from "./components/Layout/DashboardLayout";
 import { HeroKpi } from "./components/Overview/HeroKpi";
 import { ThreadTracker } from "./components/GoldenThread/ThreadTracker";
 import { TankFarmSection } from "./components/TankFarm/TankFarmSection";
+import { TankFarm3DSection } from "./components/TankFarm/TankFarm3DSection";
 import { AISection } from "./components/AIReconciliation/AISection";
 import { CommercialSection } from "./components/Commercial/CommercialSection";
 import { HSEQSection } from "./components/HSEQ/HSEQSection";
@@ -21,6 +22,7 @@ export function App() {
     >
       <HeroKpi />
       <ThreadTracker />
+      <TankFarm3DSection />
       <TankFarmSection />
       <AISection />
       <CommercialSection />

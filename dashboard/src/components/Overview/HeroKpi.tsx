@@ -153,102 +153,221 @@ const IconInvoice = () => (
   </svg>
 );
 
-// ── Data ─────────────────────────────────────────────────────────────────────
-
-const kpiItems = [
-  {
-    label: "Active journeys",
-    value: 10,
-    delta: "▲ 3 vs last week",
-    deltaType: "up" as const,
-    variant: "cyan" as const,
-    sparklineData: [10, 12, 11, 14, 13, 16, 18],
-    icon: <IconJourneys />,
-  },
-  {
-    label: "Volume received today",
-    value: "42,180",
-    unit: "KL",
-    delta: "▲ 6.2%",
-    deltaType: "up" as const,
-    variant: "blue" as const,
-    sparklineData: [30, 34, 31, 38, 36, 40, 42],
-    icon: <IconVolume />,
-  },
-  {
-    label: "In pipeline transit",
-    value: "11,940",
-    unit: "KL",
-    delta: "— steady",
-    deltaType: "flat" as const,
-    variant: "violet" as const,
-    sparklineData: [14, 13, 12, 13, 12, 11, 11.9],
-    icon: <IconPipeline />,
-  },
-  {
-    label: "Open AI alerts",
-    value: 3,
-    delta: "▼ awaiting Maintenance",
-    deltaType: "warn" as const,
-    variant: "amber" as const,
-    sparklineData: [1, 2, 2, 4, 3, 4, 3],
-    icon: <IconAlert />,
-  },
-  {
-    label: "Reconciliation variance",
-    value: "0.31",
-    unit: "%",
-    delta: "within 0.42% tolerance",
-    deltaType: "up" as const,
-    variant: "cyan" as const,
-    sparklineData: [0.5, 0.44, 0.4, 0.38, 0.35, 0.33, 0.31],
-    icon: <IconVariance />,
-  },
-  {
-    label: "Invoiced this month",
-    value: "618.4",
-    unit: "M",
-    delta: "▲ 12.8%",
-    deltaType: "up" as const,
-    variant: "gold" as const,
-    sparklineData: [40, 46, 44, 52, 55, 58, 61],
-    icon: <IconInvoice />,
-  },
-];
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const HeroKpi: React.FC = () => {
-  // ── Live: Active Journey count via list fetch ─────────────────────────────
-  // Fetches journeys where status = "Active" (non-completed, non-cancelled)
+  // 1. Live: Journeys
   const {
-    data: activeJourneys,
+    data: journeys,
     isLoading: journeyLoading,
-    error: journeyError,
   } = useFrappeGetDocList("Journey", {
-    fields: ["name"],
-    filters: [["status", "=", "Active"]],
-    limit: 500, // fetch up to 500 to get an accurate count
+    fields: ["name", "status", "current_step"],
+    limit: 500,
   });
 
-  // Derive count from the returned list length
-  const activeJourneyCount = activeJourneys?.length;
+  // 2. Live: Terminal Receipts & Volume Received
+  const {
+    data: terminalReceipts,
+    isLoading: receiptsLoading,
+  } = useFrappeGetDocList("Terminal Receipt", {
+    fields: ["name", "net_standard_volume_kl", "gross_observed_volume_kl", "receipt_datetime"],
+    limit: 500,
+  });
 
-  // Derive display value: ellipsis while loading, "–" on error
-  const journeyValue = useMemo(() => {
-    if (journeyLoading) return "…";
-    if (journeyError) return "–";
-    return activeJourneyCount ?? 0;
-  }, [activeJourneyCount, journeyLoading, journeyError]);
+  const {
+    data: shipments,
+  } = useFrappeGetDocList("Oil Shipment", {
+    fields: ["name", "planned_quantity_kl", "workflow_state"],
+    limit: 500,
+  });
 
-  // Merge live count into the first kpiItem
-  const liveKpiItems = useMemo(
-    () =>
-      kpiItems.map((item, idx) =>
-        idx === 0 ? { ...item, value: journeyValue } : item,
-      ),
-    [journeyValue],
-  );
+  // 3. Live: Pipeline Batches / Transit Volume
+  const {
+    data: pipelineBatches,
+    isLoading: pipelineLoading,
+  } = useFrappeGetDocList("Pipeline Batch", {
+    fields: ["name", "planned_volume_kl", "docstatus"],
+    limit: 500,
+  });
+
+  // 4. Live: AI Alerts
+  const {
+    data: openAlerts,
+    isLoading: alertsLoading,
+  } = useFrappeGetDocList("AI Alert", {
+    fields: ["name", "status", "severity", "anomaly_score"],
+    filters: [["status", "=", "Open"]],
+    limit: 500,
+  });
+
+  // 5. Live: Reconciliation & Variance
+  const {
+    data: reconciliations,
+    isLoading: reconLoading,
+  } = useFrappeGetDocList("Reconciliation", {
+    fields: ["name", "variance_percent", "variance_kl", "within_tolerance", "tolerance_percent"],
+    limit: 100,
+  });
+
+  // 6. Live: Invoices
+  const {
+    data: invoices,
+    isLoading: invoiceLoading,
+  } = useFrappeGetDocList("Invoice", {
+    fields: ["name", "grand_total", "currency", "posting_date"],
+    limit: 500,
+  });
+
+  // ── Computations ────────────────────────────────────────────────────────────
+
+  // Card 1: Active Journeys
+  const activeJourneys = useMemo(() => {
+    if (!journeys) return [];
+    return journeys.filter((j: any) => j.status === "Active" || !["Completed", "Cancelled"].includes(j.status));
+  }, [journeys]);
+
+  const awaitingApprovalCount = useMemo(() => {
+    if (!journeys) return 0;
+    return journeys.filter((j: any) => j.status === "Draft" || j.status === "Pending Approval").length;
+  }, [journeys]);
+
+  // Card 2: Volume Received Today / Total (KL)
+  const volumeReceived = useMemo(() => {
+    let total = 0;
+    if (terminalReceipts && terminalReceipts.length > 0) {
+      total = terminalReceipts.reduce(
+        (sum: number, r: any) => sum + (Number(r.net_standard_volume_kl) || Number(r.gross_observed_volume_kl) || 0),
+        0,
+      );
+    } else if (shipments && shipments.length > 0) {
+      total = shipments.reduce((sum: number, s: any) => sum + (Number(s.planned_quantity_kl) || 0), 0);
+    }
+    return total;
+  }, [terminalReceipts, shipments]);
+
+  // Card 3: In Pipeline Transit (KL)
+  const pipelineTransitVolume = useMemo(() => {
+    if (pipelineBatches && pipelineBatches.length > 0) {
+      return pipelineBatches.reduce((sum: number, b: any) => sum + (Number(b.planned_volume_kl) || 0), 0);
+    }
+    return 0;
+  }, [pipelineBatches]);
+
+  // Card 4: Open AI Alerts
+  const openAlertsCount = openAlerts?.length ?? 0;
+  const criticalAlertsCount = useMemo(() => {
+    if (!openAlerts) return 0;
+    return openAlerts.filter((a: any) => a.severity === "High" || a.severity === "Critical").length;
+  }, [openAlerts]);
+
+  // Card 5: Reconciliation Variance (%)
+  const { avgVariance, tolerance, flaggedReconCount } = useMemo(() => {
+    if (!reconciliations || reconciliations.length === 0) {
+      return { avgVariance: 0, tolerance: 0, flaggedReconCount: 0 };
+    }
+    const totalVar = reconciliations.reduce((sum: number, r: any) => sum + Math.abs(Number(r.variance_percent) || 0), 0);
+    const avg = totalVar / reconciliations.length;
+    const tol = Number(reconciliations[0]?.tolerance_percent) || 0;
+    const flagged = reconciliations.filter((r: any) => !r.within_tolerance).length;
+    return { avgVariance: avg, tolerance: tol, flaggedReconCount: flagged };
+  }, [reconciliations]);
+
+  // Card 6: Invoiced Total (M or formatted)
+  const { invoiceTotalFormatted, invoiceUnit, invoiceCount } = useMemo(() => {
+    if (!invoices || invoices.length === 0) {
+      return { invoiceTotalFormatted: "0", invoiceUnit: "KES", invoiceCount: 0 };
+    }
+    const total = invoices.reduce((sum: number, inv: any) => sum + (Number(inv.grand_total) || 0), 0);
+    if (total >= 1_000_000) {
+      return { invoiceTotalFormatted: (total / 1_000_000).toFixed(1), invoiceUnit: "M", invoiceCount: invoices.length };
+    } else if (total >= 1_000) {
+      return { invoiceTotalFormatted: (total / 1_000).toFixed(1), invoiceUnit: "K", invoiceCount: invoices.length };
+    }
+    return { invoiceTotalFormatted: total.toLocaleString(), invoiceUnit: "KES", invoiceCount: invoices.length };
+  }, [invoices]);
+
+  // ── Construct live KPI cards ────────────────────────────────────────────────
+  const liveKpiItems = useMemo(() => [
+    {
+      label: "Active journeys",
+      value: journeyLoading ? "…" : activeJourneys.length,
+      delta: `${activeJourneys.length} in progress`,
+      deltaType: "up" as const,
+      variant: "cyan" as const,
+      sparklineData: [activeJourneys.length, activeJourneys.length],
+      icon: <IconJourneys />,
+    },
+    {
+      label: "Volume received today",
+      value: receiptsLoading ? "…" : volumeReceived.toLocaleString("en-US", { maximumFractionDigits: 1 }),
+      unit: "KL",
+      delta: `${terminalReceipts?.length ?? shipments?.length ?? 0} receipts logged`,
+      deltaType: "up" as const,
+      variant: "blue" as const,
+      sparklineData: [volumeReceived, volumeReceived],
+      icon: <IconVolume />,
+    },
+    {
+      label: "In pipeline transit",
+      value: pipelineLoading ? "…" : pipelineTransitVolume.toLocaleString("en-US", { maximumFractionDigits: 1 }),
+      unit: "KL",
+      delta: `${pipelineBatches?.length ?? 0} batches scheduled`,
+      deltaType: "flat" as const,
+      variant: "violet" as const,
+      sparklineData: [pipelineTransitVolume, pipelineTransitVolume],
+      icon: <IconPipeline />,
+    },
+    {
+      label: "Open AI alerts",
+      value: alertsLoading ? "…" : openAlertsCount,
+      delta: criticalAlertsCount > 0 ? `▼ ${criticalAlertsCount} critical/high` : (openAlertsCount > 0 ? "▼ awaiting Maintenance" : "✓ all systems nominal"),
+      deltaType: openAlertsCount > 0 ? ("warn" as const) : ("up" as const),
+      variant: "amber" as const,
+      sparklineData: [openAlertsCount, openAlertsCount],
+      icon: <IconAlert />,
+    },
+    {
+      label: "Reconciliation variance",
+      value: reconLoading ? "…" : `${avgVariance.toFixed(2)}`,
+      unit: "%",
+      delta: flaggedReconCount > 0 ? `▼ ${flaggedReconCount} flagged for review` : `within ${tolerance.toFixed(2)}% tolerance`,
+      deltaType: flaggedReconCount > 0 ? ("warn" as const) : ("up" as const),
+      variant: "cyan" as const,
+      sparklineData: [avgVariance, avgVariance],
+      icon: <IconVariance />,
+    },
+    {
+      label: "Invoiced this month",
+      value: invoiceLoading ? "…" : invoiceTotalFormatted,
+      unit: invoiceUnit,
+      delta: `${invoiceCount} invoices issued`,
+      deltaType: "up" as const,
+      variant: "gold" as const,
+      sparklineData: [invoiceCount, invoiceCount],
+      icon: <IconInvoice />,
+    },
+  ], [
+    journeyLoading,
+    activeJourneys.length,
+    receiptsLoading,
+    volumeReceived,
+    terminalReceipts?.length,
+    shipments?.length,
+    pipelineLoading,
+    pipelineTransitVolume,
+    pipelineBatches?.length,
+    alertsLoading,
+    openAlertsCount,
+    criticalAlertsCount,
+    reconLoading,
+    avgVariance,
+    tolerance,
+    flaggedReconCount,
+    invoiceLoading,
+    invoiceTotalFormatted,
+    invoiceUnit,
+    invoiceCount,
+  ]);
 
   return (
     <section id="overview" className="scroll-mt-24 mb-12">
@@ -268,10 +387,10 @@ export const HeroKpi: React.FC = () => {
         <div className="hero-golden">
           ACTIVE GOLDEN THREADS
           <br />
-          <b>{journeyLoading ? "…" : (activeJourneyCount ?? "–")}</b> in
-          progress · <b>4</b> awaiting approval
+          <b>{journeyLoading ? "…" : activeJourneys.length}</b> in
+          progress · <b>{awaitingApprovalCount}</b> awaiting approval
           <br />
-          <b>2</b> flagged for reconciliation review
+          <b>{flaggedReconCount}</b> flagged for reconciliation review
         </div>
       </div>
 
