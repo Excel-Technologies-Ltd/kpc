@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "(cd dashboard && yarn install)",
-    "build": "(cd dashboard && yarn build)",
-    "dev": "(cd dashboard && yarn dev)"
+    "postinstall": "(cd dashboard && yarn install) && (cd portal && yarn install)",
+    "build": "(cd dashboard && yarn build) && (cd portal && yarn build)",
+    "dev": "(cd dashboard && yarn dev) && (cd portal && yarn dev)"
   },
   "repository": {
     "type": "git",
