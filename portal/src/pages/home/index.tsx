@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { useFrappeGetDocCount, useFrappeGetDocList } from 'frappe-react-sdk';
 import { Box, Map, Radio, Sparkles } from 'lucide-react';
 import React, { useMemo } from 'react';
-import { ThroughputTrendChart, ProductMixChart } from './components/analytics-charts';
+import { ThroughputTrendChart, ProductMixChart, RevenueVsTargetChart } from './components/analytics-charts';
 import type { Kpi3DCardProps } from './components/kpi-3d-card';
 import { Kpi3DCard } from './components/kpi-3d-card';
 import { LiveAlerts } from './components/live-alerts';
@@ -257,9 +257,14 @@ export default function ExecutiveCommand() {
         </div>
       </section>
 
-      {/* 3. Product Mix Breakdown Section */}
-      <section className='space-y-3'>
-        <ProductMixChart />
+      {/* 3. Product Mix & Revenue vs Target Section (2 Columns on Large Screens) */}
+      <section className='grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2'>
+        <div className='h-full'>
+          <ProductMixChart />
+        </div>
+        <div className='h-full'>
+          <RevenueVsTargetChart />
+        </div>
       </section>
     </div>
   );

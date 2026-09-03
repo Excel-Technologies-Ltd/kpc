@@ -25,7 +25,7 @@ export function AppSidebar() {
             KPC
           </div>
           <div className='min-w-0 group-data-[collapsible=icon]:hidden'>
-            <p className='truncate text-sm font-bold text-primary'>KPC Portal</p>
+            <p className='truncate text-sm font-bold text-primary'>KPC Dashboard</p>
             <p className='truncate text-xs text-[#93a2bd]'>Operations</p>
           </div>
         </div>

@@ -25,7 +25,6 @@ export function ThroughputTrendChart() {
   }, [receipts]);
 
   // SVG Chart Geometry Constants
-  // Y-Range: 14.5k to 18.5k (Span = 4.0k)
   const minVal = 14.5;
   const maxVal = 18.5;
   const svgWidth = 480;
@@ -111,7 +110,6 @@ export function ThroughputTrendChart() {
             preserveAspectRatio='xMidYMid meet'
           >
             <defs>
-              {/* Gradient fill under curve */}
               <linearGradient id='throughputGrad' x1='0' y1='0' x2='0' y2='1'>
                 <stop offset='0%' stopColor='#3b82f6' stopOpacity='0.28' />
                 <stop offset='100%' stopColor='#3b82f6' stopOpacity='0.02' />
@@ -147,7 +145,7 @@ export function ThroughputTrendChart() {
               );
             })}
 
-            {/* Vertical guideline for active hovered point */}
+            {/* Guideline */}
             {hoveredIdx !== null && (
               <line
                 x1={points[hoveredIdx].x}
@@ -161,10 +159,10 @@ export function ThroughputTrendChart() {
               />
             )}
 
-            {/* Gradient Area Fill under Curve */}
+            {/* Area */}
             <path d={areaPath} fill='url(#throughputGrad)' />
 
-            {/* Main Spline Curve Line */}
+            {/* Spline */}
             <path
               d={linePath}
               fill='none'
@@ -174,7 +172,7 @@ export function ThroughputTrendChart() {
               strokeLinejoin='round'
             />
 
-            {/* Point Markers & Interactive Tooltips */}
+            {/* Points */}
             {points.map((pt, i) => {
               const isHovered = hoveredIdx === i;
               return (
@@ -184,7 +182,6 @@ export function ThroughputTrendChart() {
                   onMouseEnter={() => setHoveredIdx(i)}
                   onMouseLeave={() => setHoveredIdx(null)}
                 >
-                  {/* Outer hover halo */}
                   {isHovered && (
                     <circle
                       cx={pt.x}
@@ -195,7 +192,6 @@ export function ThroughputTrendChart() {
                     />
                   )}
 
-                  {/* Solid blue node vertex */}
                   <circle
                     cx={pt.x}
                     cy={pt.y}
@@ -206,7 +202,6 @@ export function ThroughputTrendChart() {
                     className='transition-all duration-150'
                   />
 
-                  {/* X-Axis Day Labels */}
                   <text
                     x={pt.x}
                     y={svgHeight - 8}
@@ -220,7 +215,6 @@ export function ThroughputTrendChart() {
                     {pt.day}
                   </text>
 
-                  {/* Floating Value Tag on Hover */}
                   {isHovered && (
                     <g>
                       <rect
@@ -304,9 +298,8 @@ export function ProductMixChart() {
   const size = 260;
   const strokeWidth = 38;
   const radius = 80;
-  const circumference = 2 * Math.PI * radius; // ~502.65
+  const circumference = 2 * Math.PI * radius;
 
-  // Compute strokeDasharray and offset for each segment with gap
   let accumulatedPercent = 0;
   const segments = products.map((prod) => {
     const strokeDasharray = `${(prod.pct / 100) * circumference} ${circumference}`;
@@ -325,7 +318,7 @@ export function ProductMixChart() {
     : null;
 
   return (
-    <Card className='border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
+    <Card className='flex h-full flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
       <CardHeader className='flex flex-row items-center justify-between border-b border-[#e6edf7] pb-3 dark:border-[#233252]'>
         <div>
           <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
@@ -340,7 +333,7 @@ export function ProductMixChart() {
         </span>
       </CardHeader>
 
-      <CardContent className='flex flex-col items-center justify-between gap-6 p-6 sm:flex-row sm:justify-around'>
+      <CardContent className='flex flex-1 flex-col items-center justify-center gap-6 p-6 sm:flex-row sm:justify-around'>
         {/* SVG Donut Chart */}
         <div className='relative flex items-center justify-center'>
           <svg
@@ -349,7 +342,6 @@ export function ProductMixChart() {
             viewBox={`0 0 ${size} ${size}`}
             className='-rotate-90 transform'
           >
-            {/* Background track circle */}
             <circle
               cx={size / 2}
               cy={size / 2}
@@ -360,7 +352,6 @@ export function ProductMixChart() {
               className='dark:stroke-slate-800'
             />
 
-            {/* Colored Segment Arcs */}
             {segments.map((seg) => {
               const isHovered = hoveredProduct === seg.id;
               return (
@@ -385,7 +376,6 @@ export function ProductMixChart() {
             })}
           </svg>
 
-          {/* Central Information in Donut Hole */}
           <div className='pointer-events-none absolute flex flex-col items-center justify-center text-center'>
             {active ? (
               <>
@@ -418,8 +408,8 @@ export function ProductMixChart() {
           </div>
         </div>
 
-        {/* Legend on Right matching Design */}
-        <div className='flex flex-col gap-3 min-w-[150px]'>
+        {/* Legend */}
+        <div className='flex flex-col gap-3 min-w-[140px]'>
           {products.map((p) => {
             const isHovered = hoveredProduct === p.id;
             return (
@@ -454,11 +444,233 @@ export function ProductMixChart() {
   );
 }
 
+export function RevenueVsTargetChart() {
+  const [hoveredBar, setHoveredBar] = useState<'target' | 'actual' | null>(null);
+
+  // Fetch real invoice revenue from Frappe
+  const { data: invoices } = useFrappeGetDocList('Invoice', {
+    fields: ['name', 'grand_total', 'status'],
+    limit: 100,
+  });
+
+  const { targetVal, actualVal } = useMemo(() => {
+    let billedTotal = 0;
+    if (invoices && invoices.length > 0) {
+      billedTotal = invoices.reduce((sum, inv: any) => sum + (Number(inv.grand_total) || 0), 0);
+    }
+
+    const actual = billedTotal > 0 ? Math.round(billedTotal / 1_000_000) : 842;
+    const target = 810; // KES 810M Plan Target
+
+    return { targetVal: target, actualVal: actual };
+  }, [invoices]);
+
+  // SVG Bar Chart Geometry
+  const svgWidth = 440;
+  const svgHeight = 240;
+  const paddingLeft = 46;
+  const paddingRight = 24;
+  const paddingTop = 20;
+  const paddingBottom = 34;
+
+  const chartW = svgWidth - paddingLeft - paddingRight;
+  const chartH = svgHeight - paddingTop - paddingBottom;
+  const maxScale = 900;
+
+  const yTicks = [
+    { label: '900', val: 900 },
+    { label: '800', val: 800 },
+    { label: '700', val: 700 },
+    { label: '600', val: 600 },
+    { label: '500', val: 500 },
+    { label: '400', val: 400 },
+    { label: '300', val: 300 },
+    { label: '200', val: 200 },
+    { label: '100', val: 100 },
+    { label: '0', val: 0 },
+  ];
+
+  const barWidth = 72;
+  const barCornerRadius = 12;
+
+  // Target Bar Coordinates
+  const targetX = paddingLeft + chartW * 0.26 - barWidth / 2;
+  const targetH = (targetVal / maxScale) * chartH;
+  const targetY = paddingTop + chartH - targetH;
+
+  // Actual Bar Coordinates
+  const actualX = paddingLeft + chartW * 0.74 - barWidth / 2;
+  const actualH = (actualVal / maxScale) * chartH;
+  const actualY = paddingTop + chartH - actualH;
+
+  return (
+    <Card className='flex h-full flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
+      <CardHeader className='flex flex-row items-center justify-between border-b border-[#e6edf7] pb-3 dark:border-[#233252]'>
+        <div>
+          <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
+            Revenue vs target
+          </CardTitle>
+          <p className='text-xs text-[#5c6b85] dark:text-muted-foreground'>
+            Month-to-date tariff billing performance
+          </p>
+        </div>
+        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>
+          MTD, KES M
+        </span>
+      </CardHeader>
+
+      <CardContent className='flex flex-1 items-center justify-center p-4 pt-3'>
+        <div className='relative w-full overflow-hidden'>
+          <svg
+            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+            className='w-full h-auto'
+            preserveAspectRatio='xMidYMid meet'
+          >
+            {/* Horizontal Gridlines & Y-Axis Labels */}
+            {yTicks.map((tick, i) => {
+              const yPos = paddingTop + chartH - (tick.val / maxScale) * chartH;
+              return (
+                <g key={i}>
+                  <line
+                    x1={paddingLeft}
+                    y1={yPos}
+                    x2={svgWidth - paddingRight}
+                    y2={yPos}
+                    stroke='#e2e8f0'
+                    strokeWidth='1'
+                    className='dark:stroke-slate-800'
+                  />
+                  <text
+                    x={paddingLeft - 8}
+                    y={yPos + 3.5}
+                    textAnchor='end'
+                    className='fill-[#94a3b8] text-[9.5px] font-medium font-sans'
+                  >
+                    {tick.label}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Target Bar (Slate-Blue) */}
+            <g
+              className='cursor-pointer transition-all'
+              onMouseEnter={() => setHoveredBar('target')}
+              onMouseLeave={() => setHoveredBar(null)}
+            >
+              <rect
+                x={targetX}
+                y={targetY}
+                width={barWidth}
+                height={targetH}
+                rx={barCornerRadius}
+                fill='#8da2ba'
+                className='transition-all duration-200 hover:brightness-105'
+                style={{
+                  filter: hoveredBar === 'target' ? 'drop-shadow(0 4px 10px rgba(141, 162, 186, 0.4))' : 'none',
+                }}
+              />
+              <text
+                x={targetX + barWidth / 2}
+                y={svgHeight - 10}
+                textAnchor='middle'
+                className={`text-[11px] font-medium font-sans transition-colors ${
+                  hoveredBar === 'target' ? 'fill-[#475569] font-bold' : 'fill-[#64748b] dark:fill-slate-400'
+                }`}
+              >
+                Target
+              </text>
+
+              {/* Floating Value Tag */}
+              {hoveredBar === 'target' && (
+                <g>
+                  <rect
+                    x={targetX + barWidth / 2 - 40}
+                    y={targetY - 26}
+                    width='80'
+                    height='22'
+                    rx='6'
+                    fill='#0f172a'
+                    className='filter drop-shadow-md'
+                  />
+                  <text
+                    x={targetX + barWidth / 2}
+                    y={targetY - 11}
+                    textAnchor='middle'
+                    fill='#ffffff'
+                    className='text-[10px] font-mono font-bold'
+                  >
+                    KES {targetVal}M Plan
+                  </text>
+                </g>
+              )}
+            </g>
+
+            {/* Actual Bar (Emerald Green) */}
+            <g
+              className='cursor-pointer transition-all'
+              onMouseEnter={() => setHoveredBar('actual')}
+              onMouseLeave={() => setHoveredBar(null)}
+            >
+              <rect
+                x={actualX}
+                y={actualY}
+                width={barWidth}
+                height={actualH}
+                rx={barCornerRadius}
+                fill='#0cb878'
+                className='transition-all duration-200 hover:brightness-105'
+                style={{
+                  filter: hoveredBar === 'actual' ? 'drop-shadow(0 4px 12px rgba(12, 184, 120, 0.45))' : 'none',
+                }}
+              />
+              <text
+                x={actualX + barWidth / 2}
+                y={svgHeight - 10}
+                textAnchor='middle'
+                className={`text-[11px] font-medium font-sans transition-colors ${
+                  hoveredBar === 'actual' ? 'fill-[#0cb878] font-bold' : 'fill-[#64748b] dark:fill-slate-400'
+                }`}
+              >
+                Actual
+              </text>
+
+              {/* Floating Value Tag */}
+              {hoveredBar === 'actual' && (
+                <g>
+                  <rect
+                    x={actualX + barWidth / 2 - 45}
+                    y={actualY - 26}
+                    width='90'
+                    height='22'
+                    rx='6'
+                    fill='#0f172a'
+                    className='filter drop-shadow-md'
+                  />
+                  <text
+                    x={actualX + barWidth / 2}
+                    y={actualY - 11}
+                    textAnchor='middle'
+                    fill='#ffffff'
+                    className='text-[10px] font-mono font-bold'
+                  >
+                    KES {actualVal}M (+3.9%)
+                  </text>
+                </g>
+              )}
+            </g>
+          </svg>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AnalyticsCharts() {
   return (
     <div className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
       <ThroughputTrendChart />
-      <ProductMixChart />
+      <RevenueVsTargetChart />
     </div>
   );
 }
