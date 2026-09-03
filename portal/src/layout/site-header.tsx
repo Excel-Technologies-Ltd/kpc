@@ -33,31 +33,32 @@ export function SiteHeader() {
   };
 
   return (
-    <header className='bg-background sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border px-4'>
-      <SidebarTrigger className='-ml-1' />
-      <Separator orientation='vertical' className='mr-2 h-4' />
-      <div className='flex flex-1 items-center justify-between gap-2'>
+    <header className='sticky top-0 z-20 flex h-[var(--header-height)] shrink-0 items-center justify-between border-b border-[#e6edf7] bg-white px-4 shadow-[0_2px_12px_-8px_rgba(38,64,120,0.2)] dark:border-[#233252] dark:bg-[#0f1728] dark:shadow-none'>
+      <div className='flex items-center gap-2'>
+        <SidebarTrigger className='-ml-1 text-[#5c6b85] hover:text-[#132038]' />
+        <Separator orientation='vertical' className='mr-2 h-4 bg-[#e6edf7] dark:bg-[#233252]' />
         <div>
-          <p className='text-sm font-medium text-foreground'>Petroleum Operations</p>
-          <p className='text-muted-foreground text-xs'>Overview control room</p>
+          <p className='text-sm font-semibold text-[#132038] dark:text-foreground'>Petroleum Operations</p>
+          <p className='text-xs text-[#93a2bd]'>Overview control room</p>
         </div>
-        <div className='flex items-center gap-2'>
-          <ModeToggle />
-          {currentUser && currentUser !== 'Guest' ? (
-            <Avatar size='sm'>
-              <AvatarFallback className='text-xs'>{initialsFromUser(currentUser)}</AvatarFallback>
-            </Avatar>
-          ) : null}
-          <Button
-            variant='ghost'
-            size='icon'
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            aria-label='Log out'
-          >
-            <LogOut className='size-4' />
-          </Button>
-        </div>
+      </div>
+      <div className='flex items-center gap-2'>
+        <ModeToggle />
+        {currentUser && currentUser !== 'Guest' ? (
+          <Avatar size='sm'>
+            <AvatarFallback className='bg-blue-50 text-xs font-semibold text-[#4361ee]'>{initialsFromUser(currentUser)}</AvatarFallback>
+          </Avatar>
+        ) : null}
+        <Button
+          variant='ghost'
+          size='icon'
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          aria-label='Log out'
+          className='text-[#5c6b85] hover:bg-[#f6f9fe] hover:text-[#132038]'
+        >
+          <LogOut className='size-4' />
+        </Button>
       </div>
     </header>
   );
