@@ -1,5 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
 import { useFrappeAuth } from "frappe-react-sdk";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { DashboardLayout } from "./components/Layout/DashboardLayout";
 import { AIPage } from "./pages/AIPage";
 import { CommercialPage } from "./pages/CommercialPage";
@@ -8,24 +8,67 @@ import { LedgerPage } from "./pages/LedgerPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { TankFarmPage } from "./pages/TankFarmPage";
 import { ThreadPage } from "./pages/ThreadPage";
+import { CosmicDashboard } from "./pages/new-dashboard/dashboard";
+
+
+
+function RootLayout() {
+  const { currentUser } = useFrappeAuth();
+  return <DashboardLayout currentUser={currentUser} />;
+}
+
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <RootLayout />,
+      children: [
+        {
+          index: true,
+          element: <OverviewPage />,
+        },
+        {
+          path: "thread",
+          element: <ThreadPage />,
+        },
+        {
+          path: "tanks",
+          element: <TankFarmPage />,
+        },
+        {
+          path: "ai",
+          element: <AIPage />,
+        },
+        {
+          path: "commercial",
+          element: <CommercialPage />,
+        },
+        {
+          path: "hseq",
+          element: <HSEQPage />,
+        },
+        {
+          path: "ledger",
+          element: <LedgerPage />,
+        },
+        {
+          path: "cosmic",
+          element: <CosmicDashboard />,
+        },
+        {
+          path: "*",
+          element: <Navigate to="/" replace />,
+        },
+      ],
+    },
+  ],
+  {
+    basename: "/",
+  },
+);
 
 export function App() {
-  const { currentUser } = useFrappeAuth();
-
-  return (
-    <DashboardLayout currentUser={currentUser}>
-      <Routes>
-        <Route path="/" element={<OverviewPage />} />
-        <Route path="/thread" element={<ThreadPage />} />
-        <Route path="/tanks" element={<TankFarmPage />} />
-        <Route path="/ai" element={<AIPage />} />
-        <Route path="/commercial" element={<CommercialPage />} />
-        <Route path="/hseq" element={<HSEQPage />} />
-        <Route path="/ledger" element={<LedgerPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </DashboardLayout>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

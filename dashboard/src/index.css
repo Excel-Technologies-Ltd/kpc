@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+:root,
+[data-theme="dark"],
+.dark {
   --ink: #080d16;
   --panel: #0f1728;
   --panel-2: #141f35;
@@ -17,6 +19,27 @@
   --text: #eaf1fa;
   --text-dim: #8aa0c0;
   --text-faint: #5a6d8c;
+  --radius: 3px;
+}
+
+[data-theme="light"],
+.light {
+  --ink: #f0f4f9;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+  --panel-3: #edf2f7;
+  --line: #cbd5e1;
+  --line-soft: #e2e8f0;
+  --flow: #0d9488;
+  --flow-dim: #ccfbf1;
+  --amber: #d97706;
+  --amber-dim: #fef3c7;
+  --crimson: #dc2626;
+  --violet: #6366f1;
+  --gold: #b45309;
+  --text: #0f172a;
+  --text-dim: #475569;
+  --text-faint: #94a3b8;
   --radius: 3px;
 }
 
