@@ -1,18 +1,12 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
-interface RailProps {
-  activeSection: string;
-  setActiveSection: (sec: string) => void;
-}
-
-export const Rail: React.FC<RailProps> = ({
-  activeSection,
-  setActiveSection,
-}) => {
+export const Rail: React.FC = () => {
   const items = [
     {
       id: "overview",
-      title: "Overview",
+      title: "Overview & Control Room",
+      path: "/",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -30,6 +24,7 @@ export const Rail: React.FC<RailProps> = ({
     {
       id: "thread",
       title: "Golden Thread",
+      path: "/thread",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -47,6 +42,7 @@ export const Rail: React.FC<RailProps> = ({
     {
       id: "tanks",
       title: "Tank Farm",
+      path: "/tanks",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -62,6 +58,7 @@ export const Rail: React.FC<RailProps> = ({
     {
       id: "ai",
       title: "AI & Reconciliation",
+      path: "/ai",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -77,6 +74,7 @@ export const Rail: React.FC<RailProps> = ({
     {
       id: "commercial",
       title: "Commercial & Finance",
+      path: "/commercial",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -92,6 +90,7 @@ export const Rail: React.FC<RailProps> = ({
     {
       id: "hseq",
       title: "HSEQ",
+      path: "/hseq",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -106,6 +105,7 @@ export const Rail: React.FC<RailProps> = ({
     {
       id: "ledger",
       title: "Decision Ledger",
+      path: "/ledger",
       svg: (
         <svg
           viewBox="0 0 24 24"
@@ -122,17 +122,19 @@ export const Rail: React.FC<RailProps> = ({
 
   return (
     <nav className="rail">
-      <div className="rail-mark">KP</div>
+      <NavLink to="/" className="rail-mark" title="KPC Operations Home">
+        KP
+      </NavLink>
       {items.map((item) => (
-        <a
+        <NavLink
           key={item.id}
-          className={`rail-item ${activeSection === item.id ? "active" : ""}`}
-          href={`#${item.id}`}
-          onClick={() => setActiveSection(item.id)}
+          to={item.path}
+          end={item.path === "/"}
+          className={({ isActive }) => `rail-item ${isActive ? "active" : ""}`}
           title={item.title}
         >
           {item.svg}
-        </a>
+        </NavLink>
       ))}
       <div className="rail-spacer" />
       <div className="rail-foot">PETROLEUM OPERATIONS</div>

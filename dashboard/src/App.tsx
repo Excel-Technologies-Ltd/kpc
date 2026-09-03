@@ -1,33 +1,29 @@
-import { useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { useFrappeAuth } from "frappe-react-sdk";
 import { DashboardLayout } from "./components/Layout/DashboardLayout";
-import { HeroKpi } from "./components/Overview/HeroKpi";
-import { ThreadTracker } from "./components/GoldenThread/ThreadTracker";
-import { TankFarmSection } from "./components/TankFarm/TankFarmSection";
-import { TankFarm3DSection } from "./components/TankFarm/TankFarm3DSection";
-import { AISection } from "./components/AIReconciliation/AISection";
-import { CommercialSection } from "./components/Commercial/CommercialSection";
-import { HSEQSection } from "./components/HSEQ/HSEQSection";
-import { DecisionLedger } from "./components/Ledger/DecisionLedger";
+import { AIPage } from "./pages/AIPage";
+import { CommercialPage } from "./pages/CommercialPage";
+import { HSEQPage } from "./pages/HSEQPage";
+import { LedgerPage } from "./pages/LedgerPage";
+import { OverviewPage } from "./pages/OverviewPage";
+import { TankFarmPage } from "./pages/TankFarmPage";
+import { ThreadPage } from "./pages/ThreadPage";
 
 export function App() {
   const { currentUser } = useFrappeAuth();
-  const [activeSection, setActiveSection] = useState("overview");
 
   return (
-    <DashboardLayout
-      currentUser={currentUser}
-      activeSection={activeSection}
-      setActiveSection={setActiveSection}
-    >
-      <HeroKpi />
-      <ThreadTracker />
-      <TankFarm3DSection />
-      <TankFarmSection />
-      <AISection />
-      <CommercialSection />
-      <HSEQSection />
-      <DecisionLedger />
+    <DashboardLayout currentUser={currentUser}>
+      <Routes>
+        <Route path="/" element={<OverviewPage />} />
+        <Route path="/thread" element={<ThreadPage />} />
+        <Route path="/tanks" element={<TankFarmPage />} />
+        <Route path="/ai" element={<AIPage />} />
+        <Route path="/commercial" element={<CommercialPage />} />
+        <Route path="/hseq" element={<HSEQPage />} />
+        <Route path="/ledger" element={<LedgerPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </DashboardLayout>
   );
 }
