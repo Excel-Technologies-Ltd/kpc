@@ -20,6 +20,7 @@ const getBasename = () => {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <FrappeProvider
+    url="http://localhost:8001/"
       socketPort={import.meta.env.DEV ? "9000" : undefined}
       enableSocket={false}
       tokenParams={
