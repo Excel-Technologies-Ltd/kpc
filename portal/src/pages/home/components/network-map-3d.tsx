@@ -1035,7 +1035,7 @@ export function NetworkMap3D() {
         </div>
 
         {/* Row 2: Full-Width 3D Kenya Pipeline SCADA Network Canvas */}
-        <div className='relative h-95 w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#0e1628] via-[#090e18] to-[#04070d] shadow-inner sm:h-[460px] md:h-[500px] lg:h-[540px]'>
+        <div className='relative h-95 w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-linear-to-b from-[#0e1628] via-[#090e18] to-[#04070d] shadow-inner sm:h-[460px] md:h-[500px] lg:h-[540px]'>
           <Canvas
             dpr={[1, 2]}
             camera={{ position: [0.4, 7.6, 7.8], fov: 46 }}
