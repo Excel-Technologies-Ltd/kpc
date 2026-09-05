@@ -32,6 +32,3 @@ export const QUALITY_RESULT_DOCTYPE = 'Quality Result' as const;
 export const TARIFF_DOCTYPE = 'Tariff' as const;
 export const TERMINAL_DOCTYPE = 'Terminal' as const;
 export const VARIANCE_DOCTYPE = 'Variance' as const;
-export const INVOICE_DOCTYPE = 'Invoice' as const;
-export const ALLOCATION_DOCTYPE = 'Allocation' as const;
-export const TARIFF_DOCTYPE = 'Tariff' as const;

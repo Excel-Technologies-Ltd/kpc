@@ -1,5 +1,5 @@
-import { FlowKpiCard } from '@/features/pipeline-flow';
 import { useCommercialMetricsContext } from '../commercial-metrics-context';
+import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
 
 export function CommercialKpis() {
   const { metrics, isLoading, hasData } = useCommercialMetricsContext();
