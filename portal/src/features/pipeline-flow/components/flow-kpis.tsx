@@ -3,6 +3,7 @@ import type { Movement } from '@/types/PetroleumOperations/Movement';
 import type { PipelineBatch } from '@/types/PetroleumOperations/PipelineBatch';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
+import { useRegisterPipelineRefresh } from '../pipeline-flow-refresh';
 import { deriveFlowKpis } from '../utils/derive-flow-kpis';
 import { FlowInfoButton } from './flow-info-button';
 import { FlowKpiCard } from './flow-kpi-card';
@@ -26,23 +27,27 @@ const BATCH_FIELDS = [
 ] as const satisfies ReadonlyArray<keyof PipelineBatch>;
 
 export function FlowKpis() {
-  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList<Movement>(
-    MOVEMENT_DOCTYPE,
-    {
-      fields: [...MOVEMENT_FIELDS],
-      limit: 500,
-      orderBy: { field: 'modified', order: 'desc' },
-    }
-  );
+  const {
+    data: movements,
+    isLoading: movementsLoading,
+    mutate: mutateMovements,
+  } = useFrappeGetDocList<Movement>(MOVEMENT_DOCTYPE, {
+    fields: [...MOVEMENT_FIELDS],
+    limit: 500,
+    orderBy: { field: 'modified', order: 'desc' },
+  });
 
-  const { data: batches, isLoading: batchesLoading } = useFrappeGetDocList<PipelineBatch>(
-    PIPELINE_BATCHES_DOCTYPE,
-    {
-      fields: [...BATCH_FIELDS],
-      limit: 500,
-      orderBy: { field: 'modified', order: 'desc' },
-    }
-  );
+  const {
+    data: batches,
+    isLoading: batchesLoading,
+    mutate: mutateBatches,
+  } = useFrappeGetDocList<PipelineBatch>(PIPELINE_BATCHES_DOCTYPE, {
+    fields: [...BATCH_FIELDS],
+    limit: 500,
+    orderBy: { field: 'modified', order: 'desc' },
+  });
+
+  useRegisterPipelineRefresh(mutateMovements, mutateBatches);
 
   const kpis = useMemo(
     () => deriveFlowKpis(movements ?? [], batches ?? []),

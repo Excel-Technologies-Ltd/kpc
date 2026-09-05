@@ -31,7 +31,7 @@ export const privateRoutes: RouteObject[] = [
           },
           {
             path: 'loss-accountability',
-            element: <OverviewPage />,
+            element: <div>Loss Accountability</div>,
           },
           {
             path: 'commercial-revenue',

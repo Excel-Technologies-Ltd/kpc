@@ -8,6 +8,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useFrappeGetDocCount, useFrappeGetDocList, type Filter } from 'frappe-react-sdk';
 import { ArrowRight, Layers3 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useRegisterPipelineRefresh } from '../../pipeline-flow-refresh';
 import { AnimatedSection } from '../animated-section';
 import { FlowInfoButton } from '../flow-info-button';
 
@@ -209,6 +210,7 @@ export function ActiveBatchesTable() {
     data: batches,
     isLoading,
     error,
+    mutate: mutateBatches,
   } = useFrappeGetDocList<PipelineBatch>(PIPELINE_BATCHES_DOCTYPE, {
     fields: [...BATCH_FIELDS],
     filters,
@@ -217,10 +219,10 @@ export function ActiveBatchesTable() {
     orderBy: { field: 'modified', order: 'desc' },
   });
 
-  const { data: totalCount, isLoading: isLoadingCount } = useFrappeGetDocCount(
-    PIPELINE_BATCHES_DOCTYPE,
-    filters
-  );
+  const { data: totalCount, isLoading: isLoadingCount, mutate: mutateCount } =
+    useFrappeGetDocCount(PIPELINE_BATCHES_DOCTYPE, filters);
+
+  useRegisterPipelineRefresh(mutateBatches, mutateCount);
   const total = totalCount ?? 0;
 
   return (
