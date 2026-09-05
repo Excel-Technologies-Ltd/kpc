@@ -11,18 +11,18 @@ def get_data():
 		"fieldname": "journey_ref",
 		"transactions": [
 			{
-				"label": _("Phase 1 - Inbound Logistics & Storage"),
+				"label": _("Inbound Logistics & Storage"),
 				"items": ["Oil Shipment", "Tank Measurement", "Quality Result", "Inventory Position"],
 			},
-			{"label": _("Phase 2 - Commercial Planning"), "items": ["Nomination", "Pipeline Batch"]},
+			{"label": _("Commercial Planning"), "items": ["Nomination", "Pipeline Batch"]},
 			{
-				"label": _("Phase 3 - Pipeline Operations & AI"),
+				"label": _("Pipeline Operations & AI"),
 				"items": ["Movement", "AI Alert", "AI Prediction", "AI Recommendation", "Maintenance Work Order"],
 			},
 			{
-				"label": _("Phase 4 - Reconciliation & Outbound"),
+				"label": _("Reconciliation & Outbound"),
 				"items": ["Terminal Receipt", "Reconciliation", "Variance", "Allocation", "Dispatch"],
 			},
-			{"label": _("Phase 5 - Billing & Financials"), "items": ["Invoice", "Financial Posting"]},
+			{"label": _("Billing & Financials"), "items": ["Invoice", "Financial Posting"]},
 		],
 	}

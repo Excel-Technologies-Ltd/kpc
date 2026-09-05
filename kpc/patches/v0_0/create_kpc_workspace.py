@@ -28,12 +28,12 @@ SHORTCUTS = [
 CARDS = [
 	("Golden Thread", ["Journey"]),
 	(
-		"Phase 1 - Inbound Logistics & Storage",
+		"Inbound Logistics & Storage",
 		["Terminal", "Oil Tank", "Oil Shipment", "Tank Measurement", "Quality Result", "Inventory Position"],
 	),
-	("Phase 2 - Commercial Planning", ["Nomination", "Capacity Assessment", "Pipeline Batch"]),
+	("Commercial Planning", ["Nomination", "Capacity Assessment", "Pipeline Batch"]),
 	(
-		"Phase 3 - Pipeline Operations & AI",
+		"Pipeline Operations & AI",
 		[
 			"Movement",
 			"AI Alert",
@@ -43,8 +43,8 @@ CARDS = [
 			"Terminal Receipt",
 		],
 	),
-	("Phase 4 - Reconciliation & Outbound", ["Reconciliation", "Variance", "Allocation", "Dispatch"]),
-	("Phase 5 - Billing & Financials", ["Tariff", "Invoice", "Financial Posting"]),
+	("Reconciliation & Outbound", ["Reconciliation", "Variance", "Allocation", "Dispatch"]),
+	("Billing & Financials", ["Tariff", "Invoice", "Financial Posting"]),
 	(
 		"ArcApps Integration (Accounts & Stock)",
 		["Warehouse", "Stock Entry", "Delivery Note", "Sales Invoice"],
