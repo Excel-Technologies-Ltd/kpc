@@ -14,7 +14,6 @@ import { TankReconciliationCard } from '@/features/overview/components/tank-reco
 import { cn } from '@/lib/utils';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import {
-  Activity,
   AlertTriangle,
   ArrowDownUp,
   Database,
@@ -366,14 +365,14 @@ export default function StockTankFarmPage() {
         <TankFarm3DSection />
       </section>
 
-      {/* Stock Movement Waterfall & Reconciliation Grid */}
-      <section className='grid grid-cols-1 items-stretch gap-6 xl:grid-cols-12'>
-        <div className='h-full xl:col-span-5'>
-          <StockMovementCard compact />
-        </div>
-        <div className='h-full xl:col-span-7'>
-          <TankReconciliationCard />
-        </div>
+      {/* Tank Reconciliation (Full Width) */}
+      <section className='w-full'>
+        <TankReconciliationCard />
+      </section>
+
+      {/* Stock Movement Waterfall (Compact Height) */}
+      <section className='w-full grid grid-cols-1 lg:grid-cols-2'>
+        <StockMovementCard compact />
       </section>
     </div>
   );

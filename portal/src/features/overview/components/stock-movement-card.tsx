@@ -153,8 +153,21 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
     const deliveryBottom = peakVolume - deliveries;
     const lossBottom = closing;
     const lossTop = closing + Math.abs(losses);
+    const formatVol = (val: number, prefix = '') => {
+      const formatted = Math.round(val).toLocaleString('en-US');
+      return `${prefix}${formatted} ${movement.unit}`;
+    };
 
-    const labels = ['Opening', 'Receipts', 'Deliveries', 'Losses', 'Closing'];
+    const labels = [
+      ['Opening', formatVol(opening)],
+      ['Receipts', formatVol(receipts, '+')],
+      ['Deliveries', formatVol(deliveries, '-')],
+      [
+        'Losses',
+        losses !== 0 ? formatVol(Math.abs(losses), losses < 0 ? '-' : '+') : `0 ${movement.unit}`,
+      ],
+      ['Closing', formatVol(closing)],
+    ];
     const barRanges = [
       [0, opening],
       [opening, peakVolume],
@@ -190,7 +203,7 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
         layout: {
           padding: {
             top: 24,
-            bottom: 16,
+            bottom: 12,
             left: 10,
             right: 20,
           },
@@ -207,7 +220,12 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
             boxPadding: 6,
             usePointStyle: true,
             callbacks: {
-              title: (items) => `${items[0].label} Volume`,
+              title: (items) => {
+                const item = items[0];
+                const raw = item.label;
+                const title = Array.isArray(raw) ? raw[0] : raw;
+                return `${title} Volume`;
+              },
               label: (context) => {
                 const idx = context.dataIndex;
                 let val = 0;
@@ -235,24 +253,30 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
           x: {
             grid: { display: false },
             ticks: {
-              color: theme.muted,
-              font: { size: 12.5, weight: 500 },
-              padding: 14,
+              color: theme.foreground,
+              font: { size: 12, weight: 600, lineHeight: 1.45 },
+              padding: 10,
             },
           },
           y: {
             min: 0,
-            suggestedMax: 160000,
+            suggestedMax: Math.max(peakVolume, closing) * 1.1,
             grid: {
               color: theme.border,
             },
             ticks: {
-              stepSize: 20000,
               color: theme.muted,
               font: { size: 11 },
               callback: (value) => {
                 const num = Number(value);
-                return num === 0 ? '0k' : `${num / 1000}k`;
+                if (num === 0) return '0';
+                if (num >= 1_000_000) {
+                  return `${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+                }
+                if (num >= 1_000) {
+                  return `${(num / 1_000).toFixed(0)}k`;
+                }
+                return num.toLocaleString();
               },
             },
           },
@@ -269,10 +293,9 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
 
   return (
     <Card
-      id='stock-movement'
       className={cn(
-        'scroll-mt-24 border border-border shadow-xs',
-        compact ? 'mb-0 h-full' : 'mb-12'
+        'border-border shadow-xs relative w-full overflow-hidden border',
+        compact ? 'mb-0' : 'mb-12'
       )}
     >
       <CardHeader className='flex flex-row items-start justify-between gap-4 pb-2'>
@@ -288,30 +311,30 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
               onClick={() => setShowTooltipInfo(!showTooltipInfo)}
               onMouseEnter={() => setShowTooltipInfo(true)}
               onMouseLeave={() => setShowTooltipInfo(false)}
-              className='border-border bg-muted text-muted-foreground hover:text-foreground flex size-4.5 cursor-pointer items-center justify-center rounded-full border text-[11px] font-mono transition-colors focus:outline-none'
-              title='Stock Bridge Info'
+              className='border-border bg-muted/60 text-muted-foreground hover:text-foreground flex size-4.5 cursor-pointer items-center justify-center rounded-full border text-[11px] font-mono transition-colors focus:outline-none'
+              title='Waterfall explanation'
             >
               i
             </button>
           </div>
-          <CardDescription className='mt-0.5 text-xs text-muted-foreground'>
+          <CardDescription className='text-muted-foreground mt-0.5 text-xs sm:text-sm'>
             Opening balance walked through receipts, deliveries and losses to closing.
           </CardDescription>
         </div>
 
-        <span className='border-border bg-muted text-muted-foreground shrink-0 rounded-lg border px-2.5 py-1 font-mono text-xs'>
-          {movement.unit}, {movement.period}
-        </span>
+        <div className='flex items-center gap-2'>
+          <span className='border-border bg-muted/50 text-muted-foreground rounded border px-2 py-0.5 font-mono text-xs'>
+            {movement.unit}, today
+          </span>
+        </div>
       </CardHeader>
 
-      <CardContent className='pt-1'>
+      <CardContent className={cn('pt-0', compact ? 'pb-4' : 'pb-6')}>
         {showTooltipInfo ? (
-          <div className='border-border bg-muted/50 text-muted-foreground mb-4 flex items-center justify-between gap-4 rounded-xl border p-3 text-xs'>
+          <div className='border-border bg-muted/40 text-muted-foreground mb-3 flex items-center justify-between gap-3 rounded-lg border p-2.5 text-xs'>
             <span>
-              Real-time bridge formula:{' '}
-              <code className='text-foreground font-mono font-semibold'>
-                Opening + Receipts - Deliveries ± Losses = Closing
-              </code>
+              <b className='text-foreground'>Formula:</b> Closing = Opening + Receipts − Deliveries
+              − Losses.
             </span>
             <span className='text-foreground shrink-0 font-mono text-[11px]'>
               API: get_stock_movement
@@ -319,105 +342,8 @@ export function StockMovementCard({ compact = false }: StockMovementCardProps = 
           </div>
         ) : null}
 
-        <div className={cn('relative my-1 w-full px-1', compact ? 'h-52 sm:h-56' : 'h-80 sm:h-96')}>
+        <div className={cn('relative my-1 w-full px-1', compact ? 'h-56 sm:h-64' : 'h-80 sm:h-96')}>
           <canvas ref={canvasRef} id='stockMovementCanvas' />
-        </div>
-
-        <div
-          className={cn(
-            'border-border grid grid-cols-2 gap-2.5 border-t sm:grid-cols-4',
-            compact ? 'mt-4 pt-3' : 'mt-8 pt-6'
-          )}
-        >
-          <div
-            className={cn(
-              'border-border bg-muted/40 rounded-xl border',
-              compact ? 'p-2.5' : 'p-4 sm:p-5'
-            )}
-          >
-            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
-              Opening Stock
-            </div>
-            <div
-              className={cn(
-                'text-foreground font-mono font-bold',
-                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
-              )}
-            >
-              {movement.opening.toLocaleString('en-US', {
-                maximumFractionDigits: 0,
-              })}{' '}
-              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              'border-border bg-muted/40 rounded-xl border',
-              compact ? 'p-2.5' : 'p-4 sm:p-5'
-            )}
-          >
-            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
-              + Receipts (In)
-            </div>
-            <div
-              className={cn(
-                'text-foreground font-mono font-bold',
-                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
-              )}
-            >
-              +
-              {movement.receipts.toLocaleString('en-US', {
-                maximumFractionDigits: 0,
-              })}{' '}
-              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              'border-border bg-muted/40 rounded-xl border',
-              compact ? 'p-2.5' : 'p-4 sm:p-5'
-            )}
-          >
-            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
-              - Deliveries (Out)
-            </div>
-            <div
-              className={cn(
-                'text-foreground font-mono font-bold',
-                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
-              )}
-            >
-              -
-              {movement.deliveries.toLocaleString('en-US', {
-                maximumFractionDigits: 0,
-              })}{' '}
-              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              'border-border bg-muted/40 rounded-xl border',
-              compact ? 'p-2.5' : 'p-4 sm:p-5'
-            )}
-          >
-            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
-              = Closing Balance
-            </div>
-            <div
-              className={cn(
-                'text-foreground font-mono font-bold',
-                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
-              )}
-            >
-              {movement.closing.toLocaleString('en-US', {
-                maximumFractionDigits: 0,
-              })}{' '}
-              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   INVENTORY_POSITION_DOCTYPE,
@@ -132,7 +131,13 @@ export function TankReconciliationCard() {
 
   // 2. Fetch latest tank physical dip measurements
   const { data: measurements } = useFrappeGetDocList(TANK_MEASUREMENT_DOCTYPE, {
-    fields: ['name', 'tank', 'net_standard_volume_kl', 'gross_observed_volume_kl', 'measurement_datetime'],
+    fields: [
+      'name',
+      'tank',
+      'net_standard_volume_kl',
+      'gross_observed_volume_kl',
+      'measurement_datetime',
+    ],
     orderBy: { field: 'measurement_datetime', order: 'desc' },
     limit: 100,
   });
@@ -176,7 +181,8 @@ export function TankReconciliationCard() {
       const rawProduct = (t.product || 'AGO').toUpperCase();
       let productCode = 'AGO';
       if (rawProduct.includes('PMS') || rawProduct.includes('GASOLINE')) productCode = 'PMS';
-      else if (rawProduct.includes('JET') || rawProduct.includes('AVIATION')) productCode = 'Jet A-1';
+      else if (rawProduct.includes('JET') || rawProduct.includes('AVIATION'))
+        productCode = 'Jet A-1';
       else if (rawProduct.includes('IK') || rawProduct.includes('KEROSENE')) productCode = 'IK';
       else if (rawProduct.includes('AGO') || rawProduct.includes('DIESEL')) productCode = 'AGO';
 
@@ -246,9 +252,7 @@ export function TankReconciliationCard() {
           </CardDescription>
         </div>
 
-        <span className='shrink-0 font-mono text-xs text-muted-foreground'>
-          book vs physical
-        </span>
+        <span className='shrink-0 font-mono text-xs text-muted-foreground'>book vs physical</span>
       </CardHeader>
 
       <CardContent className='pt-1'>
@@ -269,15 +273,15 @@ export function TankReconciliationCard() {
           <table className='w-full text-left text-xs'>
             <thead>
               <tr className='border-b border-border/80 text-[11px] font-semibold text-muted-foreground'>
-                <th className='py-2.5 pr-3 font-medium'>Tank</th>
-                <th className='py-2.5 px-3 font-medium'>Product</th>
-                <th className='py-2.5 px-3 text-right font-medium'>Capacity</th>
-                <th className='py-2.5 px-3 text-right font-medium'>Book stock</th>
-                <th className='py-2.5 px-3 text-right font-medium'>Physical</th>
-                <th className='py-2.5 px-3 text-right font-medium'>Variance</th>
-                <th className='py-2.5 px-3 text-right font-medium'>Var %</th>
-                <th className='py-2.5 px-3 text-right font-medium'>Ullage</th>
-                <th className='py-2.5 pl-3 text-right font-medium'>Status</th>
+                <th className='py-3 pr-4 font-medium whitespace-nowrap'>Tank</th>
+                <th className='py-3 px-4 font-medium whitespace-nowrap'>Product</th>
+                <th className='py-3 px-4 text-right font-medium whitespace-nowrap'>Capacity</th>
+                <th className='py-3 px-4 text-right font-medium whitespace-nowrap'>Book stock</th>
+                <th className='py-3 px-4 text-right font-medium whitespace-nowrap'>Physical</th>
+                <th className='py-3 px-4 text-right font-medium whitespace-nowrap'>Variance</th>
+                <th className='py-3 px-4 text-right font-medium whitespace-nowrap'>Var %</th>
+                <th className='py-3 px-4 text-right font-medium whitespace-nowrap'>Ullage</th>
+                <th className='py-3 pl-4 text-right font-medium whitespace-nowrap'>Status</th>
               </tr>
             </thead>
             <tbody className='divide-y divide-border/50'>
@@ -293,42 +297,44 @@ export function TankReconciliationCard() {
                 return (
                   <tr
                     key={row.tank}
-                    className='transition-colors hover:bg-muted/30 font-mono text-[11.5px]'
+                    className='transition-colors hover:bg-muted/30 font-mono text-[12px]'
                   >
-                    <td className='py-2.5 pr-3 font-medium text-foreground'>{row.tank}</td>
-                    <td className='py-2.5 px-3'>
-                      <div className='flex items-center gap-1.5 font-sans font-medium text-foreground'>
+                    <td className='py-3 pr-4 font-medium text-foreground whitespace-nowrap'>
+                      {row.tank}
+                    </td>
+                    <td className='py-3 px-4 whitespace-nowrap'>
+                      <div className='flex items-center gap-2 font-sans font-medium text-foreground'>
                         <span
-                          className='size-2 rounded-full shrink-0'
+                          className='size-2.5 rounded-full shrink-0'
                           style={{ backgroundColor: row.productColor }}
                         />
                         <span>{row.product}</span>
                       </div>
                     </td>
-                    <td className='py-2.5 px-3 text-right text-muted-foreground'>
+                    <td className='py-3 px-4 text-right text-muted-foreground whitespace-nowrap'>
                       {row.capacity.toLocaleString()}
                     </td>
-                    <td className='py-2.5 px-3 text-right text-foreground font-medium'>
+                    <td className='py-3 px-4 text-right text-foreground font-medium whitespace-nowrap'>
                       {row.bookStock.toLocaleString()}
                     </td>
-                    <td className='py-2.5 px-3 text-right text-foreground font-medium'>
+                    <td className='py-3 px-4 text-right text-foreground font-medium whitespace-nowrap'>
                       {row.physical.toLocaleString()}
                     </td>
-                    <td className={cn('py-2.5 px-3 text-right', varColor)}>
+                    <td className={cn('py-3 px-4 text-right whitespace-nowrap', varColor)}>
                       {isPositive ? `+${row.variance}` : row.variance}
                     </td>
-                    <td className={cn('py-2.5 px-3 text-right', varColor)}>
+                    <td className={cn('py-3 px-4 text-right whitespace-nowrap', varColor)}>
                       {isPositive
                         ? `+${row.variancePct.toFixed(2)}%`
                         : `${row.variancePct.toFixed(2)}%`}
                     </td>
-                    <td className='py-2.5 px-3 text-right text-muted-foreground'>
+                    <td className='py-3 px-4 text-right text-muted-foreground whitespace-nowrap'>
                       {row.ullage.toLocaleString()}
                     </td>
-                    <td className='py-2.5 pl-3 text-right'>
+                    <td className='py-3 pl-4 text-right whitespace-nowrap'>
                       <span
                         className={cn(
-                          'inline-flex items-center rounded-md px-2 py-0.5 text-[10.5px] font-sans font-semibold capitalize',
+                          'inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-sans font-semibold capitalize whitespace-nowrap',
                           row.status === 'Normal' &&
                             'bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
                           row.status === 'Watch' &&
