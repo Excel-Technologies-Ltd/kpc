@@ -1,10 +1,17 @@
 import PrivateGuard from '@/guards/PrivateGuard';
 import MainLayout from '@/layout/main-layout';
+import AssetsEam from '@/pages/assets-eam';
 import CommercialRevenue from '@/pages/commercial-revenue';
 import ErrorPage from '@/pages/error';
 import ExecutiveCommand from '@/pages/home';
-import OverviewPage from '@/pages/overview';
+import HseIntegrity from '@/pages/hse-integrity';
+import LossAccountability from '@/pages/loss-accountability';
 import PipelineFlow from '@/pages/pipeline-flow';
+import DailyThroughputReport from '@/pages/reports/daily-throughput';
+import HseComplianceReport from '@/pages/reports/hse-compliance';
+import ProductLossReport from '@/pages/reports/product-loss';
+import StockReconciliationReport from '@/pages/reports/stock-reconciliation';
+import TariffRevenueReport from '@/pages/reports/tariff-revenue';
 import StockTankFarmPage from '@/pages/stock-tank-farm';
 import type { RouteObject } from 'react-router-dom';
 
@@ -32,7 +39,7 @@ export const privateRoutes: RouteObject[] = [
           },
           {
             path: 'loss-accountability',
-            element: <div>Loss Accountability</div>,
+            element: <LossAccountability />,
           },
           {
             path: 'commercial-revenue',
@@ -40,31 +47,31 @@ export const privateRoutes: RouteObject[] = [
           },
           {
             path: 'assets-eam',
-            element: <OverviewPage />,
+            element: <AssetsEam />,
           },
           {
             path: 'hse-integrity',
-            element: <OverviewPage />,
+            element: <HseIntegrity />,
           },
           {
             path: 'reports/daily-throughput',
-            element: <OverviewPage />,
+            element: <DailyThroughputReport />,
           },
           {
             path: 'reports/stock-reconciliation',
-            element: <OverviewPage />,
+            element: <StockReconciliationReport />,
           },
           {
             path: 'reports/product-loss',
-            element: <OverviewPage />,
+            element: <ProductLossReport />,
           },
           {
             path: 'reports/tariff-revenue',
-            element: <OverviewPage />,
+            element: <TariffRevenueReport />,
           },
           {
             path: 'reports/hse-compliance',
-            element: <OverviewPage />,
+            element: <HseComplianceReport />,
           },
           {
             path: '*',
