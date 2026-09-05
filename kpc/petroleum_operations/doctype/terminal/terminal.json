@@ -14,7 +14,10 @@
   "country",
   "is_active",
   "location_section",
-  "location"
+  "location",
+  "column_break_location",
+  "latitude",
+  "longitude"
  ],
  "fields": [
   {
@@ -76,6 +79,24 @@
    "fieldname": "location",
    "fieldtype": "Small Text",
    "label": "Location / Address"
+  },
+  {
+   "fieldname": "column_break_location",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude",
+   "precision": "6",
+   "description": "Decimal degrees, e.g. -4.062500 (south of the equator is negative). Used for map-view plotting only - not validated against any address."
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude",
+   "precision": "6",
+   "description": "Decimal degrees, e.g. 39.663400 (west of the prime meridian is negative)."
   }
  ],
  "index_web_pages_for_search": 1,

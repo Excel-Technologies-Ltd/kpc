@@ -7,6 +7,8 @@ frappe.ui.form.on("Terminal Receipt", {
 	},
 
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(__("Reconciliation"), () => {
 				frappe.new_doc("Reconciliation", { terminal_receipt: frm.doc.name });

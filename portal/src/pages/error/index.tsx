@@ -1,11 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Home,
-  RefreshCw,
-  ShieldAlert,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Home, RefreshCw, ShieldAlert } from 'lucide-react';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router-dom';
 
 type ErrorPageProps = {
@@ -14,11 +8,7 @@ type ErrorPageProps = {
   statusCode?: string | number;
 };
 
-export default function ErrorPage({
-  title,
-  description,
-  statusCode,
-}: ErrorPageProps) {
+export default function ErrorPage({ title, description, statusCode }: ErrorPageProps) {
   const navigate = useNavigate();
   const error = useRouteError();
 
@@ -33,8 +23,7 @@ export default function ErrorPage({
     resolvedStatus = error.status;
     resolvedTitle = error.statusText || 'Navigation Error';
     resolvedDescription =
-      error.data?.message ||
-      'An unexpected routing error occurred while accessing this view.';
+      error.data?.message || 'An unexpected routing error occurred while accessing this view.';
   } else if (error instanceof Error) {
     resolvedStatus = '500';
     resolvedTitle = 'System Error';

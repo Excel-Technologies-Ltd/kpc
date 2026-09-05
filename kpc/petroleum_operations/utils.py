@@ -229,6 +229,61 @@ def log_journey_step(journey_ref: str, step: str, doc) -> None:
 	journey.save(ignore_permissions=True)
 
 
+@frappe.whitelist()
+def get_workflow_progress(journey_ref: str) -> dict:
+	"""The full Golden Thread step list for one Journey, each step flagged
+	done/current/upcoming, plus which real document (if any) already exists
+	for the very next step.
+
+	This exists because most step doctypes have no direct link field to
+	the *next* step's own doctype - each one links back to Oil Shipment/Oil
+	Tank/Journey instead (Tank Measurement, Quality Result, and Inventory
+	Position all reference Oil Shipment/Oil Tank/Journey, never each
+	other), so Frappe's native per-doctype "Connections" tab - which relies
+	on exactly that kind of direct link field - cannot be built for them.
+	Journey's own journey_log (see log_journey_step above) is the one place
+	that already has the real, ordered answer for any given journey_ref,
+	so every step document's form reads it from here instead of needing a
+	schema change to chain steps directly to each other.
+	"""
+	if not journey_ref or not frappe.db.exists("Journey", journey_ref):
+		return {"steps": [], "current_step": None, "next_step": None, "next_step_records": []}
+
+	journey = frappe.get_doc("Journey", journey_ref)
+	# frappe.get_doc() does not itself enforce read permission on load -
+	# only an explicit check_permission() call does (see ai/chat_sessions.py
+	# in frappe_crewai for the same gap, found and closed the same way).
+	journey.check_permission("read")
+
+	logged_by_step: dict[str, list[dict]] = {}
+	for row in journey.journey_log:
+		logged_by_step.setdefault(row.step, []).append(
+			{"reference_doctype": row.reference_doctype, "reference_name": row.reference_name}
+		)
+
+	current_step = journey.current_step if journey.current_step in JOURNEY_STEPS else JOURNEY_STEPS[0]
+	current_idx = JOURNEY_STEPS.index(current_step)
+	next_step = JOURNEY_STEPS[current_idx + 1] if current_idx + 1 < len(JOURNEY_STEPS) else None
+
+	steps = []
+	for idx, step in enumerate(JOURNEY_STEPS):
+		if idx < current_idx:
+			status = "done"
+		elif idx == current_idx:
+			status = "current"
+		else:
+			status = "upcoming"
+		steps.append({"step": step, "status": status, "records": logged_by_step.get(step, [])})
+
+	return {
+		"journey": journey.name,
+		"current_step": current_step,
+		"next_step": next_step,
+		"next_step_records": logged_by_step.get(next_step, []) if next_step else [],
+		"steps": steps,
+	}
+
+
 def calculate_vcf(density_at_15c: float, observed_temperature_c: float) -> float:
 	"""Return the Volume Correction Factor (VCF) to standard 15C.
 

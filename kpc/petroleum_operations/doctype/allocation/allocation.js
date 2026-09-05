@@ -8,6 +8,8 @@ frappe.ui.form.on("Allocation", {
 	},
 
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(__("Dispatch"), () => {
 				frappe.new_doc("Dispatch", { allocation: frm.doc.name });

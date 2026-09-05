@@ -13,7 +13,13 @@ app_license = "MIT"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/kpc/css/kpc.css"
-# app_include_js = "/assets/kpc/js/kpc.js"
+
+# Defines kpc.workflow_progress.render(frm) - a "Golden Thread progress"
+# section shown on every step doctype's own form (see each doctype's own
+# <name>.js calling it from refresh()). Pure function definitions only, no
+# side effects on load, so including it app-wide (rather than per-doctype
+# via doctype_js) is safe.
+app_include_js = "/assets/kpc/js/workflow_progress.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/kpc/css/kpc.css"
@@ -126,6 +132,18 @@ after_install = "kpc.install.after_install"
 override_doctype_class = {
 	"Stock Entry": "kpc.petroleum_operations.integrations.stock_vouchers.KPCStockEntry",
 	"Delivery Note": "kpc.petroleum_operations.integrations.stock_vouchers.KPCDeliveryNote",
+}
+
+# Standard Queries
+# ----------------
+# Terminal's own default search query - so an inactive terminal never shows
+# up in ANY Terminal Link-field dropdown app-wide (Nomination, Movement, Oil
+# Shipment, Oil Tank, Pipeline Batch, Capacity Assessment, Tariff, Plant
+# Asset, ...), with no per-field client script needed anywhere. Existing
+# documents that already reference an inactive terminal are unaffected -
+# this only narrows what's *offered* for a new selection.
+standard_queries = {
+	"Terminal": "kpc.petroleum_operations.queries.active_terminal_query",
 }
 
 # Document Events

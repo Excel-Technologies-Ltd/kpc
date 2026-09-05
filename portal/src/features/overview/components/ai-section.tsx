@@ -1,11 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTheme } from '@/components/theme-provider';
 import { getChartTheme } from '@/lib/chart-theme';
 import Chart from 'chart.js/auto';
@@ -117,11 +111,7 @@ export function AISection() {
       lossDonutRef.current = new Chart(lossDonutCanvasRef.current, {
         type: 'doughnut',
         data: {
-          labels: [
-            'Measurement tolerance',
-            'Evaporation',
-            'Theft / unexplained',
-          ],
+          labels: ['Measurement tolerance', 'Evaporation', 'Theft / unexplained'],
           datasets: [
             {
               data: [54, 31, 15],
@@ -152,8 +142,8 @@ export function AISection() {
           Predictive maintenance &amp; reconciliation
         </h2>
         <p className='text-muted-foreground text-sm'>
-          Deterministic anomaly scoring against a documented safe envelope — no
-          recommendation executes without human approval.
+          Deterministic anomaly scoring against a documented safe envelope — no recommendation
+          executes without human approval.
         </p>
       </div>
 
@@ -164,16 +154,11 @@ export function AISection() {
               <CardTitle>AI alerts &amp; recommendations</CardTitle>
               <Badge variant='outline'>3 open</Badge>
             </div>
-            <CardDescription>
-              Human-in-the-loop approvals required
-            </CardDescription>
+            <CardDescription>Human-in-the-loop approvals required</CardDescription>
           </CardHeader>
           <CardContent className='divide-border divide-y p-0'>
             {ALERTS.map((alert) => (
-              <div
-                key={alert.id}
-                className='flex items-start gap-3 px-6 py-4'
-              >
+              <div key={alert.id} className='flex items-start gap-3 px-6 py-4'>
                 <div
                   className={
                     alert.severity === 'high'
@@ -206,16 +191,10 @@ export function AISection() {
                 </div>
                 <div className='min-w-0 flex-1'>
                   <div className='flex flex-wrap items-baseline justify-between gap-2'>
-                    <span className='text-foreground text-sm font-medium'>
-                      {alert.title}
-                    </span>
-                    <span className='text-muted-foreground text-xs'>
-                      {alert.time}
-                    </span>
+                    <span className='text-foreground text-sm font-medium'>{alert.title}</span>
+                    <span className='text-muted-foreground text-xs'>{alert.time}</span>
                   </div>
-                  <p className='text-muted-foreground mt-1 text-xs leading-relaxed'>
-                    {alert.desc}
-                  </p>
+                  <p className='text-muted-foreground mt-1 text-xs leading-relaxed'>{alert.desc}</p>
                   <div className='mt-2 flex items-center gap-2'>
                     <div className='bg-muted h-1.5 flex-1 overflow-hidden rounded-full'>
                       <div
@@ -234,11 +213,7 @@ export function AISection() {
                     </span>
                   </div>
                 </div>
-                <Badge
-                  variant={
-                    alert.status === 'APPROVED' ? 'default' : 'secondary'
-                  }
-                >
+                <Badge variant={alert.status === 'APPROVED' ? 'default' : 'secondary'}>
                   {alert.status}
                 </Badge>
               </div>

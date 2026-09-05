@@ -7,6 +7,8 @@ frappe.ui.form.on("Movement", {
 	},
 
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		const status_colors = { Draft: "grey", "In Transit": "blue", Completed: "green", Halted: "red" };
 		frm.page.clear_indicator();
 		if (frm.doc.movement_status) {

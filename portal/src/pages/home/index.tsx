@@ -1,11 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { useFrappeGetDocCount, useFrappeGetDocList } from 'frappe-react-sdk';
-import { Box, Map, Radio, Sparkles } from 'lucide-react';
+import { Radio, Sparkles } from 'lucide-react';
 import React, { useMemo } from 'react';
 import {
-  ThroughputTrendChart,
   ProductMixChart,
   RevenueVsTargetChart,
+  ThroughputTrendChart,
 } from './components/analytics-charts/index';
 import type { Kpi3DCardProps } from './components/kpi-3d-card';
 import { Kpi3DCard } from './components/kpi-3d-card';
@@ -61,8 +61,8 @@ export default function ExecutiveCommand() {
       totalThroughput > 0
         ? Math.round(totalThroughput).toLocaleString()
         : receipts && receipts.length === 0
-        ? '0'
-        : '0';
+          ? '0'
+          : '0';
 
     // 2. Network Line Fill / Capacity
     let totalTankCap = 0;
@@ -73,8 +73,8 @@ export default function ExecutiveCommand() {
       totalTankCap >= 1000
         ? `${Math.round(totalTankCap / 1000)}k`
         : totalTankCap > 0
-        ? Math.round(totalTankCap).toLocaleString()
-        : '0';
+          ? Math.round(totalTankCap).toLocaleString()
+          : '0';
 
     // 3. Revenue MTD
     let totalRev = 0;
@@ -85,8 +85,8 @@ export default function ExecutiveCommand() {
       totalRev >= 1_000_000
         ? (totalRev / 1_000_000).toFixed(2)
         : totalRev > 0
-        ? (totalRev / 1000).toFixed(1)
-        : '0.00';
+          ? (totalRev / 1000).toFixed(1)
+          : '0.00';
 
     // 4. System Loss: normalized loss variance from real Reconciliation records
     let avgVariance = 0;
@@ -114,9 +114,7 @@ export default function ExecutiveCommand() {
         value: throughputVal,
         unit: 'm³',
         delta:
-          receipts && receipts.length > 0
-            ? `${receipts.length} active batches`
-            : '0 batches today',
+          receipts && receipts.length > 0 ? `${receipts.length} active batches` : '0 batches today',
         deltaType: totalThroughput > 0 ? 'up' : 'flat',
         description: 'Total volume pumped across Mombasa–Nairobi trunk lines',
         color: '#4361ee',
@@ -130,9 +128,7 @@ export default function ExecutiveCommand() {
         value: lineFillVal,
         unit: 'm³',
         delta:
-          tanks && tanks.length > 0
-            ? `${tanks.length} tanks active`
-            : '0 active storage tanks',
+          tanks && tanks.length > 0 ? `${tanks.length} tanks active` : '0 active storage tanks',
         deltaType: 'flat',
         description: 'Dynamic product pack within Line 1, Line 4 & Line 5',
         color: '#06b6d4',

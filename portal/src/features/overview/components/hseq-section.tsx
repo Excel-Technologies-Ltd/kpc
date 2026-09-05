@@ -1,11 +1,6 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function HSEQSection() {
   return (
@@ -15,8 +10,8 @@ export function HSEQSection() {
           HSEQ &amp; certification gate
         </h2>
         <p className='text-muted-foreground mt-1 text-sm'>
-          Freshness is recomputed against today&apos;s date on every check — a
-          lapsed certification is never trusted from a cached status field.
+          Freshness is recomputed against today&apos;s date on every check — a lapsed certification
+          is never trusted from a cached status field.
         </p>
       </div>
 
@@ -33,9 +28,7 @@ export function HSEQSection() {
               </Avatar>
               <div className='min-w-0 flex-1'>
                 <p className='text-foreground font-medium'>James Mwangi</p>
-                <p className='text-muted-foreground text-xs'>
-                  Field Technician · Pump Station KP2
-                </p>
+                <p className='text-muted-foreground text-xs'>Field Technician · Pump Station KP2</p>
                 <div className='mt-2 flex flex-wrap gap-1.5'>
                   <Badge variant='outline'>Pipeline Operations</Badge>
                   <Badge variant='outline'>Confined Space Entry</Badge>
@@ -50,13 +43,9 @@ export function HSEQSection() {
               </Avatar>
               <div className='min-w-0 flex-1'>
                 <p className='text-foreground font-medium'>Peter Otieno</p>
-                <p className='text-muted-foreground text-xs'>
-                  Field Technician · Mombasa Terminal
-                </p>
+                <p className='text-muted-foreground text-xs'>Field Technician · Mombasa Terminal</p>
                 <div className='mt-2 flex flex-wrap gap-1.5'>
-                  <Badge variant='destructive'>
-                    Confined Space Entry — expired
-                  </Badge>
+                  <Badge variant='destructive'>Confined Space Entry — expired</Badge>
                   <Badge variant='outline'>General HSEQ</Badge>
                 </div>
               </div>
@@ -72,31 +61,21 @@ export function HSEQSection() {
           <CardContent className='gap-0'>
             <div className='border-border flex items-center justify-between gap-3 border-b py-3'>
               <div>
-                <p className='text-foreground font-mono text-sm font-medium'>
-                  PTW-2026-0117
-                </p>
-                <p className='text-muted-foreground text-xs'>
-                  Hot Work — Pump Station KP2
-                </p>
+                <p className='text-foreground font-mono text-sm font-medium'>PTW-2026-0117</p>
+                <p className='text-muted-foreground text-xs'>Hot Work — Pump Station KP2</p>
               </div>
               <Badge variant='secondary'>Issued</Badge>
             </div>
             <div className='border-border flex items-center justify-between gap-3 border-b py-3'>
               <div>
-                <p className='text-foreground font-mono text-sm font-medium'>
-                  PTW-2026-0116
-                </p>
-                <p className='text-muted-foreground text-xs'>
-                  Confined Space Entry — Tank MB-03
-                </p>
+                <p className='text-foreground font-mono text-sm font-medium'>PTW-2026-0116</p>
+                <p className='text-muted-foreground text-xs'>Confined Space Entry — Tank MB-03</p>
               </div>
               <Badge variant='outline'>Closed</Badge>
             </div>
             <div className='flex items-center justify-between gap-3 py-3'>
               <div>
-                <p className='text-foreground font-mono text-sm font-medium'>
-                  PTW-2026-0115
-                </p>
+                <p className='text-foreground font-mono text-sm font-medium'>PTW-2026-0115</p>
                 <p className='text-muted-foreground text-xs'>
                   Electrical Isolation — Nairobi Terminal
                 </p>

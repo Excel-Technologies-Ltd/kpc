@@ -2,6 +2,9 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Inventory Position", {
+	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+	},
 	opening_volume_kl(frm) {
 		frm.trigger("recalculate");
 	},

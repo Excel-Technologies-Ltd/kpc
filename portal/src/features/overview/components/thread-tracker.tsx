@@ -61,8 +61,9 @@ const STEP_DEFINITIONS = [
 ];
 
 export function ThreadTracker() {
-  const { data: journeys, isLoading: journeysLoading } =
-    useFrappeGetDocList<JourneyDoc>('Journey', {
+  const { data: journeys, isLoading: journeysLoading } = useFrappeGetDocList<JourneyDoc>(
+    'Journey',
+    {
       fields: [
         'name',
         'status',
@@ -74,24 +75,22 @@ export function ThreadTracker() {
       ],
       orderBy: { field: 'creation', order: 'desc' },
       limit: 50,
-    });
-
-  const { data: shipments } = useFrappeGetDocList<OilShipmentDoc>(
-    'Oil Shipment',
-    {
-      fields: [
-        'name',
-        'journey_ref',
-        'vessel_name',
-        'product',
-        'terminal',
-        'planned_quantity_kl',
-        'supplier',
-        'workflow_state',
-      ],
-      limit: 100,
     }
   );
+
+  const { data: shipments } = useFrappeGetDocList<OilShipmentDoc>('Oil Shipment', {
+    fields: [
+      'name',
+      'journey_ref',
+      'vessel_name',
+      'product',
+      'terminal',
+      'planned_quantity_kl',
+      'supplier',
+      'workflow_state',
+    ],
+    limit: 100,
+  });
 
   const { data: alerts } = useFrappeGetDocList<AIAlertDoc>('AI Alert', {
     fields: [
@@ -140,10 +139,7 @@ export function ThreadTracker() {
       if (found) return found;
     }
     const inProgress = journeys.find(
-      (j) =>
-        j.status === 'Active' &&
-        j.current_step &&
-        !j.current_step.startsWith('13')
+      (j) => j.status === 'Active' && j.current_step && !j.current_step.startsWith('13')
     );
     return inProgress || journeys[0];
   }, [journeys, selectedJourneyId]);
@@ -152,9 +148,7 @@ export function ThreadTracker() {
     if (!selectedJourney) return null;
     return (
       shipmentMap.get(selectedJourney.name) ||
-      (selectedJourney.origin_shipment
-        ? shipmentMap.get(selectedJourney.origin_shipment)
-        : null)
+      (selectedJourney.origin_shipment ? shipmentMap.get(selectedJourney.origin_shipment) : null)
     );
   }, [selectedJourney, shipmentMap]);
 
@@ -182,8 +176,7 @@ export function ThreadTracker() {
             Golden Thread tracker
           </h2>
           <p className='text-muted-foreground mt-1 text-sm'>
-            One journey_ref, thirteen enforced steps — loading active
-            journeys…
+            One journey_ref, thirteen enforced steps — loading active journeys…
           </p>
         </div>
         <Card className='h-64 animate-pulse opacity-60' />
@@ -199,8 +192,7 @@ export function ThreadTracker() {
             Golden Thread tracker
           </h2>
           <p className='text-muted-foreground mt-1 text-sm'>
-            One journey_ref, thirteen enforced steps — every arrow below is a
-            system-checked gate.
+            One journey_ref, thirteen enforced steps — every arrow below is a system-checked gate.
           </p>
         </div>
         <Card>
@@ -213,8 +205,7 @@ export function ThreadTracker() {
   }
 
   const vesselDisplay = currentShipment?.vessel_name || 'MT Marine Vessel';
-  const productDisplay =
-    selectedJourney.product || currentShipment?.product || 'AGO';
+  const productDisplay = selectedJourney.product || currentShipment?.product || 'AGO';
   const routeDisplay = currentShipment?.terminal
     ? `${currentShipment.terminal} → Nairobi Terminal`
     : 'Mombasa → Nairobi';
@@ -222,9 +213,7 @@ export function ThreadTracker() {
     ? `${currentShipment.planned_quantity_kl.toLocaleString()} KL`
     : '8,400 KL';
   const customerDisplay =
-    selectedJourney.customer ||
-    currentShipment?.supplier ||
-    'Commercial Partner';
+    selectedJourney.customer || currentShipment?.supplier || 'Commercial Partner';
 
   return (
     <section id='thread' className='scroll-mt-24 mb-12'>
@@ -234,8 +223,8 @@ export function ThreadTracker() {
             Golden Thread tracker
           </h2>
           <p className='text-muted-foreground mt-1 text-sm'>
-            One journey_ref, thirteen enforced steps — every arrow below is a
-            system-checked gate, not a convention.
+            One journey_ref, thirteen enforced steps — every arrow below is a system-checked gate,
+            not a convention.
           </p>
         </div>
 
@@ -262,42 +251,26 @@ export function ThreadTracker() {
       <Card>
         <CardHeader className='border-border gap-4 border-b sm:flex-row sm:items-start sm:justify-between'>
           <div>
-            <CardTitle className='font-mono text-sm'>
-              {selectedJourney.name}
-            </CardTitle>
+            <CardTitle className='font-mono text-sm'>{selectedJourney.name}</CardTitle>
             <CardDescription className='mt-1'>
               {vesselDisplay} · {productDisplay}
             </CardDescription>
           </div>
           <div className='grid grid-cols-2 gap-x-6 gap-y-2 text-xs sm:grid-cols-4'>
             <div>
-              <p className='text-muted-foreground tracking-wide uppercase'>
-                Route
-              </p>
-              <p className='text-foreground mt-0.5 font-medium'>
-                {routeDisplay}
-              </p>
+              <p className='text-muted-foreground tracking-wide uppercase'>Route</p>
+              <p className='text-foreground mt-0.5 font-medium'>{routeDisplay}</p>
             </div>
             <div>
-              <p className='text-muted-foreground tracking-wide uppercase'>
-                Quantity
-              </p>
-              <p className='text-foreground mt-0.5 font-medium'>
-                {quantityDisplay}
-              </p>
+              <p className='text-muted-foreground tracking-wide uppercase'>Quantity</p>
+              <p className='text-foreground mt-0.5 font-medium'>{quantityDisplay}</p>
             </div>
             <div>
-              <p className='text-muted-foreground tracking-wide uppercase'>
-                Customer
-              </p>
-              <p className='text-foreground mt-0.5 font-medium'>
-                {customerDisplay}
-              </p>
+              <p className='text-muted-foreground tracking-wide uppercase'>Customer</p>
+              <p className='text-foreground mt-0.5 font-medium'>{customerDisplay}</p>
             </div>
             <div>
-              <p className='text-muted-foreground tracking-wide uppercase'>
-                Current step
-              </p>
+              <p className='text-muted-foreground tracking-wide uppercase'>Current step</p>
               <p className='text-foreground mt-0.5 font-medium'>
                 {selectedJourney.current_step || '1. Shipment'}
               </p>
@@ -319,27 +292,21 @@ export function ThreadTracker() {
                 const active = stepIndex === currentStepNum;
 
                 return (
-                  <div
-                    key={step.num}
-                    className='flex min-w-[4.5rem] flex-col items-center gap-2'
-                  >
+                  <div key={step.num} className='flex min-w-[4.5rem] flex-col items-center gap-2'>
                     <div
                       className={cn(
                         'size-3 shrink-0 rounded-full',
                         done && 'bg-primary',
-                        active && 'bg-primary ring-ring ring-4 ring-offset-2 ring-offset-background',
+                        active &&
+                          'bg-primary ring-ring ring-4 ring-offset-2 ring-offset-background',
                         !done && !active && 'bg-muted'
                       )}
                     />
-                    <span className='text-muted-foreground font-mono text-[10px]'>
-                      {step.num}
-                    </span>
+                    <span className='text-muted-foreground font-mono text-[10px]'>{step.num}</span>
                     <span
                       className={cn(
                         'text-center text-[11px] leading-tight',
-                        active || done
-                          ? 'text-foreground font-medium'
-                          : 'text-muted-foreground'
+                        active || done ? 'text-foreground font-medium' : 'text-muted-foreground'
                       )}
                     >
                       {step.label}
@@ -383,8 +350,7 @@ export function ThreadTracker() {
                   <path d='M20 6L9 17l-5-5' />
                 </svg>
                 <span>
-                  All pipeline telemetry, gate checks, and mass balances nominal
-                  for this journey.
+                  All pipeline telemetry, gate checks, and mass balances nominal for this journey.
                 </span>
               </>
             )}
@@ -393,9 +359,7 @@ export function ThreadTracker() {
             <Button variant='outline' size='sm'>
               View journey_ref log
             </Button>
-            <Button size='sm'>
-              {currentAlert ? 'Acknowledge Alert' : 'Open Step Details'}
-            </Button>
+            <Button size='sm'>{currentAlert ? 'Acknowledge Alert' : 'Open Step Details'}</Button>
           </div>
         </CardFooter>
       </Card>

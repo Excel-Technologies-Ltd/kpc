@@ -325,11 +325,22 @@ def create_and_submit_delivery_note(dispatch) -> frappe.model.document.Document:
 	(Step 11) happens before Invoice (Step 12), exactly like real delivery
 	precedes billing.
 	"""
-	product = frappe.db.get_value("Oil Tank", dispatch.destination_tank, "product")
+	# The item actually being delivered is whatever the customer nominated
+	# (Step 5) - not the destination tank's own "Designated Product" field.
+	# That field is informational metadata about what a tank is normally
+	# dedicated to, and its own description says it's deliberately left
+	# blank for a multi-product/segregated tank - so a dispatch through
+	# one of those tanks got item_code=None on its Delivery Note Item,
+	# which ArcApps then rejects as an invalid Item at submit. Every other
+	# stock voucher in this app already resolves its item the same way -
+	# traced back through the real document chain (see Terminal Receipt's
+	# post_stock_transfer(), which reads it off Movement, never off a
+	# tank) - this brings Dispatch in line with that same pattern.
 	warehouse = frappe.db.get_value("Oil Tank", dispatch.destination_tank, "warehouse")
 	nomination = frappe.get_doc(
 		"Nomination", frappe.db.get_value("Allocation", dispatch.allocation, "nomination")
 	)
+	product = nomination.product
 
 	delivery_note = frappe.get_doc(
 		{

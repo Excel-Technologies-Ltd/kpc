@@ -26,6 +26,21 @@ are sequential physical-progress milestones (a vessel arriving, discharging,
 being received), normally all logged by the same Terminal Operator watching
 the same physical event in real time - not a requester/approver split, so a
 self-approval gate there would just block normal operations.
+
+The same reasoning applies to a small, explicit set of *submittable*
+doctypes too - real-time physical-event logs by the same Terminal Operator,
+not a requester/approver split, per BUSINESS_GUIDE.md's own description of
+that role ("takes dip readings ... records receipts and dispatches as they
+happen"): Tank Measurement (a dip reading), Terminal Receipt, and Dispatch.
+These were caught by the wildcard `before_submit` hook anyway (a real bug,
+not an intentional gap - the block was applied to every submittable
+Petroleum Operations doctype without distinguishing the two cases this
+module's own docstring already describes), so a single Terminal Operator
+genuinely could not submit their own dip reading, receipt, or dispatch
+record - exactly the "normal operations" this same reasoning already
+protects Oil Shipment from. Every other submittable doctype (Nomination,
+Allocation, Reconciliation, Invoice, ...) is a real requester/approver
+handoff and keeps the block.
 """
 
 import frappe
@@ -41,6 +56,12 @@ from frappe import _
 # desk UI for a real user anyway - it only matters for scripts and hooks
 # that legitimately run as Administrator.
 _EXEMPT_USERS = ("Administrator",)
+
+# Single-Terminal-Operator physical-event logs - see the module docstring
+# above for why these, specifically, get the same exemption Oil Shipment's
+# workflow_state already has, and why every other submittable doctype in
+# this module does not.
+_SELF_SUBMIT_EXEMPT_DOCTYPES = ("Tank Measurement", "Terminal Receipt", "Dispatch")
 
 
 def assert_not_self_approving(doc, action: str) -> None:
@@ -65,5 +86,7 @@ def block_self_submit(doc, method=None):
 	Stock Entry, ...), whose documents are routinely created and submitted
 	by the same user as a matter of normal, unrelated business process."""
 	if frappe.get_meta(doc.doctype).module != "Petroleum Operations":
+		return
+	if doc.doctype in _SELF_SUBMIT_EXEMPT_DOCTYPES:
 		return
 	assert_not_self_approving(doc, action=_("submitted"))

@@ -1,11 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Html, OrbitControls, Sparkles } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -19,12 +13,7 @@ interface OilTankDoc {
   tank_code?: string;
   terminal?: string;
   product?: string;
-  current_state?:
-    | 'Active'
-    | 'Maintenance'
-    | 'Quarantine'
-    | 'Decommissioned'
-    | string;
+  current_state?: 'Active' | 'Maintenance' | 'Quarantine' | 'Decommissioned' | string;
   capacity_kl?: number;
   safe_fill_capacity_kl?: number;
   reference_height_mm?: number;
@@ -88,26 +77,18 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function Tank3D({
-  data,
-  position,
-}: {
-  data: ProcessedTank;
-  position: [number, number, number];
-}) {
+function Tank3D({ data, position }: { data: ProcessedTank; position: [number, number, number] }) {
   const liquidRef = useRef<THREE.Mesh>(null);
   const liquidTopRef = useRef<THREE.Mesh>(null);
   const height = 3.0;
   const radius = 0.85;
 
   const clampedLevel = Math.max(0, Math.min(1, data.level));
-  const liquidHeight =
-    clampedLevel > 0 ? Math.max(0.12, (height - 0.08) * clampedLevel) : 0.04;
+  const liquidHeight = clampedLevel > 0 ? Math.max(0.12, (height - 0.08) * clampedLevel) : 0.04;
   const baseLiquidY = -height / 2 + liquidHeight / 2 + 0.04;
 
   useFrame((state) => {
-    const wave =
-      Math.sin(state.clock.elapsedTime * 1.6 + position[0] * 2) * 0.012;
+    const wave = Math.sin(state.clock.elapsedTime * 1.6 + position[0] * 2) * 0.012;
     if (liquidRef.current) {
       liquidRef.current.position.y = baseLiquidY + wave;
     }
@@ -126,9 +107,7 @@ function Tank3D({
       {clampedLevel > 0 && (
         <group>
           <mesh ref={liquidRef} position={[0, baseLiquidY, 0]}>
-            <cylinderGeometry
-              args={[radius - 0.06, radius - 0.06, liquidHeight, 36]}
-            />
+            <cylinderGeometry args={[radius - 0.06, radius - 0.06, liquidHeight, 36]} />
             <meshStandardMaterial
               color={data.color}
               emissive={data.color}
@@ -171,11 +150,7 @@ function Tank3D({
         [0.25, 0.5, 0.75].map((level, i) => (
           <mesh key={i} position={[0, -height / 2 + height * level, 0]}>
             <torusGeometry args={[radius + 0.015, 0.018, 16, 36]} />
-            <meshStandardMaterial
-              color='#233252'
-              roughness={0.4}
-              metalness={0.6}
-            />
+            <meshStandardMaterial color='#233252' roughness={0.4} metalness={0.6} />
           </mesh>
         ))}
 
@@ -186,11 +161,7 @@ function Tank3D({
 
       <mesh position={[radius + 0.02, height / 2 + 0.04, 0]}>
         <sphereGeometry args={[0.07, 16, 16]} />
-        <meshStandardMaterial
-          color={data.color}
-          emissive={data.color}
-          emissiveIntensity={1.8}
-        />
+        <meshStandardMaterial color={data.color} emissive={data.color} emissiveIntensity={1.8} />
       </mesh>
 
       <Html position={[0, height / 2 + 0.52, 0]} center distanceFactor={9}>
@@ -207,9 +178,7 @@ function Tank3D({
             textAlign: 'center',
           }}
         >
-          <div style={{ fontWeight: 700, letterSpacing: '0.02em' }}>
-            {data.code || data.name}
-          </div>
+          <div style={{ fontWeight: 700, letterSpacing: '0.02em' }}>{data.code || data.name}</div>
           <div
             style={{
               color: data.color,
@@ -236,10 +205,7 @@ function Pipeline3D() {
     ]);
   }, []);
 
-  const tubeGeo = useMemo(
-    () => new THREE.TubeGeometry(curve, 64, 0.13, 12, false),
-    [curve],
-  );
+  const tubeGeo = useMemo(() => new THREE.TubeGeometry(curve, 64, 0.13, 12, false), [curve]);
   const particleCount = 14;
   const particleRefs = useRef<(THREE.Mesh | null)[]>([]);
 
@@ -267,11 +233,7 @@ function Pipeline3D() {
           }}
         >
           <sphereGeometry args={[0.045, 8, 8]} />
-          <meshStandardMaterial
-            color='#33C9B7'
-            emissive='#33C9B7'
-            emissiveIntensity={1.8}
-          />
+          <meshStandardMaterial color='#33C9B7' emissive='#33C9B7' emissiveIntensity={1.8} />
         </mesh>
       ))}
     </group>
@@ -320,18 +282,11 @@ function Scene3D({ tanks }: { tanks: ProcessedTank[] }) {
         opacity={0.35}
       />
 
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -1.65, 0]}
-        receiveShadow
-      >
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.65, 0]} receiveShadow>
         <planeGeometry args={[40, 30]} />
         <shadowMaterial opacity={0.35} />
       </mesh>
-      <gridHelper
-        args={[32, 32, '#1a2540', '#101a2c']}
-        position={[0, -1.64, 0]}
-      />
+      <gridHelper args={[32, 32, '#1a2540', '#101a2c']} position={[0, -1.64, 0]} />
 
       {false && <Pipeline3D />}
 
@@ -356,21 +311,20 @@ function Scene3D({ tanks }: { tanks: ProcessedTank[] }) {
 }
 
 export function TankFarm3DSection() {
-  const { data: rawTanks, isLoading: tanksLoading } =
-    useFrappeGetDocList<OilTankDoc>('Oil Tank', {
-      fields: [
-        'name',
-        'tank_name',
-        'tank_code',
-        'terminal',
-        'product',
-        'current_state',
-        'capacity_kl',
-        'safe_fill_capacity_kl',
-        'reference_height_mm',
-      ],
-      limit: 100,
-    });
+  const { data: rawTanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>('Oil Tank', {
+    fields: [
+      'name',
+      'tank_name',
+      'tank_code',
+      'terminal',
+      'product',
+      'current_state',
+      'capacity_kl',
+      'safe_fill_capacity_kl',
+      'reference_height_mm',
+    ],
+    limit: 100,
+  });
 
   const { data: measurements, isLoading: measurementsLoading } =
     useFrappeGetDocList<TankMeasurementDoc>('Tank Measurement', {
@@ -414,21 +368,13 @@ export function TankFarm3DSection() {
             100,
             Math.max(
               0,
-              Math.round(
-                (measurement.observed_level_mm / tank.reference_height_mm) *
-                  100,
-              ),
-            ),
+              Math.round((measurement.observed_level_mm / tank.reference_height_mm) * 100)
+            )
           );
         } else if (tank.capacity_kl && measurement.net_standard_volume_kl) {
           levelPercent = Math.min(
             100,
-            Math.max(
-              0,
-              Math.round(
-                (measurement.net_standard_volume_kl / tank.capacity_kl) * 100,
-              ),
-            ),
+            Math.max(0, Math.round((measurement.net_standard_volume_kl / tank.capacity_kl) * 100))
           );
         }
       }
@@ -466,8 +412,7 @@ export function TankFarm3DSection() {
       <div>
         <h2 className='text-foreground text-lg font-medium'>Tank farm</h2>
         <p className='text-muted-foreground text-sm'>
-          Live fill levels rendered in 3D across Mombasa and Nairobi. Drag to
-          orbit, scroll to zoom.
+          Live fill levels rendered in 3D across Mombasa and Nairobi. Drag to orbit, scroll to zoom.
         </p>
       </div>
 
@@ -478,9 +423,7 @@ export function TankFarm3DSection() {
               <CardTitle>Tank farm — live render</CardTitle>
               <Badge variant='outline'>R3F · WebGL</Badge>
             </div>
-            <CardDescription>
-              Interactive 3D view of tank inventory
-            </CardDescription>
+            <CardDescription>Interactive 3D view of tank inventory</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='bg-muted/30 relative min-h-[480px] overflow-hidden rounded-lg'>
@@ -498,8 +441,7 @@ export function TankFarm3DSection() {
                     shadows
                     dpr={[1, 2]}
                     camera={{
-                      position:
-                        tanks.length > 4 ? [0, 4.2, 11.2] : [0, 3.2, 9.5],
+                      position: tanks.length > 4 ? [0, 4.2, 11.2] : [0, 3.2, 9.5],
                       fov: 42,
                     }}
                     gl={{ antialias: true }}
@@ -568,9 +510,7 @@ export function TankFarm3DSection() {
                           <span className='font-mono'>{tank.temp}</span>
                         </div>
                         <div className='mt-2'>
-                          <Badge variant={cfg.badgeVariant}>
-                            {tank.statusLabel}
-                          </Badge>
+                          <Badge variant={cfg.badgeVariant}>{tank.statusLabel}</Badge>
                         </div>
                         <div className='bg-muted mt-2 h-1 w-full overflow-hidden rounded-full'>
                           <div

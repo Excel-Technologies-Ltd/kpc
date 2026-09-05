@@ -1,11 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
 
@@ -15,12 +9,7 @@ interface OilTankDoc {
   tank_code?: string;
   terminal?: string;
   product?: string;
-  current_state?:
-    | 'Active'
-    | 'Maintenance'
-    | 'Quarantine'
-    | 'Decommissioned'
-    | string;
+  current_state?: 'Active' | 'Maintenance' | 'Quarantine' | 'Decommissioned' | string;
   capacity_kl?: number;
   safe_fill_capacity_kl?: number;
   reference_height_mm?: number;
@@ -56,21 +45,20 @@ function statusMeta(state: string): {
 }
 
 export function TankFarmSection() {
-  const { data: tanks, isLoading: tanksLoading } =
-    useFrappeGetDocList<OilTankDoc>('Oil Tank', {
-      fields: [
-        'name',
-        'tank_name',
-        'tank_code',
-        'terminal',
-        'product',
-        'current_state',
-        'capacity_kl',
-        'safe_fill_capacity_kl',
-        'reference_height_mm',
-      ],
-      limit: 100,
-    });
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>('Oil Tank', {
+    fields: [
+      'name',
+      'tank_name',
+      'tank_code',
+      'terminal',
+      'product',
+      'current_state',
+      'capacity_kl',
+      'safe_fill_capacity_kl',
+      'reference_height_mm',
+    ],
+    limit: 100,
+  });
 
   const { data: measurements, isLoading: measurementsLoading } =
     useFrappeGetDocList<TankMeasurementDoc>('Tank Measurement', {
@@ -108,8 +96,8 @@ export function TankFarmSection() {
       <div>
         <h2 className='text-foreground text-lg font-medium'>Tank cards</h2>
         <p className='text-muted-foreground text-sm'>
-          Live fill levels across Mombasa and Nairobi. A tank under Maintenance
-          or Quarantine blocks any new measurement.
+          Live fill levels across Mombasa and Nairobi. A tank under Maintenance or Quarantine blocks
+          any new measurement.
         </p>
       </div>
 
@@ -145,26 +133,16 @@ export function TankFarmSection() {
                   100,
                   Math.max(
                     0,
-                    Math.round(
-                      (measurement.observed_level_mm /
-                        tank.reference_height_mm) *
-                        100,
-                    ),
-                  ),
+                    Math.round((measurement.observed_level_mm / tank.reference_height_mm) * 100)
+                  )
                 );
-              } else if (
-                tank.capacity_kl &&
-                measurement.net_standard_volume_kl
-              ) {
+              } else if (tank.capacity_kl && measurement.net_standard_volume_kl) {
                 levelPercent = Math.min(
                   100,
                   Math.max(
                     0,
-                    Math.round(
-                      (measurement.net_standard_volume_kl / tank.capacity_kl) *
-                        100,
-                    ),
-                  ),
+                    Math.round((measurement.net_standard_volume_kl / tank.capacity_kl) * 100)
+                  )
                 );
               }
             }
@@ -182,15 +160,11 @@ export function TankFarmSection() {
             return (
               <Card key={tank.name}>
                 <CardHeader className='pb-0'>
-                  <CardTitle
-                    className='truncate'
-                    title={tank.tank_name || tank.name}
-                  >
+                  <CardTitle className='truncate' title={tank.tank_name || tank.name}>
                     {tank.tank_name || tank.name}
                   </CardTitle>
                   <CardDescription>
-                    {tank.terminal || 'Terminal'} ·{' '}
-                    {tank.product || 'All Products'}
+                    {tank.terminal || 'Terminal'} · {tank.product || 'All Products'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='flex items-end gap-4'>
