@@ -6,6 +6,10 @@ frappe.ui.form.on("Tank Measurement", {
 		frm.set_query("tank", () => ({ filters: { current_state: "Active" } }));
 	},
 
+	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+	},
+
 	journey_ref(frm) {
 		if (!frm.doc.journey_ref) return;
 		frappe.db.get_value("Journey", frm.doc.journey_ref, "origin_shipment").then((r) => {

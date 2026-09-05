@@ -4,6 +4,7 @@
 frappe.ui.form.on("Quality Result", {
 	refresh(frm) {
 		frm.trigger("set_indicator");
+		kpc.workflow_progress.render(frm);
 	},
 
 	set_indicator(frm) {
