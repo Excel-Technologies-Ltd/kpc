@@ -1,6 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  ALLOCATION_DOCTYPE,
+  OIL_TANK_DOCTYPE,
+  PIPELINE_BATCHES_DOCTYPE,
+} from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { Layers, PieChart } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -12,7 +17,7 @@ export function ProductMixChart() {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
 
   // Fetch real Oil Tanks
-  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList('Oil Tank', {
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList(OIL_TANK_DOCTYPE, {
     fields: [
       'name',
       'tank_code',
@@ -26,16 +31,22 @@ export function ProductMixChart() {
   });
 
   // Fetch real Pipeline Batches for supplemental product volume
-  const { data: batches, isLoading: batchesLoading } = useFrappeGetDocList('Pipeline Batch', {
-    fields: ['name', 'product', 'planned_volume_kl'],
-    limit: 200,
-  });
+  const { data: batches, isLoading: batchesLoading } = useFrappeGetDocList(
+    PIPELINE_BATCHES_DOCTYPE,
+    {
+      fields: ['name', 'product', 'planned_volume_kl'],
+      limit: 200,
+    }
+  );
 
   // Fetch real Allocations
-  const { data: allocations, isLoading: allocationsLoading } = useFrappeGetDocList('Allocation', {
-    fields: ['name', 'product', 'allocated_quantity_kl'],
-    limit: 200,
-  });
+  const { data: allocations, isLoading: allocationsLoading } = useFrappeGetDocList(
+    ALLOCATION_DOCTYPE,
+    {
+      fields: ['name', 'product', 'allocated_quantity_kl'],
+      limit: 200,
+    }
+  );
 
   const isLoading = tanksLoading || batchesLoading || allocationsLoading;
 

@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { useRegisterPipelineRefresh } from '../pipeline-flow-refresh';
 import { deriveFlowKpis } from '../utils/derive-flow-kpis';
 import { FlowInfoButton } from './flow-info-button';
-import { FlowKpiCard } from './flow-kpi-card';
+import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
 
 const MOVEMENT_FIELDS = [
   'name',

@@ -1,4 +1,14 @@
 import { Badge } from '@/components/ui/badge';
+import {
+  AI_ALERT_DOCTYPE,
+  INVOICE_DOCTYPE,
+  JOURNEY_DOCTYPE,
+  OIL_SHIPMENT_DOCTYPE,
+  OIL_TANK_DOCTYPE,
+  PERMIT_TO_WORK_DOCTYPE,
+  RECONCILIATION_DOCTYPE,
+  TERMINAL_RECEIPT_DOCTYPE,
+} from '@/constants/doctype.string';
 import { useFrappeGetDocCount, useFrappeGetDocList } from 'frappe-react-sdk';
 import { Radio, Sparkles } from 'lucide-react';
 import React, { useMemo } from 'react';
@@ -15,36 +25,45 @@ import { NetworkMap3D } from './components/network-map-3d';
 export default function ExecutiveCommand() {
   const [mapMode, setMapMode] = React.useState<'3d' | '2d'>('3d');
   // 1. Fetch live Frappe counts & document lists
-  const { data: journeyCount, isLoading: journeysLoading } = useFrappeGetDocCount('Journey');
-  const { data: shipmentCount, isLoading: shipmentsLoading } = useFrappeGetDocCount('Oil Shipment');
-  const { data: permitCount, isLoading: permitLoading } = useFrappeGetDocCount('Permit to Work');
-  const { data: openAlertsCount, isLoading: alertsLoading } = useFrappeGetDocCount('AI Alert', [
-    ['status', '=', 'Open'],
-  ]);
+  const { data: journeyCount, isLoading: journeysLoading } = useFrappeGetDocCount(JOURNEY_DOCTYPE);
+  const { data: shipmentCount, isLoading: shipmentsLoading } =
+    useFrappeGetDocCount(OIL_SHIPMENT_DOCTYPE);
+  const { data: permitCount, isLoading: permitLoading } =
+    useFrappeGetDocCount(PERMIT_TO_WORK_DOCTYPE);
+  const { data: openAlertsCount, isLoading: alertsLoading } = useFrappeGetDocCount(
+    AI_ALERT_DOCTYPE,
+    [['status', '=', 'Open']]
+  );
 
   // Terminal Receipts for Throughput
-  const { data: receipts, isLoading: receiptsLoading } = useFrappeGetDocList('Terminal Receipt', {
-    fields: ['name', 'net_standard_volume_kl', 'gross_observed_volume_kl'],
-    limit: 100,
-  });
+  const { data: receipts, isLoading: receiptsLoading } = useFrappeGetDocList(
+    TERMINAL_RECEIPT_DOCTYPE,
+    {
+      fields: ['name', 'net_standard_volume_kl', 'gross_observed_volume_kl'],
+      limit: 100,
+    }
+  );
 
   // Tanks for Line Fill / Storage
-  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList('Oil Tank', {
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList(OIL_TANK_DOCTYPE, {
     fields: ['name', 'safe_fill_capacity_kl', 'current_state'],
     limit: 100,
   });
 
   // Invoices for MTD Revenue
-  const { data: invoices, isLoading: invoicesLoading } = useFrappeGetDocList('Invoice', {
+  const { data: invoices, isLoading: invoicesLoading } = useFrappeGetDocList(INVOICE_DOCTYPE, {
     fields: ['name', 'grand_total', 'currency', 'docstatus'],
     limit: 200,
   });
 
   // Reconciliations for System Loss
-  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList('Reconciliation', {
-    fields: ['name', 'variance_percent', 'variance_kl', 'within_tolerance', 'tolerance_percent'],
-    limit: 50,
-  });
+  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList(
+    RECONCILIATION_DOCTYPE,
+    {
+      fields: ['name', 'variance_percent', 'variance_kl', 'within_tolerance', 'tolerance_percent'],
+      limit: 50,
+    }
+  );
 
   // 2. Computed KPI Values with animated count-up numbers and loaders
   const kpis: Kpi3DCardProps[] = useMemo(() => {

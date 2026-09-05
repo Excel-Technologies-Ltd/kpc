@@ -33,7 +33,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className='sticky top-0 z-20 flex h-(--header-height) shrink-0 items-center justify-between border-b border-[#e6edf7] bg-white px-4 shadow-[0_2px_12px_-8px_rgba(38,64,120,0.2)] dark:border-[#233252] dark:bg-[#0f1728] dark:shadow-none'>
+    <header className='sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center justify-between border-b border-[#e6edf7] bg-white px-4 shadow-[0_2px_12px_-8px_rgba(38,64,120,0.2)] dark:border-[#233252] dark:bg-[#0f1728] dark:shadow-none'>
       <div className='flex items-center gap-2'>
         <SidebarTrigger className='-ml-1 text-[#5c6b85] hover:text-[#132038]' />
         {/* <Separator orientation='vertical' className='mr-2 h-4 bg-[#e6edf7] dark:bg-[#233252]' />

@@ -1,4 +1,16 @@
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AI_ALERT_DOCTYPE,
+  INVENTORY_POSITION_DOCTYPE,
+  INVOICE_DOCTYPE,
+  JOURNEY_DOCTYPE,
+  MOVEMENT_DOCTYPE,
+  OIL_SHIPMENT_DOCTYPE,
+  OIL_TANK_DOCTYPE,
+  PIPELINE_BATCHES_DOCTYPE,
+  RECONCILIATION_DOCTYPE,
+  TERMINAL_RECEIPT_DOCTYPE,
+} from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
 import { KpiCard } from './kpi-card';
@@ -110,56 +122,59 @@ const IconInvoice = () => (
 );
 
 export function HeroKpi() {
-  const { data: journeys, isLoading: journeyLoading } = useFrappeGetDocList('Journey', {
+  const { data: journeys, isLoading: journeyLoading } = useFrappeGetDocList(JOURNEY_DOCTYPE, {
     fields: ['name', 'status', 'current_step'],
     limit: 500,
   });
 
   const { data: terminalReceipts, isLoading: receiptsLoading } = useFrappeGetDocList(
-    'Terminal Receipt',
+    TERMINAL_RECEIPT_DOCTYPE,
     {
       fields: ['name', 'net_standard_volume_kl', 'gross_observed_volume_kl', 'receipt_datetime'],
       limit: 500,
     }
   );
 
-  const { data: shipments } = useFrappeGetDocList('Oil Shipment', {
+  const { data: shipments } = useFrappeGetDocList(OIL_SHIPMENT_DOCTYPE, {
     fields: ['name', 'planned_quantity_kl', 'workflow_state'],
     limit: 500,
   });
 
   const { data: pipelineBatches, isLoading: pipelineLoading } = useFrappeGetDocList(
-    'Pipeline Batch',
+    PIPELINE_BATCHES_DOCTYPE,
     {
       fields: ['name', 'planned_volume_kl', 'docstatus'],
       limit: 500,
     }
   );
 
-  const { data: openAlerts, isLoading: alertsLoading } = useFrappeGetDocList('AI Alert', {
+  const { data: openAlerts, isLoading: alertsLoading } = useFrappeGetDocList(AI_ALERT_DOCTYPE, {
     fields: ['name', 'status', 'severity', 'anomaly_score'],
     filters: [['status', '=', 'Open']],
     limit: 500,
   });
 
-  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList('Reconciliation', {
-    fields: ['name', 'variance_percent', 'variance_kl', 'within_tolerance', 'tolerance_percent'],
-    limit: 100,
-  });
+  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList(
+    RECONCILIATION_DOCTYPE,
+    {
+      fields: ['name', 'variance_percent', 'variance_kl', 'within_tolerance', 'tolerance_percent'],
+      limit: 100,
+    }
+  );
 
-  const { data: invoices, isLoading: invoiceLoading } = useFrappeGetDocList('Invoice', {
+  const { data: invoices, isLoading: invoiceLoading } = useFrappeGetDocList(INVOICE_DOCTYPE, {
     fields: ['name', 'grand_total', 'currency', 'posting_date'],
     limit: 500,
   });
 
-  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList('Oil Tank', {
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList(OIL_TANK_DOCTYPE, {
     fields: ['name', 'safe_fill_capacity_kl', 'current_state'],
     filters: [['current_state', '!=', 'Decommissioned']],
     limit: 100,
   });
 
   const { data: inventoryPositions, isLoading: inventoryLoading } = useFrappeGetDocList(
-    'Inventory Position',
+    INVENTORY_POSITION_DOCTYPE,
     {
       fields: ['name', 'tank', 'position_date', 'closing_volume_kl'],
       orderBy: { field: 'position_date', order: 'desc' },
@@ -167,7 +182,7 @@ export function HeroKpi() {
     }
   );
 
-  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList('Movement', {
+  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList(MOVEMENT_DOCTYPE, {
     fields: ['name', 'pipeline_batch', 'movement_status', 'start_datetime'],
     filters: [['movement_status', 'in', ['In Transit', 'Completed']]],
     limit: 500,

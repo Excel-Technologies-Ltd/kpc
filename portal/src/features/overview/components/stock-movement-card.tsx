@@ -1,6 +1,12 @@
 import { useTheme } from '@/components/theme-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  DISPATCH_DOCTYPE,
+  INVENTORY_POSITION_DOCTYPE,
+  TERMINAL_RECEIPT_DOCTYPE,
+} from '@/constants/doctype.string';
 import { getChartTheme } from '@/lib/chart-theme';
+import { cn } from '@/lib/utils';
 import Chart from 'chart.js/auto';
 import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,7 +27,11 @@ interface StockMovementResponse {
   };
 }
 
-export function StockMovementCard() {
+interface StockMovementCardProps {
+  compact?: boolean;
+}
+
+export function StockMovementCard({ compact = false }: StockMovementCardProps = {}) {
   const { theme } = useTheme();
   const chartRef = useRef<Chart | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -31,7 +41,7 @@ export function StockMovementCard() {
     'kpc.petroleum_operations.api.get_stock_movement'
   );
 
-  const { data: positions } = useFrappeGetDocList('Inventory Position', {
+  const { data: positions } = useFrappeGetDocList(INVENTORY_POSITION_DOCTYPE, {
     fields: [
       'opening_volume_kl',
       'receipts_kl',
@@ -42,12 +52,12 @@ export function StockMovementCard() {
     limit: 100,
   });
 
-  const { data: receipts } = useFrappeGetDocList('Terminal Receipt', {
+  const { data: receipts } = useFrappeGetDocList(TERMINAL_RECEIPT_DOCTYPE, {
     fields: ['net_standard_volume_kl', 'gross_observed_volume_kl'],
     limit: 100,
   });
 
-  const { data: dispatches } = useFrappeGetDocList('Dispatch', {
+  const { data: dispatches } = useFrappeGetDocList(DISPATCH_DOCTYPE, {
     fields: ['actual_quantity_kl', 'planned_quantity_kl'],
     limit: 100,
   });
@@ -258,99 +268,154 @@ export function StockMovementCard() {
   }, [movement, theme]);
 
   return (
-    <Card id='stock-movement' className='mb-12 scroll-mt-24'>
-      <CardHeader className='flex flex-row items-start justify-between gap-4'>
+    <Card
+      id='stock-movement'
+      className={cn(
+        'scroll-mt-24 border border-border shadow-xs',
+        compact ? 'mb-0 h-full' : 'mb-12'
+      )}
+    >
+      <CardHeader className='flex flex-row items-start justify-between gap-4 pb-2'>
         <div>
-          <div className='flex items-center gap-2.5'>
-            <CardTitle className='text-xl sm:text-2xl'>Stock movement</CardTitle>
+          <div className='flex items-center gap-2'>
+            <CardTitle
+              className={cn(compact ? 'text-lg font-bold sm:text-xl' : 'text-xl sm:text-2xl')}
+            >
+              Stock movement
+            </CardTitle>
             <button
               type='button'
               onClick={() => setShowTooltipInfo(!showTooltipInfo)}
               onMouseEnter={() => setShowTooltipInfo(true)}
               onMouseLeave={() => setShowTooltipInfo(false)}
-              className='border-border bg-muted text-muted-foreground hover:text-foreground flex size-5 cursor-pointer items-center justify-center rounded-full border text-xs font-mono transition-colors focus:outline-none'
+              className='border-border bg-muted text-muted-foreground hover:text-foreground flex size-4.5 cursor-pointer items-center justify-center rounded-full border text-[11px] font-mono transition-colors focus:outline-none'
               title='Stock Bridge Info'
             >
               i
             </button>
           </div>
-          <CardDescription className='mt-1.5'>
+          <CardDescription className='mt-0.5 text-xs text-muted-foreground'>
             Opening balance walked through receipts, deliveries and losses to closing.
           </CardDescription>
         </div>
 
-        <span className='border-border bg-muted text-muted-foreground shrink-0 rounded-lg border px-3 py-1.5 font-mono text-xs sm:text-sm'>
+        <span className='border-border bg-muted text-muted-foreground shrink-0 rounded-lg border px-2.5 py-1 font-mono text-xs'>
           {movement.unit}, {movement.period}
         </span>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className='pt-1'>
         {showTooltipInfo ? (
-          <div className='border-border bg-muted/50 text-muted-foreground mb-6 flex items-center justify-between gap-4 rounded-xl border p-3.5 text-xs'>
+          <div className='border-border bg-muted/50 text-muted-foreground mb-4 flex items-center justify-between gap-4 rounded-xl border p-3 text-xs'>
             <span>
               Real-time bridge formula:{' '}
               <code className='text-foreground font-mono font-semibold'>
                 Opening + Receipts - Deliveries ± Losses = Closing
               </code>
             </span>
-            <span className='text-foreground shrink-0 font-mono'>
-              Live API: kpc.petroleum_operations.api.get_stock_movement
+            <span className='text-foreground shrink-0 font-mono text-[11px]'>
+              API: get_stock_movement
             </span>
           </div>
         ) : null}
 
-        <div className='relative my-2 h-80 w-full px-1 sm:h-96'>
+        <div className={cn('relative my-1 w-full px-1', compact ? 'h-52 sm:h-56' : 'h-80 sm:h-96')}>
           <canvas ref={canvasRef} id='stockMovementCanvas' />
         </div>
 
-        <div className='border-border mt-8 grid grid-cols-2 gap-4 border-t pt-6 sm:grid-cols-4'>
-          <div className='border-border bg-muted/40 rounded-xl border p-4 sm:p-5'>
-            <div className='text-muted-foreground text-[11px] font-medium tracking-wider uppercase'>
+        <div
+          className={cn(
+            'border-border grid grid-cols-2 gap-2.5 border-t sm:grid-cols-4',
+            compact ? 'mt-4 pt-3' : 'mt-8 pt-6'
+          )}
+        >
+          <div
+            className={cn(
+              'border-border bg-muted/40 rounded-xl border',
+              compact ? 'p-2.5' : 'p-4 sm:p-5'
+            )}
+          >
+            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
               Opening Stock
             </div>
-            <div className='text-foreground mt-1.5 font-mono text-lg font-bold sm:text-xl'>
+            <div
+              className={cn(
+                'text-foreground font-mono font-bold',
+                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
+              )}
+            >
               {movement.opening.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
+              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
             </div>
           </div>
 
-          <div className='border-border bg-muted/40 rounded-xl border p-4 sm:p-5'>
-            <div className='text-muted-foreground text-[11px] font-medium tracking-wider uppercase'>
+          <div
+            className={cn(
+              'border-border bg-muted/40 rounded-xl border',
+              compact ? 'p-2.5' : 'p-4 sm:p-5'
+            )}
+          >
+            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
               + Receipts (In)
             </div>
-            <div className='text-foreground mt-1.5 font-mono text-lg font-bold sm:text-xl'>
+            <div
+              className={cn(
+                'text-foreground font-mono font-bold',
+                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
+              )}
+            >
               +
               {movement.receipts.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
+              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
             </div>
           </div>
 
-          <div className='border-border bg-muted/40 rounded-xl border p-4 sm:p-5'>
-            <div className='text-muted-foreground text-[11px] font-medium tracking-wider uppercase'>
+          <div
+            className={cn(
+              'border-border bg-muted/40 rounded-xl border',
+              compact ? 'p-2.5' : 'p-4 sm:p-5'
+            )}
+          >
+            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
               - Deliveries (Out)
             </div>
-            <div className='text-foreground mt-1.5 font-mono text-lg font-bold sm:text-xl'>
+            <div
+              className={cn(
+                'text-foreground font-mono font-bold',
+                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
+              )}
+            >
               -
               {movement.deliveries.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
+              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
             </div>
           </div>
 
-          <div className='border-border bg-muted/40 rounded-xl border p-4 sm:p-5'>
-            <div className='text-muted-foreground text-[11px] font-medium tracking-wider uppercase'>
+          <div
+            className={cn(
+              'border-border bg-muted/40 rounded-xl border',
+              compact ? 'p-2.5' : 'p-4 sm:p-5'
+            )}
+          >
+            <div className='text-muted-foreground text-[10.5px] font-medium tracking-wider uppercase'>
               = Closing Balance
             </div>
-            <div className='text-foreground mt-1.5 font-mono text-lg font-bold sm:text-xl'>
+            <div
+              className={cn(
+                'text-foreground font-mono font-bold',
+                compact ? 'mt-0.5 text-sm sm:text-base' : 'mt-1.5 text-lg sm:text-xl'
+              )}
+            >
               {movement.closing.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
+              <span className='text-muted-foreground text-[11px] font-normal'>{movement.unit}</span>
             </div>
           </div>
         </div>

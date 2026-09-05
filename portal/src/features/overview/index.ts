@@ -8,3 +8,4 @@ export { AISection } from './components/ai-section';
 export { CommercialSection } from './components/commercial-section';
 export { HSEQSection } from './components/hseq-section';
 export { DecisionLedger } from './components/decision-ledger';
+export { TankReconciliationCard } from './components/tank-reconciliation-card';

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AI_ALERT_DOCTYPE } from '@/constants/doctype.string';
 import { cn } from '@/lib/utils';
 import { type Filter, useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
 import {
@@ -46,7 +47,7 @@ export function LiveAlerts() {
   const { data: statsResponse } = useFrappeGetCall<
     { message?: SeverityStatRow[] } | SeverityStatRow[]
   >('frappe.client.get_list', {
-    doctype: 'AI Alert',
+    doctype: AI_ALERT_DOCTYPE,
     fields: ['severity', 'count(name) as count'],
     group_by: 'severity',
   });
@@ -90,7 +91,7 @@ export function LiveAlerts() {
   }, [activeTab]);
 
   // 3. Direct Server-Side API Pagination (Fetch ONLY 5 records for current page)
-  const { data: dbAlerts, isLoading } = useFrappeGetDocList<AIAlertDoc>('AI Alert', {
+  const { data: dbAlerts, isLoading } = useFrappeGetDocList<AIAlertDoc>(AI_ALERT_DOCTYPE, {
     fields: [
       'name',
       'journey_ref',

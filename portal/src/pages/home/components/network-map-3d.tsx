@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { OIL_TANK_DOCTYPE } from '@/constants/doctype.string';
 import { OrbitControls, Sparkles, Text } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
@@ -864,7 +865,7 @@ export function NetworkMap3D() {
   const [selectedTank, setSelectedTank] = useState<TerminalNode3D>(KENYA_TERMINALS[0]);
 
   // Fetch real Oil Tank records from Frappe if available
-  const { data: dbTanks } = useFrappeGetDocList('Oil Tank', {
+  const { data: dbTanks } = useFrappeGetDocList(OIL_TANK_DOCTYPE, {
     fields: ['name', 'tank_name', 'terminal', 'safe_fill_capacity_kl', 'current_state'],
     limit: 20,
   });

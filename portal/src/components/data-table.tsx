@@ -1,3 +1,4 @@
+// Reusable DataTable with pagination, sorting and filter support
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Table,
