@@ -3,6 +3,8 @@
 
 frappe.ui.form.on("Financial Posting", {
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		frm.disable_form();
 
 		const colors = { Posted: "green", Reversed: "red" };

@@ -4,6 +4,7 @@
 frappe.ui.form.on("Oil Shipment", {
 	refresh(frm) {
 		frm.trigger("set_indicator");
+		kpc.workflow_progress.render(frm);
 
 		if (frm.doc.journey_ref) {
 			frm.add_custom_button(__("View Golden Thread"), () => {

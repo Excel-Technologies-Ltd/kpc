@@ -8,6 +8,8 @@ frappe.ui.form.on("Dispatch", {
 	},
 
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(__("Invoice"), () => {
 				// Invoice references Dispatch from inside its "lines" child

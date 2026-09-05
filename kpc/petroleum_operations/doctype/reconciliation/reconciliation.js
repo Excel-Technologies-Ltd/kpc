@@ -3,6 +3,8 @@
 
 frappe.ui.form.on("Reconciliation", {
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(__("Variance"), () => {
 				frappe.new_doc("Variance", { reconciliation: frm.doc.name });

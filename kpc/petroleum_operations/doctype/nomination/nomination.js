@@ -15,6 +15,8 @@ frappe.ui.form.on("Nomination", {
 	},
 
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		if (frm.doc.journey_ref) {
 			frm.add_custom_button(__("View Golden Thread"), () => {
 				frappe.set_route("Form", "Journey", frm.doc.journey_ref);

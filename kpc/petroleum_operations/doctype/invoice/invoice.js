@@ -16,6 +16,8 @@ frappe.ui.form.on("Invoice", {
 	},
 
 	refresh(frm) {
+		kpc.workflow_progress.render(frm);
+
 		if (frm.doc.sales_invoice) {
 			frm.add_custom_button(__("View Sales Invoice"), () => {
 				frappe.set_route("Form", "Sales Invoice", frm.doc.sales_invoice);
