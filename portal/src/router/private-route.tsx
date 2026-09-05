@@ -3,6 +3,7 @@ import MainLayout from '@/layout/main-layout';
 import ErrorPage from '@/pages/error';
 import ExecutiveCommand from '@/pages/home';
 import OverviewPage from '@/pages/overview';
+import PipelineFlow from '@/pages/pipeline-flow';
 import type { RouteObject } from 'react-router-dom';
 
 export const privateRoutes: RouteObject[] = [
@@ -21,7 +22,7 @@ export const privateRoutes: RouteObject[] = [
           },
           {
             path: 'pipeline-flow',
-            element: <OverviewPage />,
+            element: <PipelineFlow />,
           },
           {
             path: 'stock-tank-farm',

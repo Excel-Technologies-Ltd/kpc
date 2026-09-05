@@ -2,7 +2,11 @@ import { Badge } from '@/components/ui/badge';
 import { useFrappeGetDocCount, useFrappeGetDocList } from 'frappe-react-sdk';
 import { Box, Map, Radio, Sparkles } from 'lucide-react';
 import React, { useMemo } from 'react';
-import { ThroughputTrendChart, ProductMixChart, RevenueVsTargetChart } from './components/analytics-charts';
+import {
+  ThroughputTrendChart,
+  ProductMixChart,
+  RevenueVsTargetChart,
+} from './components/analytics-charts';
 import type { Kpi3DCardProps } from './components/kpi-3d-card';
 import { Kpi3DCard } from './components/kpi-3d-card';
 import { LiveAlerts } from './components/live-alerts';

@@ -68,11 +68,7 @@ const IconAlert = () => (
     strokeLinejoin='round'
     className='text-muted-foreground'
   >
-    <path
-      d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'
-      fill='currentColor'
-      fillOpacity='0.2'
-    />
+    <path d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' fill='currentColor' fillOpacity='0.2' />
     <path d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' />
     <path d='M13.73 21a2 2 0 0 1-3.46 0' />
   </svg>
@@ -114,103 +110,80 @@ const IconInvoice = () => (
 );
 
 export function HeroKpi() {
-  const { data: journeys, isLoading: journeyLoading } = useFrappeGetDocList(
-    'Journey',
+  const { data: journeys, isLoading: journeyLoading } = useFrappeGetDocList('Journey', {
+    fields: ['name', 'status', 'current_step'],
+    limit: 500,
+  });
+
+  const { data: terminalReceipts, isLoading: receiptsLoading } = useFrappeGetDocList(
+    'Terminal Receipt',
     {
-      fields: ['name', 'status', 'current_step'],
+      fields: ['name', 'net_standard_volume_kl', 'gross_observed_volume_kl', 'receipt_datetime'],
       limit: 500,
     }
   );
-
-  const { data: terminalReceipts, isLoading: receiptsLoading } =
-    useFrappeGetDocList('Terminal Receipt', {
-      fields: [
-        'name',
-        'net_standard_volume_kl',
-        'gross_observed_volume_kl',
-        'receipt_datetime',
-      ],
-      limit: 500,
-    });
 
   const { data: shipments } = useFrappeGetDocList('Oil Shipment', {
     fields: ['name', 'planned_quantity_kl', 'workflow_state'],
     limit: 500,
   });
 
-  const { data: pipelineBatches, isLoading: pipelineLoading } =
-    useFrappeGetDocList('Pipeline Batch', {
+  const { data: pipelineBatches, isLoading: pipelineLoading } = useFrappeGetDocList(
+    'Pipeline Batch',
+    {
       fields: ['name', 'planned_volume_kl', 'docstatus'],
       limit: 500,
-    });
-
-  const { data: openAlerts, isLoading: alertsLoading } = useFrappeGetDocList(
-    'AI Alert',
-    {
-      fields: ['name', 'status', 'severity', 'anomaly_score'],
-      filters: [['status', '=', 'Open']],
-      limit: 500,
     }
   );
 
-  const { data: reconciliations, isLoading: reconLoading } =
-    useFrappeGetDocList('Reconciliation', {
-      fields: [
-        'name',
-        'variance_percent',
-        'variance_kl',
-        'within_tolerance',
-        'tolerance_percent',
-      ],
-      limit: 100,
-    });
+  const { data: openAlerts, isLoading: alertsLoading } = useFrappeGetDocList('AI Alert', {
+    fields: ['name', 'status', 'severity', 'anomaly_score'],
+    filters: [['status', '=', 'Open']],
+    limit: 500,
+  });
 
-  const { data: invoices, isLoading: invoiceLoading } = useFrappeGetDocList(
-    'Invoice',
+  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList('Reconciliation', {
+    fields: ['name', 'variance_percent', 'variance_kl', 'within_tolerance', 'tolerance_percent'],
+    limit: 100,
+  });
+
+  const { data: invoices, isLoading: invoiceLoading } = useFrappeGetDocList('Invoice', {
+    fields: ['name', 'grand_total', 'currency', 'posting_date'],
+    limit: 500,
+  });
+
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList('Oil Tank', {
+    fields: ['name', 'safe_fill_capacity_kl', 'current_state'],
+    filters: [['current_state', '!=', 'Decommissioned']],
+    limit: 100,
+  });
+
+  const { data: inventoryPositions, isLoading: inventoryLoading } = useFrappeGetDocList(
+    'Inventory Position',
     {
-      fields: ['name', 'grand_total', 'currency', 'posting_date'],
-      limit: 500,
-    }
-  );
-
-  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList(
-    'Oil Tank',
-    {
-      fields: ['name', 'safe_fill_capacity_kl', 'current_state'],
-      filters: [['current_state', '!=', 'Decommissioned']],
-      limit: 100,
-    }
-  );
-
-  const { data: inventoryPositions, isLoading: inventoryLoading } =
-    useFrappeGetDocList('Inventory Position', {
       fields: ['name', 'tank', 'position_date', 'closing_volume_kl'],
       orderBy: { field: 'position_date', order: 'desc' },
       limit: 500,
-    });
-
-  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList(
-    'Movement',
-    {
-      fields: ['name', 'pipeline_batch', 'movement_status', 'start_datetime'],
-      filters: [['movement_status', 'in', ['In Transit', 'Completed']]],
-      limit: 500,
     }
   );
+
+  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList('Movement', {
+    fields: ['name', 'pipeline_batch', 'movement_status', 'start_datetime'],
+    filters: [['movement_status', 'in', ['In Transit', 'Completed']]],
+    limit: 500,
+  });
 
   const activeJourneys = useMemo(() => {
     if (!journeys) return [];
     return journeys.filter(
-      (j: any) =>
-        j.status === 'Active' || !['Completed', 'Cancelled'].includes(j.status)
+      (j: any) => j.status === 'Active' || !['Completed', 'Cancelled'].includes(j.status)
     );
   }, [journeys]);
 
   const awaitingApprovalCount = useMemo(() => {
     if (!journeys) return 0;
-    return journeys.filter(
-      (j: any) => j.status === 'Draft' || j.status === 'Pending Approval'
-    ).length;
+    return journeys.filter((j: any) => j.status === 'Draft' || j.status === 'Pending Approval')
+      .length;
   }, [journeys]);
 
   const volumeReceived = useMemo(() => {
@@ -218,10 +191,7 @@ export function HeroKpi() {
     if (terminalReceipts && terminalReceipts.length > 0) {
       total = terminalReceipts.reduce(
         (sum: number, r: any) =>
-          sum +
-          (Number(r.net_standard_volume_kl) ||
-            Number(r.gross_observed_volume_kl) ||
-            0),
+          sum + (Number(r.net_standard_volume_kl) || Number(r.gross_observed_volume_kl) || 0),
         0
       );
     } else if (shipments && shipments.length > 0) {
@@ -246,9 +216,7 @@ export function HeroKpi() {
   const openAlertsCount = openAlerts?.length ?? 0;
   const criticalAlertsCount = useMemo(() => {
     if (!openAlerts) return 0;
-    return openAlerts.filter(
-      (a: any) => a.severity === 'High' || a.severity === 'Critical'
-    ).length;
+    return openAlerts.filter((a: any) => a.severity === 'High' || a.severity === 'Critical').length;
   }, [openAlerts]);
 
   const { avgVariance, tolerance, flaggedReconCount } = useMemo(() => {
@@ -261,9 +229,7 @@ export function HeroKpi() {
     );
     const avg = totalVar / reconciliations.length;
     const tol = Number(reconciliations[0]?.tolerance_percent) || 0;
-    const flagged = reconciliations.filter(
-      (r: any) => !r.within_tolerance
-    ).length;
+    const flagged = reconciliations.filter((r: any) => !r.within_tolerance).length;
     return { avgVariance: avg, tolerance: tol, flaggedReconCount: flagged };
   }, [reconciliations]);
 
@@ -302,8 +268,7 @@ export function HeroKpi() {
   const latestInventoryByTank = useMemo(() => {
     const latest = new Map<string, any>();
     for (const position of inventoryPositions ?? []) {
-      if (position.tank && !latest.has(position.tank))
-        latest.set(position.tank, position);
+      if (position.tank && !latest.has(position.tank)) latest.set(position.tank, position);
     }
     return latest;
   }, [inventoryPositions]);
@@ -320,8 +285,7 @@ export function HeroKpi() {
   const availableUsage = useMemo(
     () =>
       (tanks ?? []).reduce((sum, tank: any) => {
-        const stock =
-          Number(latestInventoryByTank.get(tank.name)?.closing_volume_kl) || 0;
+        const stock = Number(latestInventoryByTank.get(tank.name)?.closing_volume_kl) || 0;
         const capacity = Number(tank.safe_fill_capacity_kl) || 0;
         return sum + Math.max(0, capacity - stock);
       }, 0),
@@ -344,17 +308,15 @@ export function HeroKpi() {
 
   const tanksInAlarm = useMemo(
     () =>
-      (openAlerts ?? []).filter((alert: any) =>
-        ['High', 'Critical'].includes(alert.severity)
-      ).length,
+      (openAlerts ?? []).filter((alert: any) => ['High', 'Critical'].includes(alert.severity))
+        .length,
     [openAlerts]
   );
 
   const totalVariance = useMemo(
     () =>
       (reconciliations ?? []).reduce(
-        (sum, reconciliation: any) =>
-          sum + (Number(reconciliation.variance_kl) || 0),
+        (sum, reconciliation: any) => sum + (Number(reconciliation.variance_kl) || 0),
         0
       ),
     [reconciliations]
@@ -535,9 +497,8 @@ export function HeroKpi() {
             Every drop of cargo, traced from vessel to invoice.
           </h1>
           <p className='text-muted-foreground mt-3 text-sm leading-relaxed'>
-            Thirteen enforced steps, one immutable journey_ref per cargo — from
-            Oil Shipment through predictive pipeline maintenance to Financial
-            Posting.
+            Thirteen enforced steps, one immutable journey_ref per cargo — from Oil Shipment through
+            predictive pipeline maintenance to Financial Posting.
           </p>
         </div>
 
@@ -547,18 +508,13 @@ export function HeroKpi() {
               Active golden threads
             </p>
             <p className='text-foreground mt-2 text-sm leading-relaxed'>
-              <span className='font-semibold'>
-                {journeyLoading ? '…' : activeJourneys.length}
-              </span>{' '}
-              in progress ·{' '}
-              <span className='font-semibold'>{awaitingApprovalCount}</span>{' '}
-              awaiting approval
+              <span className='font-semibold'>{journeyLoading ? '…' : activeJourneys.length}</span>{' '}
+              in progress · <span className='font-semibold'>{awaitingApprovalCount}</span> awaiting
+              approval
             </p>
             <p className='text-muted-foreground mt-1 text-sm'>
-              <span className='text-foreground font-semibold'>
-                {flaggedReconCount}
-              </span>{' '}
-              flagged for reconciliation review
+              <span className='text-foreground font-semibold'>{flaggedReconCount}</span> flagged for
+              reconciliation review
             </p>
           </CardContent>
         </Card>

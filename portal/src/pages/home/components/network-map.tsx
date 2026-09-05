@@ -106,7 +106,8 @@ export function NetworkMap() {
             </Badge>
           </div>
           <p className='mt-0.5 text-xs text-[#5c6b85] dark:text-muted-foreground'>
-            Active pipeline flow telemetry across trunk lines (Lines 1 to 6) from Mombasa Port to Western Terminals
+            Active pipeline flow telemetry across trunk lines (Lines 1 to 6) from Mombasa Port to
+            Western Terminals
           </p>
         </div>
 
@@ -125,11 +126,7 @@ export function NetworkMap() {
 
       <CardContent className='p-4'>
         <div className='relative h-[250px] w-full overflow-hidden rounded-xl bg-gradient-to-b from-[#f8fafc] to-[#eef3fb] p-2 dark:from-[#0a101d] dark:to-[#0f1728]'>
-          <svg
-            viewBox='0 0 960 250'
-            className='size-full'
-            preserveAspectRatio='xMidYMid meet'
-          >
+          <svg viewBox='0 0 960 250' className='size-full' preserveAspectRatio='xMidYMid meet'>
             {/* Draw segment flow lines */}
             {segments.map((seg, idx) => {
               const n1 = getNode(seg.from);
@@ -237,7 +234,8 @@ export function NetworkMap() {
               <span className='size-2 rounded-full bg-amber-500' /> Standby
             </span>
             <span className='flex items-center gap-1.5'>
-              <span className='size-2 rounded-full bg-rose-500' /> Alarm / Loss Watch (Sultan Hamud–Nairobi)
+              <span className='size-2 rounded-full bg-rose-500' /> Alarm / Loss Watch (Sultan
+              Hamud–Nairobi)
             </span>
           </div>
         </div>

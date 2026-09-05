@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTheme } from '@/components/theme-provider';
 import { getChartTheme } from '@/lib/chart-theme';
 import Chart from 'chart.js/auto';
@@ -26,13 +21,7 @@ export function CommercialSection() {
       funnelRef.current = new Chart(funnelCanvasRef.current, {
         type: 'bar',
         data: {
-          labels: [
-            'Submitted',
-            'Credit + stock OK',
-            'Batched',
-            'Dispatched',
-            'Invoiced',
-          ],
+          labels: ['Submitted', 'Credit + stock OK', 'Batched', 'Dispatched', 'Invoiced'],
           datasets: [
             {
               data: [46, 41, 37, 33, 30],
@@ -95,13 +84,7 @@ export function CommercialSection() {
       creditRef.current = new Chart(creditCanvasRef.current, {
         type: 'bar',
         data: {
-          labels: [
-            'Vivo Energy',
-            'TotalEnergies',
-            'Rubis',
-            'Ola Energy',
-            'Astrol',
-          ],
+          labels: ['Vivo Energy', 'TotalEnergies', 'Rubis', 'Ola Energy', 'Astrol'],
           datasets: [
             {
               data: [82, 64, 49, 37, 22],
@@ -144,12 +127,10 @@ export function CommercialSection() {
   return (
     <section id='commercial' className='scroll-mt-24 space-y-4'>
       <div>
-        <h2 className='text-foreground text-lg font-medium'>
-          Commercial &amp; finance
-        </h2>
+        <h2 className='text-foreground text-lg font-medium'>Commercial &amp; finance</h2>
         <p className='text-muted-foreground text-sm'>
-          From accepted Nomination through to Sales Invoice and GL posting,
-          every figure carries its journey_ref.
+          From accepted Nomination through to Sales Invoice and GL posting, every figure carries its
+          journey_ref.
         </p>
       </div>
 

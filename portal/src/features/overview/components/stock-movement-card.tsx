@@ -1,11 +1,5 @@
 import { useTheme } from '@/components/theme-provider';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getChartTheme } from '@/lib/chart-theme';
 import Chart from 'chart.js/auto';
 import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
@@ -76,10 +70,7 @@ export function StockMovementCard() {
         (acc: number, p: any) => acc + (Number(p.opening_volume_kl) || 0),
         0
       );
-      const rec = positions.reduce(
-        (acc: number, p: any) => acc + (Number(p.receipts_kl) || 0),
-        0
-      );
+      const rec = positions.reduce((acc: number, p: any) => acc + (Number(p.receipts_kl) || 0), 0);
       const disp = positions.reduce(
         (acc: number, p: any) => acc + (Number(p.dispatches_kl) || 0),
         0
@@ -108,10 +99,7 @@ export function StockMovementCard() {
     if (receipts && receipts.length > 0) {
       totalReceipts = receipts.reduce(
         (sum: number, r: any) =>
-          sum +
-          (Number(r.net_standard_volume_kl) ||
-            Number(r.gross_observed_volume_kl) ||
-            0),
+          sum + (Number(r.net_standard_volume_kl) || Number(r.gross_observed_volume_kl) || 0),
         0
       );
     }
@@ -119,8 +107,7 @@ export function StockMovementCard() {
     if (dispatches && dispatches.length > 0) {
       totalDispatches = dispatches.reduce(
         (sum: number, d: any) =>
-          sum +
-          (Number(d.actual_quantity_kl) || Number(d.planned_quantity_kl) || 0),
+          sum + (Number(d.actual_quantity_kl) || Number(d.planned_quantity_kl) || 0),
         0
       );
     }
@@ -166,13 +153,7 @@ export function StockMovementCard() {
       [0, closing],
     ];
 
-    const colors = [
-      theme.chart1,
-      theme.chart2,
-      theme.chart3,
-      theme.chart4,
-      theme.chart5,
-    ];
+    const colors = [theme.chart1, theme.chart2, theme.chart3, theme.chart4, theme.chart5];
 
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
@@ -294,8 +275,7 @@ export function StockMovementCard() {
             </button>
           </div>
           <CardDescription className='mt-1.5'>
-            Opening balance walked through receipts, deliveries and losses to
-            closing.
+            Opening balance walked through receipts, deliveries and losses to closing.
           </CardDescription>
         </div>
 
@@ -332,9 +312,7 @@ export function StockMovementCard() {
               {movement.opening.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>
-                {movement.unit}
-              </span>
+              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
             </div>
           </div>
 
@@ -347,9 +325,7 @@ export function StockMovementCard() {
               {movement.receipts.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>
-                {movement.unit}
-              </span>
+              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
             </div>
           </div>
 
@@ -362,9 +338,7 @@ export function StockMovementCard() {
               {movement.deliveries.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>
-                {movement.unit}
-              </span>
+              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
             </div>
           </div>
 
@@ -376,9 +350,7 @@ export function StockMovementCard() {
               {movement.closing.toLocaleString('en-US', {
                 maximumFractionDigits: 0,
               })}{' '}
-              <span className='text-muted-foreground text-xs font-normal'>
-                {movement.unit}
-              </span>
+              <span className='text-muted-foreground text-xs font-normal'>{movement.unit}</span>
             </div>
           </div>
         </div>

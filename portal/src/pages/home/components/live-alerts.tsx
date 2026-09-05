@@ -1,7 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, AlertTriangle, ArrowUpRight, CheckCircle2, ChevronRight, Clock, ShieldAlert, Sparkles } from 'lucide-react';
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowUpRight,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 
@@ -61,7 +70,11 @@ export function LiveAlerts() {
               : `${a.severity || 'Notice'} threshold trigger active`),
           time: timeStr,
           category: a.movement ? 'SCADA Telemetry' : 'AI Diagnostic',
-          type: isCritical ? ('alarm' as const) : isMedium ? ('warning' as const) : ('good' as const),
+          type: isCritical
+            ? ('alarm' as const)
+            : isMedium
+              ? ('warning' as const)
+              : ('good' as const),
         };
       });
     }
@@ -214,9 +227,12 @@ export function LiveAlerts() {
                 <div
                   className={cn(
                     'flex size-6 shrink-0 items-center justify-center rounded-lg shadow-2xs',
-                    alert.type === 'alarm' && 'bg-rose-100 text-rose-600 dark:bg-rose-900/50 dark:text-rose-300',
-                    alert.type === 'warning' && 'bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-300',
-                    alert.type === 'good' && 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
+                    alert.type === 'alarm' &&
+                      'bg-rose-100 text-rose-600 dark:bg-rose-900/50 dark:text-rose-300',
+                    alert.type === 'warning' &&
+                      'bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-300',
+                    alert.type === 'good' &&
+                      'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-300'
                   )}
                 >
                   {alert.type === 'alarm' && <AlertCircle className='size-3.5' />}
@@ -232,9 +248,12 @@ export function LiveAlerts() {
                     <span
                       className={cn(
                         'rounded px-1.5 py-0.2 text-[9px] font-semibold tracking-tight',
-                        alert.type === 'alarm' && 'bg-rose-200/60 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
-                        alert.type === 'warning' && 'bg-amber-200/60 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
-                        alert.type === 'good' && 'bg-emerald-200/60 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+                        alert.type === 'alarm' &&
+                          'bg-rose-200/60 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
+                        alert.type === 'warning' &&
+                          'bg-amber-200/60 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+                        alert.type === 'good' &&
+                          'bg-emerald-200/60 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
                       )}
                     >
                       {alert.category}
