@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
+import { useMemo, useState } from 'react';
 
 export function ThroughputTrendChart() {
   // Fetch real terminal receipts for dynamic throughput calculation
@@ -97,9 +96,7 @@ export function ThroughputTrendChart() {
             Daily pumped volume across Nairobi &amp; Western trunk lines
           </p>
         </div>
-        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>
-          7 days
-        </span>
+        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>7 days</span>
       </CardHeader>
 
       <CardContent className='flex flex-1 items-center justify-center p-4 pt-3'>
@@ -118,10 +115,7 @@ export function ThroughputTrendChart() {
 
             {/* Horizontal Gridlines & Y-Axis Labels */}
             {yTicks.map((tick, i) => {
-              const yPos =
-                paddingTop +
-                chartH -
-                ((tick.val - minVal) / (maxVal - minVal)) * chartH;
+              const yPos = paddingTop + chartH - ((tick.val - minVal) / (maxVal - minVal)) * chartH;
               return (
                 <g key={i}>
                   <line
@@ -183,13 +177,7 @@ export function ThroughputTrendChart() {
                   onMouseLeave={() => setHoveredIdx(null)}
                 >
                   {isHovered && (
-                    <circle
-                      cx={pt.x}
-                      cy={pt.y}
-                      r='9'
-                      fill='#3b82f6'
-                      fillOpacity='0.25'
-                    />
+                    <circle cx={pt.x} cy={pt.y} r='9' fill='#3b82f6' fillOpacity='0.25' />
                   )}
 
                   <circle
@@ -207,9 +195,7 @@ export function ThroughputTrendChart() {
                     y={svgHeight - 8}
                     textAnchor='middle'
                     className={`text-[11px] font-medium font-sans transition-colors ${
-                      isHovered
-                        ? 'fill-[#3b82f6] font-bold'
-                        : 'fill-[#64748b] dark:fill-slate-400'
+                      isHovered ? 'fill-[#3b82f6] font-bold' : 'fill-[#64748b] dark:fill-slate-400'
                     }`}
                   >
                     {pt.day}
@@ -259,10 +245,38 @@ export function ProductMixChart() {
   // Calculate real product distribution or calibrated KPC mix
   const products = useMemo(() => {
     const defaultMix = [
-      { id: 'PMS', name: 'PMS', fullName: 'Premium Motor Spirit (Super)', pct: 42, vol: '7,800 m³', color: '#f59e0b' },
-      { id: 'AGO', name: 'AGO', fullName: 'Automotive Gas Oil (Diesel)', pct: 37, vol: '6,900 m³', color: '#10b981' },
-      { id: 'Jet A-1', name: 'Jet A-1', fullName: 'Aviation Turbine Fuel', pct: 14, vol: '2,600 m³', color: '#8b5cf6' },
-      { id: 'IK', name: 'IK', fullName: 'Illuminating Kerosene', pct: 7, vol: '1,120 m³', color: '#06b6d4' },
+      {
+        id: 'PMS',
+        name: 'PMS',
+        fullName: 'Premium Motor Spirit (Super)',
+        pct: 42,
+        vol: '7,800 m³',
+        color: '#f59e0b',
+      },
+      {
+        id: 'AGO',
+        name: 'AGO',
+        fullName: 'Automotive Gas Oil (Diesel)',
+        pct: 37,
+        vol: '6,900 m³',
+        color: '#10b981',
+      },
+      {
+        id: 'Jet A-1',
+        name: 'Jet A-1',
+        fullName: 'Aviation Turbine Fuel',
+        pct: 14,
+        vol: '2,600 m³',
+        color: '#8b5cf6',
+      },
+      {
+        id: 'IK',
+        name: 'IK',
+        fullName: 'Illuminating Kerosene',
+        pct: 7,
+        vol: '1,120 m³',
+        color: '#06b6d4',
+      },
     ];
 
     if (tanks && tanks.length > 0) {
@@ -272,10 +286,19 @@ export function ProductMixChart() {
       tanks.forEach((t: any) => {
         const prod = t.product || '';
         const cap = Number(t.safe_fill_capacity_kl) || 1000;
-        if (prod.includes('PMS')) { counts.PMS += cap; total += cap; }
-        else if (prod.includes('AGO') || prod.includes('Diesel')) { counts.AGO += cap; total += cap; }
-        else if (prod.includes('Jet')) { counts['Jet A-1'] += cap; total += cap; }
-        else if (prod.includes('IK') || prod.includes('Kero')) { counts.IK += cap; total += cap; }
+        if (prod.includes('PMS')) {
+          counts.PMS += cap;
+          total += cap;
+        } else if (prod.includes('AGO') || prod.includes('Diesel')) {
+          counts.AGO += cap;
+          total += cap;
+        } else if (prod.includes('Jet')) {
+          counts['Jet A-1'] += cap;
+          total += cap;
+        } else if (prod.includes('IK') || prod.includes('Kero')) {
+          counts.IK += cap;
+          total += cap;
+        }
       });
 
       if (total > 0) {
@@ -313,9 +336,7 @@ export function ProductMixChart() {
     };
   });
 
-  const active = hoveredProduct
-    ? products.find((p) => p.id === hoveredProduct)
-    : null;
+  const active = hoveredProduct ? products.find((p) => p.id === hoveredProduct) : null;
 
   return (
     <Card className='flex h-full flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
@@ -328,9 +349,7 @@ export function ProductMixChart() {
             Fuel product distribution across pipeline network
           </p>
         </div>
-        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>
-          today
-        </span>
+        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>today</span>
       </CardHeader>
 
       <CardContent className='flex flex-1 flex-col items-center justify-center gap-6 p-6 sm:flex-row sm:justify-around'>
@@ -379,10 +398,7 @@ export function ProductMixChart() {
           <div className='pointer-events-none absolute flex flex-col items-center justify-center text-center'>
             {active ? (
               <>
-                <span
-                  className='text-xs font-bold'
-                  style={{ color: active.color }}
-                >
+                <span className='text-xs font-bold' style={{ color: active.color }}>
                   {active.name}
                 </span>
                 <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
@@ -514,9 +530,7 @@ export function RevenueVsTargetChart() {
             Month-to-date tariff billing performance
           </p>
         </div>
-        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>
-          MTD, KES M
-        </span>
+        <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>MTD, KES M</span>
       </CardHeader>
 
       <CardContent className='flex flex-1 items-center justify-center p-4 pt-3'>
@@ -567,7 +581,10 @@ export function RevenueVsTargetChart() {
                 fill='#8da2ba'
                 className='transition-all duration-200 hover:brightness-105'
                 style={{
-                  filter: hoveredBar === 'target' ? 'drop-shadow(0 4px 10px rgba(141, 162, 186, 0.4))' : 'none',
+                  filter:
+                    hoveredBar === 'target'
+                      ? 'drop-shadow(0 4px 10px rgba(141, 162, 186, 0.4))'
+                      : 'none',
                 }}
               />
               <text
@@ -575,7 +592,9 @@ export function RevenueVsTargetChart() {
                 y={svgHeight - 10}
                 textAnchor='middle'
                 className={`text-[11px] font-medium font-sans transition-colors ${
-                  hoveredBar === 'target' ? 'fill-[#475569] font-bold' : 'fill-[#64748b] dark:fill-slate-400'
+                  hoveredBar === 'target'
+                    ? 'fill-[#475569] font-bold'
+                    : 'fill-[#64748b] dark:fill-slate-400'
                 }`}
               >
                 Target
@@ -621,7 +640,10 @@ export function RevenueVsTargetChart() {
                 fill='#0cb878'
                 className='transition-all duration-200 hover:brightness-105'
                 style={{
-                  filter: hoveredBar === 'actual' ? 'drop-shadow(0 4px 12px rgba(12, 184, 120, 0.45))' : 'none',
+                  filter:
+                    hoveredBar === 'actual'
+                      ? 'drop-shadow(0 4px 12px rgba(12, 184, 120, 0.45))'
+                      : 'none',
                 }}
               />
               <text
@@ -629,7 +651,9 @@ export function RevenueVsTargetChart() {
                 y={svgHeight - 10}
                 textAnchor='middle'
                 className={`text-[11px] font-medium font-sans transition-colors ${
-                  hoveredBar === 'actual' ? 'fill-[#0cb878] font-bold' : 'fill-[#64748b] dark:fill-slate-400'
+                  hoveredBar === 'actual'
+                    ? 'fill-[#0cb878] font-bold'
+                    : 'fill-[#64748b] dark:fill-slate-400'
                 }`}
               >
                 Actual
