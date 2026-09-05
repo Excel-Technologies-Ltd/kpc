@@ -1,6 +1,6 @@
 import { FLOW_KPIS } from '../data/dummy';
 import { FlowInfoButton } from './flow-info-button';
-import { FlowKpiCard } from './flow-kpi-card';
+import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
 
 export function FlowKpis() {
   return (

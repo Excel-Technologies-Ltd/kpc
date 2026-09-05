@@ -1,28 +1,21 @@
+import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { StockMovementCard } from '@/features/overview/components/stock-movement-card';
 import { TankFarm3DSection } from '@/features/overview/components/tank-farm-3d-section';
-import { TankFarmSection } from '@/features/overview/components/tank-farm-section';
-import { cn } from '@/lib/utils';
-import { useFrappeGetDocCount, useFrappeGetDocList } from 'frappe-react-sdk';
+import { useFrappeGetDocList } from 'frappe-react-sdk';
 import {
   Activity,
   AlertTriangle,
   ArrowDownUp,
-  Boxes,
-  CheckCircle2,
   Database,
   Droplets,
-  Gauge,
   Layers,
   Radio,
   RefreshCw,
   Scale,
-  ShieldCheck,
-  Sparkles,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 interface OilTankDoc {
   name: string;
@@ -48,22 +41,23 @@ export default function StockTankFarmPage() {
   const [selectedTerminal, setSelectedTerminal] = useState<string>('all');
 
   // 1. Fetch live tanks
-  const { data: tanks, isLoading: tanksLoading, mutate: reloadTanks } = useFrappeGetDocList<OilTankDoc>(
-    'Oil Tank',
-    {
-      fields: [
-        'name',
-        'tank_name',
-        'tank_code',
-        'terminal',
-        'product',
-        'current_state',
-        'capacity_kl',
-        'safe_fill_capacity_kl',
-      ],
-      limit: 200,
-    }
-  );
+  const {
+    data: tanks,
+    isLoading: tanksLoading,
+    mutate: reloadTanks,
+  } = useFrappeGetDocList<OilTankDoc>('Oil Tank', {
+    fields: [
+      'name',
+      'tank_name',
+      'tank_code',
+      'terminal',
+      'product',
+      'current_state',
+      'capacity_kl',
+      'safe_fill_capacity_kl',
+    ],
+    limit: 200,
+  });
 
   // 2. Fetch live tank measurements
   const { data: measurements, isLoading: measLoading } = useFrappeGetDocList<TankMeasurementDoc>(
@@ -199,7 +193,8 @@ export default function StockTankFarmPage() {
                 </Badge>
               </div>
               <p className='mt-0.5 text-xs text-[#5c6b85] sm:text-sm dark:text-muted-foreground'>
-                Tank capacity, live liquid level dips, ullage diagnostics &amp; depot reconciliation across Kenya trunk terminals.
+                Tank capacity, live liquid level dips, ullage diagnostics &amp; depot reconciliation
+                across Kenya trunk terminals.
               </p>
             </div>
           </div>
@@ -208,10 +203,12 @@ export default function StockTankFarmPage() {
         {/* Live Status Chips & Actions */}
         <div className='flex flex-wrap items-center gap-2 text-xs'>
           <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
-            Monitored Tanks <b className='text-[#132038] dark:text-white'>{stats.totalTanks || '4'}</b>
+            Monitored Tanks{' '}
+            <b className='text-[#132038] dark:text-white'>{stats.totalTanks || '4'}</b>
           </div>
           <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
-            Active Terminals <b className='text-[#132038] dark:text-white'>{terminals.length || '5'}</b>
+            Active Terminals{' '}
+            <b className='text-[#132038] dark:text-white'>{terminals.length || '5'}</b>
           </div>
           <Button
             variant='outline'
@@ -225,112 +222,97 @@ export default function StockTankFarmPage() {
       </div>
 
       {/* 5-Column Stock & Tank KPI Metrics */}
-      <section className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
+      <section className='grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
         {/* KPI 1: Total Stock */}
-        <Card className='rounded-2xl border border-[#e6edf7] bg-white p-4 shadow-xs dark:border-[#233252] dark:bg-[#0f1728]'>
-          <div className='flex items-center justify-between text-xs text-[#5c6b85] dark:text-slate-400'>
-            <span className='font-bold uppercase tracking-wider'>Total Stored Stock</span>
-            <Droplets className='size-4 text-[#06b6d4]' />
-          </div>
-          <div className='mt-2 flex items-baseline gap-1.5'>
-            <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
-              {stats.totalStock >= 1000
-                ? `${(stats.totalStock / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-                : Math.round(stats.totalStock).toLocaleString()}
-            </span>
-            <span className='text-xs font-bold text-[#06b6d4]'>m³</span>
-          </div>
-          <p className='mt-1 text-[11px] font-medium text-[#5c6b85] dark:text-slate-400'>
-            {stats.totalTanks} tanks monitored
-          </p>
-        </Card>
+        <FlowKpiCard
+          title='Total Stored Stock'
+          value={
+            stats.totalStock >= 1000
+              ? `${(stats.totalStock / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
+              : Math.round(stats.totalStock).toLocaleString()
+          }
+          unit='m³'
+          delta={
+            stats.totalCap > 0
+              ? `${Math.round((stats.totalStock / stats.totalCap) * 100)}% cap`
+              : 'nominal'
+          }
+          deltaType='up'
+          description={`${stats.totalTanks} tanks monitored`}
+          color='#06b6d4'
+          delay={0}
+          icon={<Droplets className='size-4' />}
+        />
 
         {/* KPI 2: Available Ullage */}
-        <Card className='rounded-2xl border border-[#e6edf7] bg-white p-4 shadow-xs dark:border-[#233252] dark:bg-[#0f1728]'>
-          <div className='flex items-center justify-between text-xs text-[#5c6b85] dark:text-slate-400'>
-            <span className='font-bold uppercase tracking-wider'>Available Ullage</span>
-            <Layers className='size-4 text-[#10b981]' />
-          </div>
-          <div className='mt-2 flex items-baseline gap-1.5'>
-            <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
-              {stats.availableUllage >= 1000
-                ? `${(stats.availableUllage / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-                : Math.round(stats.availableUllage).toLocaleString()}
-            </span>
-            <span className='text-xs font-bold text-[#10b981]'>m³</span>
-          </div>
-          <p className='mt-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400'>
-            Safe room to receive
-          </p>
-        </Card>
+        <FlowKpiCard
+          title='Available Ullage'
+          value={
+            stats.availableUllage >= 1000
+              ? `${(stats.availableUllage / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
+              : Math.round(stats.availableUllage).toLocaleString()
+          }
+          unit='m³'
+          delta='Safe room'
+          deltaType='up'
+          description='Safe room to receive'
+          color='#10b981'
+          delay={0.08}
+          icon={<Layers className='size-4' />}
+        />
 
         {/* KPI 3: Movement Today */}
-        <Card className='rounded-2xl border border-[#e6edf7] bg-white p-4 shadow-xs dark:border-[#233252] dark:bg-[#0f1728]'>
-          <div className='flex items-center justify-between text-xs text-[#5c6b85] dark:text-slate-400'>
-            <span className='font-bold uppercase tracking-wider'>Movement Today</span>
-            <ArrowDownUp className='size-4 text-[#4361ee]' />
-          </div>
-          <div className='mt-2 flex items-baseline gap-1.5'>
-            <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
-              {stats.movementVol >= 1000
-                ? `${(stats.movementVol / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-                : Math.round(stats.movementVol).toLocaleString()}
-            </span>
-            <span className='text-xs font-bold text-[#4361ee]'>m³</span>
-          </div>
-          <p className='mt-1 text-[11px] font-medium text-[#5c6b85] dark:text-slate-400'>
-            {stats.movementCount} movements logged
-          </p>
-        </Card>
+        <FlowKpiCard
+          title='Movement Today'
+          value={
+            stats.movementVol >= 1000
+              ? `${(stats.movementVol / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
+              : Math.round(stats.movementVol).toLocaleString()
+          }
+          unit='m³'
+          delta={`${stats.movementCount} logs`}
+          deltaType={stats.movementVol > 0 ? 'up' : 'flat'}
+          description={`${stats.movementCount} movements logged`}
+          color='#4361ee'
+          delay={0.16}
+          icon={<ArrowDownUp className='size-4' />}
+        />
 
         {/* KPI 4: Tanks in Alarm */}
-        <Card className='rounded-2xl border border-[#e6edf7] bg-white p-4 shadow-xs dark:border-[#233252] dark:bg-[#0f1728]'>
-          <div className='flex items-center justify-between text-xs text-[#5c6b85] dark:text-slate-400'>
-            <span className='font-bold uppercase tracking-wider'>Tanks in Alarm</span>
-            <AlertTriangle className={cn('size-4', stats.alarmCount > 0 ? 'text-[#f59e0b]' : 'text-emerald-500')} />
-          </div>
-          <div className='mt-2 flex items-baseline gap-1.5'>
-            <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
-              {stats.alarmCount}
-            </span>
-            <span className='text-xs font-bold text-[#5c6b85]'>tanks</span>
-          </div>
-          <p className='mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400'>
-            {stats.alarmCount === 0 ? 'All nominal & safe' : 'High/quarantine watch'}
-          </p>
-        </Card>
+        <FlowKpiCard
+          title='Tanks in Alarm'
+          value={`${stats.alarmCount}`}
+          unit='tanks'
+          delta={stats.alarmCount === 0 ? 'All nominal' : `${stats.alarmCount} active`}
+          deltaType={stats.alarmCount === 0 ? 'flat' : 'down'}
+          description={stats.alarmCount === 0 ? 'All nominal & safe' : 'High/quarantine watch'}
+          color={stats.alarmCount > 0 ? '#f59e0b' : '#10b981'}
+          delay={0.24}
+          icon={<AlertTriangle className='size-4' />}
+        />
 
-        {/* KPI 5: Net Variance */}
-        <Card className='rounded-2xl border border-[#e6edf7] bg-white p-4 shadow-xs dark:border-[#233252] dark:bg-[#0f1728]'>
-          <div className='flex items-center justify-between text-xs text-[#5c6b85] dark:text-slate-400'>
-            <span className='font-bold uppercase tracking-wider'>Recon Variance</span>
-            <Scale className='size-4 text-[#f43f5e]' />
-          </div>
-          <div className='mt-2 flex items-baseline gap-1.5'>
-            <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
-              {Math.abs(stats.netVariance) > 0 ? stats.netVariance.toFixed(1) : '0.00'}
-            </span>
-            <span className='text-xs font-bold text-[#f43f5e]'>m³</span>
-          </div>
-          <p className='mt-1 text-[11px] font-medium text-[#5c6b85] dark:text-slate-400'>
-            {stats.varianceCount} reconciliations flagged
-          </p>
-        </Card>
+        {/* KPI 5: Recon Variance */}
+        <FlowKpiCard
+          title='Recon Variance'
+          value={Math.abs(stats.netVariance) > 0 ? stats.netVariance.toFixed(1) : '0.00'}
+          unit='m³'
+          delta={
+            stats.netVariance === 0
+              ? 'Balanced'
+              : stats.netVariance > 0
+                ? `+${stats.netVariance.toFixed(1)}`
+                : `${stats.netVariance.toFixed(1)}`
+          }
+          deltaType={stats.netVariance === 0 ? 'flat' : stats.netVariance > 0 ? 'up' : 'down'}
+          description={`${stats.varianceCount} reconciliations flagged`}
+          color={Math.abs(stats.netVariance) > 0 ? '#f43f5e' : '#8b5cf6'}
+          delay={0.32}
+          icon={<Scale className='size-4' />}
+        />
       </section>
 
       {/* 3D Interactive Tank Farm Section */}
       <section className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <Sparkles className='size-4 text-[#06b6d4]' />
-            <h2 className='text-sm font-bold uppercase tracking-wide text-[#5c6b85] dark:text-slate-400'>
-              Interactive 3D Depot Tank Gauging
-            </h2>
-          </div>
-          <span className='text-xs text-[#93a2bd] hidden sm:inline'>
-            ✦ Rotate &amp; click individual tanks for live liquid elevation and temperature
-          </span>
-        </div>
         <TankFarm3DSection />
       </section>
 
@@ -343,19 +325,6 @@ export default function StockTankFarmPage() {
           </h2>
         </div>
         <StockMovementCard />
-      </section>
-
-      {/* Detailed Live Tank Inventory & Dip Logs Table */}
-      <section className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center gap-2'>
-            <Boxes className='size-4 text-[#10b981]' />
-            <h2 className='text-sm font-bold uppercase tracking-wide text-[#5c6b85] dark:text-slate-400'>
-              Terminal Tank Inventory &amp; Telemetry Dip Records
-            </h2>
-          </div>
-        </div>
-        <TankFarmSection />
       </section>
     </div>
   );
