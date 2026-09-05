@@ -115,7 +115,7 @@ export function FlowKpiCard({
         }}
         whileHover={{ scale: 1.03, y: -4 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className='group relative flex h-[168px] flex-col justify-between overflow-hidden rounded-2xl border border-white/15 border-l-2 bg-linear-to-b from-[#18233c] via-[#0f1728] to-[#080d16] p-4'
+        className='group relative flex h-42 flex-col justify-between overflow-hidden rounded-2xl border border-white/15 border-l-2 bg-linear-to-b from-[#18233c] via-[#0f1728] to-[#080d16] p-4'
       >
         <div
           className='pointer-events-none absolute -top-10 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full opacity-30 blur-3xl'
