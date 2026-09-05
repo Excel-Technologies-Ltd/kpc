@@ -30,7 +30,7 @@ export function HeaderStatusPills() {
         </span>
         Live · SCADA linked
       </span>
-      <span className='inline-flex items-center rounded-lg border border-[#e6edf7] bg-[#f6f9fe] px-3 py-1.5 text-xs font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#141f35] dark:text-[#8aa0c0]'>
+      <span className='hidden lg:inline-flex items-center rounded-lg border border-[#e6edf7] bg-[#f6f9fe] px-3 py-1.5 text-xs font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#141f35] dark:text-[#8aa0c0]'>
         Kenya Pipeline Network
       </span>
       <span className='inline-flex items-center rounded-lg border border-[#e6edf7] bg-[#f6f9fe] px-3 py-1.5 font-mono text-xs font-semibold tabular-nums text-[#132038] dark:border-[#233252] dark:bg-[#141f35] dark:text-[#eaf1fa]'>

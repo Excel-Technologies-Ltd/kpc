@@ -224,7 +224,7 @@ export default function ExecutiveCommand() {
   ]);
 
   return (
-    <div className='mx-auto container space-y-8 pb-12'>
+    <div className='w-full min-w-0 space-y-8 pb-12'>
       {/* Top Page Header */}
       <div className='flex flex-wrap items-end justify-between gap-4 border-b border-[#e6edf7] pb-5 dark:border-[#233252]'>
         <div>
