@@ -32,7 +32,7 @@ const ReusablePagination: React.FC<ReusablePaginationProps> = ({
   pageSize,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 30, 40, 50],
+  pageSizeOptions,
 }) => {
   const totalPages = Math.ceil(total / pageSize);
 
@@ -118,28 +118,30 @@ const ReusablePagination: React.FC<ReusablePaginationProps> = ({
           </PaginationContent>
         </Pagination>
 
-        <div className='flex items-center gap-2'>
-          <span className='text-xs md:text-sm text-foreground'>Show</span>
-          <Select
-            value={pageSize.toString()}
-            onValueChange={(value) => onPageSizeChange(Number(value))}
-          >
-            <SelectTrigger
-              size='sm'
-              className='w-14 h-7 md:w-18 md:h-8 bg-background border-border text-xs md:text-sm'
+        {pageSizeOptions && (
+          <div className='flex items-center gap-2'>
+            <span className='text-xs md:text-sm text-foreground'>Show</span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => onPageSizeChange(Number(value))}
             >
-              <SelectValue placeholder={pageSize.toString()} />
-            </SelectTrigger>
-            <SelectContent align='end'>
-              {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={size.toString()} className='text-xs md:text-sm'>
-                  {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className='text-xs md:text-sm text-foreground'>entries</span>
-        </div>
+              <SelectTrigger
+                size='sm'
+                className='w-14 h-7 md:w-18 md:h-8 bg-background border-border text-xs md:text-sm'
+              >
+                <SelectValue placeholder={pageSize.toString()} />
+              </SelectTrigger>
+              <SelectContent align='end'>
+                {pageSizeOptions.map((size) => (
+                  <SelectItem key={size} value={size.toString()} className='text-xs md:text-sm'>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className='text-xs md:text-sm text-foreground'>entries</span>
+          </div>
+        )}
       </div>
     </div>
   );

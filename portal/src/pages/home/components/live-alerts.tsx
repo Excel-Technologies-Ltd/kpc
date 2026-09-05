@@ -1,22 +1,6 @@
-<<<<<<< HEAD
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-=======
-import React, { useMemo, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-  AlertCircle,
-  AlertTriangle,
-  ArrowUpRight,
-  CheckCircle2,
-  ChevronRight,
-  Clock,
-  ShieldAlert,
-  Sparkles,
-} from 'lucide-react';
->>>>>>> e4fb75e84f3475925450d503d55d4bb28f50ebdb
 import { cn } from '@/lib/utils';
 import { type Filter, useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
 import {

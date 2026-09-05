@@ -1,4 +1,4 @@
-export { ActiveBatchesTable } from './components/active-batches-table';
+export { ActiveBatchesTable } from './components/active-batches';
 export { AnimatedSection } from './components/animated-section';
 export { FlowInfoButton } from './components/flow-info-button';
 export { FlowKpiCard } from './components/flow-kpi-card';
