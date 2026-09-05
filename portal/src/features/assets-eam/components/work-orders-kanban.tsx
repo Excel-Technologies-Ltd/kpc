@@ -3,11 +3,7 @@ import { Button } from '@/components/ui/button';
 import { MAINTENANCE_WORK_ORDER_DOCTYPE } from '@/constants/doctype.string';
 import { cn } from '@/lib/utils';
 import type { MaintenanceWorkOrder } from '@/types/PetroleumOperations/MaintenanceWorkOrder';
-import {
-  useFrappeGetDocList,
-  useFrappePostCall,
-  useFrappeUpdateDoc,
-} from 'frappe-react-sdk';
+import { useFrappeGetDocList, useFrappePostCall, useFrappeUpdateDoc } from 'frappe-react-sdk';
 import {
   AlertCircle,
   Calendar,
@@ -84,7 +80,8 @@ function getPriorityMeta(type?: string) {
     default:
       return {
         borderClass: 'border-l-emerald-500',
-        badgeClass: 'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
+        badgeClass:
+          'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
         label: 'Inspection',
       };
   }
@@ -117,7 +114,9 @@ export function WorkOrdersKanban() {
   const { updateDoc } = useFrappeUpdateDoc();
 
   // Optimistic overrides for instantaneous drag-and-drop & button feedback (React 19 compliant)
-  const [optimisticStatusMap, setOptimisticStatusMap] = useState<Record<string, ExecutionStatus>>({});
+  const [optimisticStatusMap, setOptimisticStatusMap] = useState<Record<string, ExecutionStatus>>(
+    {}
+  );
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<ExecutionStatus | null>(null);
@@ -137,12 +136,13 @@ export function WorkOrdersKanban() {
     const map: Record<ExecutionStatus, MaintenanceWorkOrder[]> = {
       'Not Started': [],
       'In Progress': [],
-      'Completed': [],
+      Completed: [],
     };
 
     workOrders.forEach((wo) => {
       const status: ExecutionStatus =
-        wo.execution_status && ['Not Started', 'In Progress', 'Completed'].includes(wo.execution_status)
+        wo.execution_status &&
+        ['Not Started', 'In Progress', 'Completed'].includes(wo.execution_status)
           ? wo.execution_status
           : 'Not Started';
       map[status].push(wo);
@@ -246,7 +246,8 @@ export function WorkOrdersKanban() {
       <div className='flex items-center justify-between pb-3'>
         <div className='flex items-center gap-2'>
           <span className='text-xs text-muted-foreground'>
-            Total: <strong className='font-mono text-foreground'>{workOrders.length}</strong> active orders
+            Total: <strong className='font-mono text-foreground'>{workOrders.length}</strong> active
+            orders
           </span>
           {actionError ? (
             <span className='inline-flex items-center gap-1 rounded bg-rose-500/10 px-2 py-0.5 text-xs text-rose-600 dark:text-rose-400'>
@@ -278,7 +279,7 @@ export function WorkOrdersKanban() {
           <p className='mt-1 text-muted-foreground'>{error.message}</p>
         </div>
       ) : (
-        <div className='flex min-w-[780px] gap-3.5 pb-2'>
+        <div className='flex min-w-195 gap-3.5 pb-2'>
           {STAGES.map((stage) => {
             const items = groupedOrders[stage.id] || [];
             const isTarget = dragOverStage === stage.id;
@@ -315,7 +316,7 @@ export function WorkOrdersKanban() {
                 </div>
 
                 {/* Card List - Y-Axis scrollable with bounded height */}
-                <div className='flex flex-1 flex-col gap-2 max-h-[310px] overflow-y-auto overflow-x-hidden pr-1'>
+                <div className='flex flex-1 flex-col gap-2 max-h-77.5 overflow-y-auto overflow-x-hidden pr-1'>
                   {items.length === 0 ? (
                     <div
                       className={cn(
