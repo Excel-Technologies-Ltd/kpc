@@ -1,7 +1,7 @@
 import path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import proxyOptions from './proxyOptions';
+import proxyOptions from './proxyOptions.ts';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://vitejs.dev/config/
@@ -14,7 +14,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(import.meta.dirname, 'src'),
     },
   },
   build: {

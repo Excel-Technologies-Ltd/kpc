@@ -1,5 +1,6 @@
 import PrivateGuard from '@/guards/PrivateGuard';
 import MainLayout from '@/layout/main-layout';
+import CommercialRevenue from '@/pages/commercial-revenue';
 import ErrorPage from '@/pages/error';
 import ExecutiveCommand from '@/pages/home';
 import OverviewPage from '@/pages/overview';
@@ -35,7 +36,7 @@ export const privateRoutes: RouteObject[] = [
           },
           {
             path: 'commercial-revenue',
-            element: <OverviewPage />,
+            element: <CommercialRevenue />,
           },
           {
             path: 'assets-eam',
