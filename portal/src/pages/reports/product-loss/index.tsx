@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 export default function ProductLossReport() {
   return (
-    <div className='mx-auto max-w-7xl space-y-4'>
+    <div className='mx-auto container space-y-4'>
       <AnimatedSection>
         <PageHeader
           title='Reports'
@@ -59,9 +59,7 @@ export default function ProductLossReport() {
                 <ReportTd
                   mono
                   className={cn(
-                    r.lossPct > 0.2
-                      ? 'font-semibold text-rose-600 dark:text-rose-400'
-                      : undefined
+                    r.lossPct > 0.2 ? 'font-semibold text-rose-600 dark:text-rose-400' : undefined
                   )}
                 >
                   {r.lossPct.toFixed(2)}%

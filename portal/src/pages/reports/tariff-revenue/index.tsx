@@ -13,7 +13,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 
 export default function TariffRevenueReport() {
   return (
-    <div className='mx-auto max-w-7xl space-y-4'>
+    <div className='mx-auto container space-y-4'>
       <AnimatedSection>
         <PageHeader
           title='Reports'

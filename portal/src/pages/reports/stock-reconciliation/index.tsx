@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 export default function StockReconciliationReport() {
   return (
-    <div className='mx-auto max-w-7xl space-y-4'>
+    <div className='mx-auto container space-y-4'>
       <AnimatedSection>
         <PageHeader
           title='Reports'
@@ -45,9 +45,7 @@ export default function StockReconciliationReport() {
                 </TableCell>
                 <TableCell className='px-3 font-mono tabular-nums'>{STOCK_FOOT.capacity}</TableCell>
                 <TableCell className='px-3 font-mono tabular-nums'>{STOCK_FOOT.book}</TableCell>
-                <TableCell className='px-3 font-mono tabular-nums'>
-                  {STOCK_FOOT.physical}
-                </TableCell>
+                <TableCell className='px-3 font-mono tabular-nums'>{STOCK_FOOT.physical}</TableCell>
                 <TableCell className='px-3 font-mono text-rose-600 tabular-nums dark:text-rose-400'>
                   {STOCK_FOOT.variance}
                 </TableCell>

@@ -196,7 +196,7 @@ export default function StockTankFarmPage() {
   }
 
   return (
-    <div className='mx-auto max-w-7xl space-y-8 pb-16'>
+    <div className='mx-auto container space-y-8 pb-16'>
       {/* Top Header */}
       <div className='flex flex-wrap items-end justify-between gap-4 border-b border-[#e6edf7] pb-5 dark:border-[#233252]'>
         <div>
