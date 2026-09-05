@@ -14,7 +14,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   currentUser,
 }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-br from-[#080d16] via-[#101a2b] to-[#172b3d] text-[#eaf1fa]">
+    <div className="min-h-screen flex flex-col bg-[var(--ink)] text-[var(--text)] transition-colors duration-200">
       {/* Left Icon Rail Navigation */}
       <Rail />
 
