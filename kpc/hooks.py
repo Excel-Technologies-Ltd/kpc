@@ -14,13 +14,19 @@ app_license = "MIT"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/kpc/css/kpc.css"
 
-# Defines kpc.workflow_progress.render(frm) - a "Golden Thread progress"
-# section shown on every step doctype's own form - and kpc.dip_gauge.open(frm)
-# - the interactive Tank Measurement dip gauge dialog (see each doctype's
-# own <name>.js calling these from refresh()). Pure function definitions
-# only, no side effects on load, so including them app-wide (rather than
-# per-doctype via doctype_js) is safe.
-app_include_js = ["/assets/kpc/js/workflow_progress.js", "/assets/kpc/js/dip_gauge.js"]
+# app_include_js is bundled (not plain "/assets/..." raw-file paths - what
+# this used to be) so every deploy gets a content-hashed filename from
+# esbuild. A raw "/assets/..." path has no cache-busting at all - a real
+# bug reported live: a browser that had ever loaded workflow_progress.js/
+# dip_gauge.js kept serving that exact stale copy indefinitely, through
+# every subsequent fix to either file (a new toolbar icon added, then
+# swapped for a different one - none of it ever reached that browser),
+# until a manual hard refresh. Confirmed directly, and already the same
+# root cause found and fixed the same way in frappe_crewai's own
+# ai_chat.js earlier - see that app's hooks.py for the fuller writeup.
+# kpc.bundle.js just imports workflow_progress.js/dip_gauge.js - same
+# files, same behavior, now cache-safe on every future edit to either one.
+app_include_js = "kpc.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/kpc/css/kpc.css"

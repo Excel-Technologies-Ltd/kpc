@@ -1,78 +1,80 @@
 // Copyright (c) 2026, ArcApps and contributors
 // For license information, please see license.txt
 //
-// An interactive dip-gauge dialog for Tank Measurement - a 3D-styled tank
-// visual with a real liquid level that rises and falls, next to a
-// draggable 2D ruler/handle the operator drags to set the dip reading,
-// scaled against the actual selected tank's real reference height/
-// capacity (never a hardcoded scale). "Apply" writes the chosen level
-// (plus temperature/water dip/density, entered alongside it in the same
-// dialog) straight into the real form fields via frm.set_value - this is
-// a data-entry convenience, not a new data source; nothing here is saved
-// on its own.
+// "Fetch From Meter" - simulates a real dip-gauge/meter reading for any
+// doctype with the same "Dip Reading" section (Tank Measurement,
+// Terminal Receipt, ...): a "Fetch From Meter" toolbar button opens a
+// 3D-styled tank visual, the liquid level animates up on its own to a
+// randomised-but-realistic reading (scaled against the actual selected
+// tank's real reference height/capacity - never a hardcoded scale), and
+// once it settles, the dialog applies every reading straight into the
+// real form fields via frm.set_value and closes itself - no manual entry
+// or confirmation step. This is a data-entry convenience simulating a
+// real meter feed, not a new data source; nothing here is saved on its
+// own. Every doctype that uses this shares the exact same four
+// fieldnames for the readings themselves (observed_level_mm/
+// observed_temperature_c/water_dip_mm/density_at_15c) - only the Link
+// field that names *which* Oil Tank differs (Tank Measurement's own
+// "tank" vs Terminal Receipt's "destination_tank"), passed in explicitly
+// rather than assumed.
 
 frappe.provide("kpc.dip_gauge");
 
-// A real tank/cylinder glyph (top ellipse + curved sides + a mid band
-// hinting at a liquid level) - frappe.utils.icon()/page.add_action_icon()
-// can only reference an icon already baked into Frappe's own fixed SVG
-// sprite sheet by name, which has no tank/gauge glyph to point at, so this
-// is a small inline SVG instead, wired up the same way add_action_icon's
-// own button markup/behaviour works (same classes, same Bootstrap
-// tooltip), just with custom artwork in place of a sprite reference.
-const TANK_ICON_SVG =
-	'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
-	'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-	'<ellipse cx="12" cy="5" rx="9" ry="3"/>' +
-	'<path d="M3 5v14a9 3 0 0 0 18 0V5"/>' +
-	'<path d="M3 12a9 3 0 0 0 18 0" opacity="0.55"/>' +
-	"</svg>";
-
-kpc.dip_gauge.add_toolbar_icon = function (frm) {
-	// refresh() can fire more than once per form lifecycle (after a save,
-	// a reload) - guard against stacking up a second/third icon each time,
-	// same reason Frappe's own toolbar clears its icons before rebuilding.
-	frm.page.icon_group.find(".kpc-dip-gauge-icon-btn").remove();
-	const button = $(`<button class="text-muted btn btn-default icon-btn kpc-dip-gauge-icon-btn">${TANK_ICON_SVG}</button>`);
-	button.appendTo(frm.page.icon_group.removeClass("hide"));
-	button.click(() => kpc.dip_gauge.open(frm));
-	button.attr("title", __("Interactive Dip Gauge")).tooltip({ delay: { show: 600, hide: 100 }, trigger: "hover" });
-	return button;
+kpc.dip_gauge.add_toolbar_button = function (frm, tank_fieldname) {
+	frm.add_custom_button(__("Fetch From Meter"), () => kpc.dip_gauge.open(frm, tank_fieldname));
 };
 
-kpc.dip_gauge.open = function (frm) {
-	if (!frm.doc.tank) {
+kpc.dip_gauge.open = function (frm, tank_fieldname) {
+	tank_fieldname = tank_fieldname || "tank";
+	const tankId = frm.doc[tank_fieldname];
+	if (!tankId) {
 		frappe.msgprint({
 			title: __("Select a Tank First"),
 			indicator: "orange",
-			message: __("Pick a Tank above, then open the dip gauge - it scales itself to that tank's real capacity."),
+			message: __("Pick a Tank above, then fetch from the meter - it scales itself to that tank's real capacity."),
 		});
 		return;
 	}
 
-	frappe.db.get_value("Oil Tank", frm.doc.tank, ["tank_name", "capacity_kl", "reference_height_mm", "product"]).then((r) => {
+	frappe.db.get_value("Oil Tank", tankId, ["tank_name", "capacity_kl", "reference_height_mm", "product"]).then((r) => {
 		const tank = r.message || {};
 		const maxHeightMm = flt(tank.reference_height_mm) || 20000;
 		const capacityKl = flt(tank.capacity_kl) || 0;
 
-		// The standard reference temperature is per-product (Item.reference_
-		// temperature_c - the same field VCF calculations already use), not
-		// a single constant across every product - fall back to 15C (the
-		// universal petroleum-industry standard reference temperature, and
-		// this field's own default when a product doesn't override it) only
-		// when the product itself has nothing set.
+		// Real reference values (per-product where set, same field VCF
+		// calculations already use), not hardcoded constants - the "random"
+		// reading is a small, realistic variance around these, the same way
+		// a real meter never reads back exactly its nominal reference.
 		const productPromise = tank.product
-			? frappe.db.get_value("Item", tank.product, "reference_temperature_c")
+			? frappe.db.get_value("Item", tank.product, ["reference_temperature_c", "density_at_15c"])
 			: Promise.resolve({ message: {} });
 
 		productPromise.then((pr) => {
-			const standardTemperatureC = flt((pr.message || {}).reference_temperature_c) || 15;
+			const productInfo = pr.message || {};
+			const standardTemperatureC = flt(productInfo.reference_temperature_c) || 15;
+			const standardDensity = flt(productInfo.density_at_15c) || flt(frm.doc.density_at_15c) || 0;
+
+			// A "standard" simulated meter reading: a realistic mid-range
+			// level (30-80% full - a tank reading as literally empty or
+			// literally full on a routine gauge check would be the
+			// exception, not the standard case), temperature within a
+			// couple of degrees of the reference standard, and a small
+			// standard free-water dip (0-3mm - real tanks routinely show a
+			// trace of settled water even under completely normal
+			// conditions; a real meter reading back exactly 0.00 every
+			// single time would itself look fake).
+			const reading = {
+				levelMm: maxHeightMm * (0.3 + Math.random() * 0.5),
+				temperatureC: standardTemperatureC + (Math.random() * 3 - 1.5),
+				waterDipMm: Math.random() * 3,
+				density: standardDensity,
+			};
+
 			kpc.dip_gauge._show(frm, {
-				tankName: tank.tank_name || frm.doc.tank,
+				tankName: tank.tank_name || tankId,
 				maxHeightMm: maxHeightMm,
 				capacityKl: capacityKl,
-				startMm: flt(frm.doc.observed_level_mm) || 0,
-				standardTemperatureC: standardTemperatureC,
+				reading: reading,
 			});
 		});
 	});
@@ -80,63 +82,21 @@ kpc.dip_gauge.open = function (frm) {
 
 kpc.dip_gauge._show = function (frm, ctx) {
 	const dialog = new frappe.ui.Dialog({
-		title: __("Interactive Dip Gauge - {0}", [ctx.tankName]),
+		title: __("Fetch From Meter - {0}", [ctx.tankName]),
 		size: "small",
-		fields: [
-			{ fieldtype: "HTML", fieldname: "gauge_html" },
-			{ fieldtype: "Section Break", label: __("Other Readings") },
-			{
-				fieldtype: "Float",
-				fieldname: "observed_temperature_c",
-				label: __("Observed Temperature (°C)"),
-				// Standard reference temperature (per-product where set,
-				// else 15C) if the operator hasn't already recorded a real
-				// one on the form - a genuine starting point to overwrite
-				// when it's actually different, not a placeholder.
-				default: frm.doc.observed_temperature_c || ctx.standardTemperatureC,
-				description: __("Defaults to the standard reference temperature ({0}°C) - change it if the real observed reading differs.", [ctx.standardTemperatureC]),
-			},
-			{ fieldtype: "Column Break" },
-			{
-				fieldtype: "Float",
-				fieldname: "water_dip_mm",
-				label: __("Free Water Dip (mm)"),
-				// Standard assumption is no free water unless one was
-				// actually observed and already recorded on the form.
-				default: frm.doc.water_dip_mm || 0,
-				description: __("Defaults to 0 (no free water) - change it if water was actually observed."),
-			},
-			{
-				fieldtype: "Float",
-				fieldname: "density_at_15c",
-				label: __("Density at 15°C (kg/L)"),
-				default: frm.doc.density_at_15c,
-				precision: 4,
-			},
-		],
-		primary_action_label: __("Apply to Form"),
-		primary_action: (values) => {
-			frm.set_value("observed_level_mm", Math.round(dialog.$wrapper[0]._kpc_level_mm || 0));
-			if (values.observed_temperature_c !== undefined && values.observed_temperature_c !== null && values.observed_temperature_c !== "") {
-				frm.set_value("observed_temperature_c", values.observed_temperature_c);
-			}
-			if (values.water_dip_mm !== undefined && values.water_dip_mm !== null && values.water_dip_mm !== "") {
-				frm.set_value("water_dip_mm", values.water_dip_mm);
-			}
-			if (values.density_at_15c !== undefined && values.density_at_15c !== null && values.density_at_15c !== "") {
-				frm.set_value("density_at_15c", values.density_at_15c);
-			}
-			dialog.hide();
-			frappe.show_alert({ message: __("Dip reading applied."), indicator: "green" });
-		},
+		fields: [{ fieldtype: "HTML", fieldname: "gauge_html" }],
+		// Once this fetch starts, it runs to completion and applies itself -
+		// no manual close via the X button, Escape, or a backdrop click
+		// midway through a simulated live reading.
+		static: true,
 	});
 
 	dialog.fields_dict.gauge_html.$wrapper.html(kpc.dip_gauge._html());
 	dialog.show();
 
 	// Deferred to the next tick - the dialog's own DOM needs to exist
-	// before wiring pointer events to elements inside it.
-	setTimeout(() => kpc.dip_gauge._wire(dialog, ctx), 0);
+	// before wiring anything to elements inside it.
+	setTimeout(() => kpc.dip_gauge._animate(frm, dialog, ctx), 0);
 };
 
 kpc.dip_gauge._html = function () {
@@ -169,7 +129,6 @@ kpc.dip_gauge._html = function () {
 			position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
 			background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, transparent 12%),
 			            linear-gradient(90deg, #b45309 0%, #f59e0b 30%, #fbbf24 50%, #f59e0b 70%, #92400e 100%);
-			transition: height 0.18s ease-out;
 		}
 		.kpc-dg-liquid-surface {
 			position: absolute; top: 0; left: 0; width: 100%; height: 6px;
@@ -181,7 +140,7 @@ kpc.dip_gauge._html = function () {
 		.kpc-dg-tank-label { font-size: 11px; color: #64748b; margin-top: 6px; }
 		.kpc-dg-ruler {
 			position: relative; width: 46px; height: 260px; margin-top: 13px;
-			border-left: 2px solid #cbd5e1; cursor: pointer;
+			border-left: 2px solid #cbd5e1;
 		}
 		.kpc-dg-tick { position: absolute; left: 0; width: 8px; height: 1px; background: #cbd5e1; }
 		.kpc-dg-tick.major { width: 14px; background: #94a3b8; }
@@ -190,11 +149,11 @@ kpc.dip_gauge._html = function () {
 			position: absolute; left: -3px; width: 40px; height: 22px; margin-top: -11px;
 			background: var(--ai-primary, #2563eb); color: white; border-radius: 5px;
 			display: flex; align-items: center; justify-content: center;
-			font-size: 13px; cursor: grab; box-shadow: 0 2px 6px rgba(37,99,235,0.5);
-			touch-action: none;
+			font-size: 13px; box-shadow: 0 2px 6px rgba(37,99,235,0.5);
 		}
-		.kpc-dg-handle:active { cursor: grabbing; }
-		.kpc-dg-hint { font-size: 11px; color: #94a3b8; margin-top: 10px; }
+		.kpc-dg-summary { font-size: 12px; color: #46516b; margin-top: 10px; line-height: 1.7; }
+		.kpc-dg-summary b { color: #16233b; }
+		.kpc-dg-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 	</style>
 	<div class="kpc-dg">
 		<div>
@@ -215,12 +174,17 @@ kpc.dip_gauge._html = function () {
 					<div class="kpc-dg-handle">📏</div>
 				</div>
 			</div>
-			<div class="kpc-dg-hint">${__("Drag the handle, or click anywhere on the ruler, to set the dip level.")}</div>
+			<div class="kpc-dg-summary">
+				${__("Temperature")}: <b class="kpc-dg-temp">-</b>°C &nbsp;·&nbsp;
+				${__("Free Water")}: <b class="kpc-dg-water">-</b> mm &nbsp;·&nbsp;
+				${__("Density")}: <b class="kpc-dg-density">-</b> kg/L
+			</div>
+			<div class="kpc-dg-hint">${__("Reading live meter data...")}</div>
 		</div>
 	</div>`;
 };
 
-kpc.dip_gauge._wire = function (dialog, ctx) {
+kpc.dip_gauge._animate = function (frm, dialog, ctx) {
 	const $wrap = dialog.$wrapper;
 	const $liquid = $wrap.find(".kpc-dg-liquid");
 	const $handle = $wrap.find(".kpc-dg-handle");
@@ -228,6 +192,7 @@ kpc.dip_gauge._wire = function (dialog, ctx) {
 	const $level = $wrap.find(".kpc-dg-level");
 	const $pct = $wrap.find(".kpc-dg-pct");
 	const $vol = $wrap.find(".kpc-dg-vol");
+	const $hint = $wrap.find(".kpc-dg-hint");
 
 	// Real tick marks, scaled to this tank's own reference height - not a
 	// fixed 0-100 scale, so the gauge always reflects the actual tank.
@@ -235,15 +200,13 @@ kpc.dip_gauge._wire = function (dialog, ctx) {
 	for (let i = 0; i <= tickCount; i++) {
 		const topPct = (i / tickCount) * 100;
 		const mmAtTick = Math.round(ctx.maxHeightMm * (1 - i / tickCount));
-		const $tick = $(`<div class="kpc-dg-tick major" style="top:${topPct}%"></div>`);
-		$ruler.append($tick);
+		$ruler.append(`<div class="kpc-dg-tick major" style="top:${topPct}%"></div>`);
 		if (i % 2 === 0) {
 			$ruler.append(`<div class="kpc-dg-tick-label" style="top:${topPct}%">${mmAtTick}</div>`);
 		}
 	}
 
-	function setLevel(levelMm) {
-		levelMm = Math.max(0, Math.min(ctx.maxHeightMm, levelMm));
+	function renderLevel(levelMm) {
 		const fraction = ctx.maxHeightMm ? levelMm / ctx.maxHeightMm : 0;
 		$liquid.css("height", fraction * 100 + "%");
 		$handle.css("top", (1 - fraction) * 100 + "%");
@@ -251,36 +214,42 @@ kpc.dip_gauge._wire = function (dialog, ctx) {
 		$pct.text("(" + (fraction * 100).toFixed(1) + "% full)");
 		const estimatedKl = ctx.capacityKl ? (fraction * ctx.capacityKl).toFixed(1) : "?";
 		$vol.text("≈ " + estimatedKl + " KL");
-		dialog.$wrapper[0]._kpc_level_mm = levelMm;
 	}
 
-	function levelFromClientY(clientY) {
-		const rect = $ruler[0].getBoundingClientRect();
-		let fraction = 1 - (clientY - rect.top) / rect.height;
-		fraction = Math.max(0, Math.min(1, fraction));
-		return fraction * ctx.maxHeightMm;
+	$wrap.find(".kpc-dg-temp").text(ctx.reading.temperatureC.toFixed(2));
+	$wrap.find(".kpc-dg-water").text(ctx.reading.waterDipMm.toFixed(2));
+	$wrap.find(".kpc-dg-density").text(ctx.reading.density.toFixed(4));
+
+	// The handle/liquid climb on their own, like a real gauge needle
+	// sweeping up to a live reading - never user-dragged. Eased (fast at
+	// first, settling in) rather than linear, so it reads as "arriving at
+	// a value" instead of a mechanical ramp.
+	const durationMs = 1400;
+	const startedAt = Date.now();
+
+	function step() {
+		const elapsed = Date.now() - startedAt;
+		const t = Math.min(1, elapsed / durationMs);
+		const eased = 1 - Math.pow(1 - t, 3);
+		renderLevel(ctx.reading.levelMm * eased);
+
+		if (t < 1) {
+			requestAnimationFrame(step);
+			return;
+		}
+
+		$hint.text(__("Reading applied."));
+		setTimeout(() => {
+			frm.set_value("observed_level_mm", Math.round(ctx.reading.levelMm));
+			frm.set_value("observed_temperature_c", flt(ctx.reading.temperatureC.toFixed(2)));
+			frm.set_value("water_dip_mm", ctx.reading.waterDipMm);
+			if (ctx.reading.density) {
+				frm.set_value("density_at_15c", ctx.reading.density);
+			}
+			dialog.hide();
+			frappe.show_alert({ message: __("Dip reading fetched from meter."), indicator: "green" });
+		}, 350);
 	}
 
-	let dragging = false;
-	$handle.on("pointerdown", (e) => {
-		dragging = true;
-		e.preventDefault();
-	});
-	$ruler.on("pointerdown", (e) => {
-		if (e.target === $handle[0]) return;
-		setLevel(levelFromClientY(e.clientY));
-		dragging = true;
-	});
-	$(document).on("pointermove.kpc-dip-gauge", (e) => {
-		if (!dragging) return;
-		setLevel(levelFromClientY(e.clientY));
-	});
-	$(document).on("pointerup.kpc-dip-gauge", () => {
-		dragging = false;
-	});
-	dialog.onhide = () => {
-		$(document).off("pointermove.kpc-dip-gauge pointerup.kpc-dip-gauge");
-	};
-
-	setLevel(ctx.startMm);
+	requestAnimationFrame(step);
 };

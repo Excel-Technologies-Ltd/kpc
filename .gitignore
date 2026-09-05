@@ -5,3 +5,8 @@
 tags
 kpc/docs/current
 node_modules/
+
+# esbuild output for the bundled app_include_js (kpc.bundle.js) - built
+# fresh on every `bench build`, content-hashed, never checked in - same
+# convention frappe_crewai's own .gitignore already uses for its bundle.
+kpc/public/dist/

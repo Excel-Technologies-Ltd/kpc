@@ -9,6 +9,11 @@ frappe.ui.form.on("Terminal Receipt", {
 	refresh(frm) {
 		kpc.workflow_progress.render(frm);
 
+		// Same "Dip Reading" section, same four fieldnames, as Tank
+		// Measurement - only the tank Link field's own name differs here
+		// ("destination_tank", not "tank").
+		kpc.dip_gauge.add_toolbar_button(frm, "destination_tank");
+
 		if (frm.doc.docstatus === 1) {
 			frm.add_custom_button(__("Reconciliation"), () => {
 				frappe.new_doc("Reconciliation", { terminal_receipt: frm.doc.name });
