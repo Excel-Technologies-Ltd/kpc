@@ -35,8 +35,8 @@ export default function ErrorPage({ title, description, statusCode }: ErrorPageP
   return (
     <div className='relative flex min-h-[80vh] w-full flex-col items-center justify-center overflow-hidden px-4 py-12 text-center'>
       {/* Background glow accents */}
-      <div className='pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-gradient-to-tr from-[#4361ee]/15 via-[#06b6d4]/15 to-transparent blur-3xl' />
-      <div className='pointer-events-none absolute bottom-0 right-1/4 -z-10 h-80 w-80 rounded-full bg-gradient-to-br from-[#f59e0b]/10 to-transparent blur-3xl' />
+      <div className='pointer-events-none absolute -top-24 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-linear-to-tr from-[#4361ee]/15 via-[#06b6d4]/15 to-transparent blur-3xl' />
+      <div className='pointer-events-none absolute bottom-0 right-1/4 -z-10 h-80 w-80 rounded-full bg-linear-to-br from-[#f59e0b]/10 to-transparent blur-3xl' />
 
       <div className='mx-auto max-w-lg space-y-6'>
         {/* Status code badge */}
@@ -47,7 +47,7 @@ export default function ErrorPage({ title, description, statusCode }: ErrorPageP
 
         {/* Hero error display */}
         <div className='space-y-2'>
-          <h1 className='bg-gradient-to-r from-[#132038] via-[#4361ee] to-[#06b6d4] bg-clip-text text-7xl font-extrabold tracking-tight text-transparent sm:text-8xl'>
+          <h1 className='bg-linear-to-r from-[#132038] via-[#4361ee] to-[#06b6d4] bg-clip-text text-7xl font-extrabold tracking-tight text-transparent sm:text-8xl'>
             {resolvedStatus}
           </h1>
           <h2 className='text-2xl font-bold tracking-tight text-[#132038] sm:text-3xl'>
@@ -72,7 +72,7 @@ export default function ErrorPage({ title, description, statusCode }: ErrorPageP
         <div className='flex flex-wrap items-center justify-center gap-3 pt-2'>
           <Button
             onClick={() => navigate('/')}
-            className='h-10 rounded-xl bg-gradient-to-r from-[#4361ee] to-[#6a8bff] px-5 text-sm font-medium text-white shadow-[0_8px_18px_-8px_rgba(67,97,238,0.7)] transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.98]'
+            className='h-10 rounded-xl bg-linear-to-r from-[#4361ee] to-[#6a8bff] px-5 text-sm font-medium text-white shadow-[0_8px_18px_-8px_rgba(67,97,238,0.7)] transition-all hover:scale-[1.02] hover:brightness-105 active:scale-[0.98]'
           >
             <Home className='mr-2 size-4' />
             Executive Command

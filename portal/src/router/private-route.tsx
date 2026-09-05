@@ -4,6 +4,7 @@ import ErrorPage from '@/pages/error';
 import ExecutiveCommand from '@/pages/home';
 import OverviewPage from '@/pages/overview';
 import PipelineFlow from '@/pages/pipeline-flow';
+import StockTankFarmPage from '@/pages/stock-tank-farm';
 import type { RouteObject } from 'react-router-dom';
 
 export const privateRoutes: RouteObject[] = [
@@ -26,7 +27,7 @@ export const privateRoutes: RouteObject[] = [
           },
           {
             path: 'stock-tank-farm',
-            element: <OverviewPage />,
+            element: <StockTankFarmPage />,
           },
           {
             path: 'loss-accountability',

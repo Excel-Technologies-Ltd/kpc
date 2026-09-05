@@ -1,7 +1,6 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Droplets, Gauge, Radio } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Droplets, Gauge, Radio } from 'lucide-react';
 
 export function NetworkMap() {
   // Kenya pipeline nodes coordinates stretched across full-width widescreen layout
@@ -125,7 +124,7 @@ export function NetworkMap() {
       </CardHeader>
 
       <CardContent className='p-4'>
-        <div className='relative h-[250px] w-full overflow-hidden rounded-xl bg-gradient-to-b from-[#f8fafc] to-[#eef3fb] p-2 dark:from-[#0a101d] dark:to-[#0f1728]'>
+        <div className='relative h-62.5 w-full overflow-hidden rounded-xl bg-linear-to-b from-[#f8fafc] to-[#eef3fb] p-2 dark:from-[#0a101d] dark:to-[#0f1728]'>
           <svg viewBox='0 0 960 250' className='size-full' preserveAspectRatio='xMidYMid meet'>
             {/* Draw segment flow lines */}
             {segments.map((seg, idx) => {
