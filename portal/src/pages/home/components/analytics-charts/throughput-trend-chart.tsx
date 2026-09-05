@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PIPELINE_BATCHES_DOCTYPE, TERMINAL_RECEIPT_DOCTYPE } from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -12,25 +13,31 @@ export function ThroughputTrendChart() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   // Fetch live terminal receipts
-  const { data: receipts, isLoading: receiptsLoading } = useFrappeGetDocList('Terminal Receipt', {
-    fields: [
-      'name',
-      'posting_date',
-      'receipt_datetime',
-      'creation',
-      'net_standard_volume_kl',
-      'gross_observed_volume_kl',
-    ],
-    limit: 500,
-    orderBy: { field: 'creation', order: 'desc' },
-  });
+  const { data: receipts, isLoading: receiptsLoading } = useFrappeGetDocList(
+    TERMINAL_RECEIPT_DOCTYPE,
+    {
+      fields: [
+        'name',
+        'posting_date',
+        'receipt_datetime',
+        'creation',
+        'net_standard_volume_kl',
+        'gross_observed_volume_kl',
+      ],
+      limit: 500,
+      orderBy: { field: 'creation', order: 'desc' },
+    }
+  );
 
   // Fetch live pipeline batches as supplementary throughput data
-  const { data: batches, isLoading: batchesLoading } = useFrappeGetDocList('Pipeline Batch', {
-    fields: ['name', 'scheduled_start', 'creation', 'planned_volume_kl'],
-    limit: 500,
-    orderBy: { field: 'creation', order: 'desc' },
-  });
+  const { data: batches, isLoading: batchesLoading } = useFrappeGetDocList(
+    PIPELINE_BATCHES_DOCTYPE,
+    {
+      fields: ['name', 'scheduled_start', 'creation', 'planned_volume_kl'],
+      limit: 500,
+      orderBy: { field: 'creation', order: 'desc' },
+    }
+  );
 
   const isLoading = receiptsLoading || batchesLoading;
 

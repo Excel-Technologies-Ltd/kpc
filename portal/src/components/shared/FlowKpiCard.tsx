@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { Loader2, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 function AnimatedCounter({ value, duration = 1.2 }: { value: string; duration?: number }) {
@@ -58,6 +58,7 @@ export type FlowKpiCardProps = {
   color: string;
   delay?: number;
   icon?: React.ReactNode;
+  isLoading?: boolean;
 };
 
 export function FlowKpiCard({
@@ -70,6 +71,7 @@ export function FlowKpiCard({
   color,
   delay = 0,
   icon,
+  isLoading = false,
 }: FlowKpiCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
@@ -142,27 +144,47 @@ export function FlowKpiCard({
             ) : null}
           </div>
           <div className='flex items-baseline gap-1'>
-            <span className='font-mono text-2xl font-black tracking-tight text-white xl:text-3xl'>
-              <AnimatedCounter value={value} />
-            </span>
-            {unit ? <span className='text-sm font-semibold text-white/50'>{unit}</span> : null}
+            {isLoading ? (
+              <div className='flex h-9 items-center gap-2'>
+                <div className='h-7 w-24 animate-pulse rounded-md bg-white/20' />
+                <Loader2 className='size-3.5 animate-spin text-white/50' />
+              </div>
+            ) : (
+              <>
+                <span className='font-mono text-2xl font-black tracking-tight text-white xl:text-3xl'>
+                  <AnimatedCounter value={value} />
+                </span>
+                {unit ? <span className='text-sm font-semibold text-white/50'>{unit}</span> : null}
+              </>
+            )}
           </div>
-          <p className='line-clamp-2 min-h-[2.2em] text-[11px] leading-snug text-white/45'>
-            {description}
-          </p>
-        </div>
-        <div
-          style={{ transform: 'translateZ(20px)' }}
-          className={cn(
-            'relative z-10 mt-auto inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-            deltaType === 'up' && 'bg-emerald-500/20 text-emerald-300',
-            deltaType === 'down' && 'bg-rose-500/20 text-rose-300',
-            deltaType === 'flat' && 'bg-white/10 text-white/70'
+          {isLoading ? (
+            <div className='space-y-1 py-0.5'>
+              <div className='h-2.5 w-3/4 animate-pulse rounded bg-white/15' />
+              <div className='h-2.5 w-1/2 animate-pulse rounded bg-white/10' />
+            </div>
+          ) : (
+            <p className='line-clamp-2 min-h-[2.2em] text-[11px] leading-snug text-white/45'>
+              {description}
+            </p>
           )}
-        >
-          <DeltaIcon className='size-3' />
-          {delta}
         </div>
+        {isLoading ? (
+          <div className='h-5 w-20 animate-pulse rounded-full bg-white/15' />
+        ) : (
+          <div
+            style={{ transform: 'translateZ(20px)' }}
+            className={cn(
+              'relative z-10 mt-auto inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+              deltaType === 'up' && 'bg-emerald-500/20 text-emerald-300',
+              deltaType === 'down' && 'bg-rose-500/20 text-rose-300',
+              deltaType === 'flat' && 'bg-white/10 text-white/70'
+            )}
+          >
+            <DeltaIcon className='size-3' />
+            {delta}
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );

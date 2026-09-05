@@ -1,6 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  CAPACITY_ASSESSMENT_DOCTYPE,
+  INVOICE_DOCTYPE,
+  NOMINATION_DOCTYPE,
+  PIPELINE_BATCHES_DOCTYPE,
+  TARIFF_DOCTYPE,
+} from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { BarChart3 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -12,13 +19,13 @@ export function RevenueVsTargetChart() {
   const [hoveredBar, setHoveredBar] = useState<'target' | 'actual' | null>(null);
 
   // 1. Fetch Actual Invoices from Frappe
-  const { data: invoices, isLoading: invoicesLoading } = useFrappeGetDocList('Invoice', {
+  const { data: invoices, isLoading: invoicesLoading } = useFrappeGetDocList(INVOICE_DOCTYPE, {
     fields: ['name', 'grand_total', 'currency', 'docstatus', 'posting_date'],
     limit: 500,
   });
 
   // 2. Fetch Active Tariffs from Frappe
-  const { data: tariffs, isLoading: tariffsLoading } = useFrappeGetDocList('Tariff', {
+  const { data: tariffs, isLoading: tariffsLoading } = useFrappeGetDocList(TARIFF_DOCTYPE, {
     fields: [
       'name',
       'product',
@@ -33,7 +40,7 @@ export function RevenueVsTargetChart() {
 
   // 3. Fetch Capacity Assessment target records from Frappe
   const { data: capacityAssessments, isLoading: capLoading } = useFrappeGetDocList(
-    'Capacity Assessment',
+    CAPACITY_ASSESSMENT_DOCTYPE,
     {
       fields: [
         'name',
@@ -48,13 +55,13 @@ export function RevenueVsTargetChart() {
   );
 
   // 4. Fetch Pipeline Batches to calculate scheduled target volume
-  const { data: batches, isLoading: batchLoading } = useFrappeGetDocList('Pipeline Batch', {
+  const { data: batches, isLoading: batchLoading } = useFrappeGetDocList(PIPELINE_BATCHES_DOCTYPE, {
     fields: ['name', 'planned_volume_kl', 'product'],
     limit: 200,
   });
 
   // 5. Fetch Nominations for customer volume targets
-  const { data: nominations, isLoading: nomLoading } = useFrappeGetDocList('Nomination', {
+  const { data: nominations, isLoading: nomLoading } = useFrappeGetDocList(NOMINATION_DOCTYPE, {
     fields: ['name', 'nominated_quantity_kl', 'product'],
     limit: 200,
   });

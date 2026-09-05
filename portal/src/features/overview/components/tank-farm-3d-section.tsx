@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { OIL_TANK_DOCTYPE, TANK_MEASUREMENT_DOCTYPE } from '@/constants/doctype.string';
 import { cn } from '@/lib/utils';
 import { Html, OrbitControls, Sparkles } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
@@ -354,23 +355,26 @@ export function TankFarm3DSection() {
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [cameraKey, setCameraKey] = useState<number>(0);
 
-  const { data: rawTanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>('Oil Tank', {
-    fields: [
-      'name',
-      'tank_name',
-      'tank_code',
-      'terminal',
-      'product',
-      'current_state',
-      'capacity_kl',
-      'safe_fill_capacity_kl',
-      'reference_height_mm',
-    ],
-    limit: 100,
-  });
+  const { data: rawTanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>(
+    OIL_TANK_DOCTYPE,
+    {
+      fields: [
+        'name',
+        'tank_name',
+        'tank_code',
+        'terminal',
+        'product',
+        'current_state',
+        'capacity_kl',
+        'safe_fill_capacity_kl',
+        'reference_height_mm',
+      ],
+      limit: 100,
+    }
+  );
 
   const { data: measurements, isLoading: measurementsLoading } =
-    useFrappeGetDocList<TankMeasurementDoc>('Tank Measurement', {
+    useFrappeGetDocList<TankMeasurementDoc>(TANK_MEASUREMENT_DOCTYPE, {
       fields: [
         'name',
         'tank',
@@ -591,7 +595,7 @@ export function TankFarm3DSection() {
         </div>
 
         {/* 3D Viewport Body */}
-        <div className='relative h-[480px] w-full bg-[#080d16] overflow-hidden border-b border-border isolate'>
+        <div className='relative h-120 w-full bg-[#080d16] overflow-hidden border-b border-border isolate'>
           {isLoading ? (
             <div className='flex h-full items-center justify-center text-sm text-slate-400'>
               <div className='flex items-center gap-2'>
@@ -718,7 +722,7 @@ export function TankFarm3DSection() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className='w-[215px] min-w-[205px] shrink-0 rounded-xl border border-border p-3 animate-pulse space-y-2'
+                  className='w-[215px] min-w-51.25 shrink-0 rounded-xl border border-border p-3 animate-pulse space-y-2'
                 >
                   <div className='h-4 w-1/2 bg-muted rounded' />
                   <div className='h-3 w-3/4 bg-muted rounded' />

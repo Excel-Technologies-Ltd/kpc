@@ -8,6 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  AI_ALERT_DOCTYPE,
+  JOURNEY_DOCTYPE,
+  OIL_SHIPMENT_DOCTYPE,
+} from '@/constants/doctype.string';
 import { cn } from '@/lib/utils';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo, useState } from 'react';
@@ -62,7 +67,7 @@ const STEP_DEFINITIONS = [
 
 export function ThreadTracker() {
   const { data: journeys, isLoading: journeysLoading } = useFrappeGetDocList<JourneyDoc>(
-    'Journey',
+    JOURNEY_DOCTYPE,
     {
       fields: [
         'name',
@@ -78,7 +83,7 @@ export function ThreadTracker() {
     }
   );
 
-  const { data: shipments } = useFrappeGetDocList<OilShipmentDoc>('Oil Shipment', {
+  const { data: shipments } = useFrappeGetDocList<OilShipmentDoc>(OIL_SHIPMENT_DOCTYPE, {
     fields: [
       'name',
       'journey_ref',
@@ -92,7 +97,7 @@ export function ThreadTracker() {
     limit: 100,
   });
 
-  const { data: alerts } = useFrappeGetDocList<AIAlertDoc>('AI Alert', {
+  const { data: alerts } = useFrappeGetDocList<AIAlertDoc>(AI_ALERT_DOCTYPE, {
     fields: [
       'name',
       'journey_ref',

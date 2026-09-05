@@ -1,8 +1,17 @@
+import ScreenLoader from '@/components/loader/screen-loader';
 import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  OIL_TANK_DOCTYPE,
+  RECONCILIATION_DOCTYPE,
+  STOCK_MOVEMENT_DOCTYPE,
+  TANK_MEASUREMENT_DOCTYPE,
+} from '@/constants/doctype.string';
 import { StockMovementCard } from '@/features/overview/components/stock-movement-card';
 import { TankFarm3DSection } from '@/features/overview/components/tank-farm-3d-section';
+import { TankReconciliationCard } from '@/features/overview/components/tank-reconciliation-card';
+import { cn } from '@/lib/utils';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import {
   Activity,
@@ -45,7 +54,7 @@ export default function StockTankFarmPage() {
     data: tanks,
     isLoading: tanksLoading,
     mutate: reloadTanks,
-  } = useFrappeGetDocList<OilTankDoc>('Oil Tank', {
+  } = useFrappeGetDocList<OilTankDoc>(OIL_TANK_DOCTYPE, {
     fields: [
       'name',
       'tank_name',
@@ -61,7 +70,7 @@ export default function StockTankFarmPage() {
 
   // 2. Fetch live tank measurements
   const { data: measurements, isLoading: measLoading } = useFrappeGetDocList<TankMeasurementDoc>(
-    'Tank Measurement',
+    TANK_MEASUREMENT_DOCTYPE,
     {
       fields: [
         'name',
@@ -77,16 +86,22 @@ export default function StockTankFarmPage() {
   );
 
   // 3. Fetch receipts / movements for activity KPI
-  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList('Stock Movement', {
-    fields: ['name', 'movement_type', 'quantity_kl', 'status'],
-    limit: 100,
-  });
+  const { data: movements, isLoading: movementsLoading } = useFrappeGetDocList(
+    STOCK_MOVEMENT_DOCTYPE,
+    {
+      fields: ['name', 'movement_type', 'quantity_kl', 'status'],
+      limit: 100,
+    }
+  );
 
   // 4. Fetch reconciliations for net variance KPI
-  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList('Reconciliation', {
-    fields: ['name', 'variance_kl', 'variance_percent', 'status'],
-    limit: 50,
-  });
+  const { data: reconciliations, isLoading: reconLoading } = useFrappeGetDocList(
+    RECONCILIATION_DOCTYPE,
+    {
+      fields: ['name', 'variance_kl', 'variance_percent', 'status'],
+      limit: 50,
+    }
+  );
 
   // Latest measurement per tank mapping
   const latestMeasMap = useMemo(() => {
@@ -170,6 +185,17 @@ export default function StockTankFarmPage() {
     return Array.from(set);
   }, [tanks]);
 
+  const isInitialLoading = (tanksLoading && !tanks) || (measLoading && !measurements);
+
+  if (isInitialLoading) {
+    return (
+      <ScreenLoader
+        message='Loading stock & tank farm telemetry…'
+        className='min-h-[65vh] bg-transparent'
+      />
+    );
+  }
+
   return (
     <div className='mx-auto max-w-7xl space-y-8 pb-16'>
       {/* Top Header */}
@@ -204,19 +230,38 @@ export default function StockTankFarmPage() {
         <div className='flex flex-wrap items-center gap-2 text-xs'>
           <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
             Monitored Tanks{' '}
-            <b className='text-[#132038] dark:text-white'>{stats.totalTanks || '4'}</b>
+            <b className='text-[#132038] dark:text-white'>
+              {tanksLoading ? (
+                <span className='ml-1 inline-block size-3 animate-spin rounded-full border-2 border-[#4361ee] border-t-transparent align-middle' />
+              ) : (
+                stats.totalTanks || '4'
+              )}
+            </b>
           </div>
           <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
             Active Terminals{' '}
-            <b className='text-[#132038] dark:text-white'>{terminals.length || '5'}</b>
+            <b className='text-[#132038] dark:text-white'>
+              {tanksLoading ? (
+                <span className='ml-1 inline-block size-3 animate-spin rounded-full border-2 border-[#4361ee] border-t-transparent align-middle' />
+              ) : (
+                terminals.length || '5'
+              )}
+            </b>
           </div>
           <Button
             variant='outline'
             size='sm'
+            disabled={tanksLoading || measLoading}
             onClick={() => reloadTanks()}
-            className='h-8 gap-1.5 border-[#e6edf7] bg-white text-xs font-semibold text-[#132038] shadow-xs hover:bg-slate-50 dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-200 cursor-pointer'
+            className='h-8 gap-1.5 border-[#e6edf7] bg-white text-xs font-semibold text-[#132038] shadow-xs hover:bg-slate-50 dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-200 cursor-pointer disabled:opacity-60'
           >
-            <RefreshCw className='size-3.5 text-[#4361ee]' /> Refresh Dips
+            <RefreshCw
+              className={cn(
+                'size-3.5 text-[#4361ee]',
+                (tanksLoading || measLoading) && 'animate-spin'
+              )}
+            />
+            {tanksLoading || measLoading ? 'Refreshing…' : 'Refresh Dips'}
           </Button>
         </div>
       </div>
@@ -242,6 +287,7 @@ export default function StockTankFarmPage() {
           color='#06b6d4'
           delay={0}
           icon={<Droplets className='size-4' />}
+          isLoading={tanksLoading || measLoading}
         />
 
         {/* KPI 2: Available Ullage */}
@@ -259,6 +305,7 @@ export default function StockTankFarmPage() {
           color='#10b981'
           delay={0.08}
           icon={<Layers className='size-4' />}
+          isLoading={tanksLoading || measLoading}
         />
 
         {/* KPI 3: Movement Today */}
@@ -276,6 +323,7 @@ export default function StockTankFarmPage() {
           color='#4361ee'
           delay={0.16}
           icon={<ArrowDownUp className='size-4' />}
+          isLoading={movementsLoading}
         />
 
         {/* KPI 4: Tanks in Alarm */}
@@ -289,6 +337,7 @@ export default function StockTankFarmPage() {
           color={stats.alarmCount > 0 ? '#f59e0b' : '#10b981'}
           delay={0.24}
           icon={<AlertTriangle className='size-4' />}
+          isLoading={tanksLoading}
         />
 
         {/* KPI 5: Recon Variance */}
@@ -308,6 +357,7 @@ export default function StockTankFarmPage() {
           color={Math.abs(stats.netVariance) > 0 ? '#f43f5e' : '#8b5cf6'}
           delay={0.32}
           icon={<Scale className='size-4' />}
+          isLoading={reconLoading}
         />
       </section>
 
@@ -316,15 +366,14 @@ export default function StockTankFarmPage() {
         <TankFarm3DSection />
       </section>
 
-      {/* Stock Movement Waterfall Analysis */}
-      <section className='space-y-3'>
-        <div className='flex items-center gap-2'>
-          <Activity className='size-4 text-[#4361ee]' />
-          <h2 className='text-sm font-bold uppercase tracking-wide text-[#5c6b85] dark:text-slate-400'>
-            Custody Stock Movement Waterfall
-          </h2>
+      {/* Stock Movement Waterfall & Reconciliation Grid */}
+      <section className='grid grid-cols-1 items-stretch gap-6 xl:grid-cols-12'>
+        <div className='h-full xl:col-span-5'>
+          <StockMovementCard compact />
         </div>
-        <StockMovementCard />
+        <div className='h-full xl:col-span-7'>
+          <TankReconciliationCard />
+        </div>
       </section>
     </div>
   );

@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { OIL_TANK_DOCTYPE, TANK_MEASUREMENT_DOCTYPE } from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
 
@@ -45,7 +46,7 @@ function statusMeta(state: string): {
 }
 
 export function TankFarmSection() {
-  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>('Oil Tank', {
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>(OIL_TANK_DOCTYPE, {
     fields: [
       'name',
       'tank_name',
@@ -61,7 +62,7 @@ export function TankFarmSection() {
   });
 
   const { data: measurements, isLoading: measurementsLoading } =
-    useFrappeGetDocList<TankMeasurementDoc>('Tank Measurement', {
+    useFrappeGetDocList<TankMeasurementDoc>(TANK_MEASUREMENT_DOCTYPE, {
       fields: [
         'name',
         'tank',
