@@ -1,4 +1,3 @@
-import { NAV_GROUPS } from '@/constants/nav';
 import {
   Sidebar,
   SidebarContent,
@@ -11,17 +10,21 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NAV_GROUPS } from '@/constants/nav';
 import { cn } from '@/lib/utils';
+import { NavLink, useLocation } from 'react-router-dom';
 
 export function AppSidebar() {
   const { pathname } = useLocation();
 
   return (
-    <Sidebar collapsible='icon' className='border-r border-[#e6edf7] bg-white dark:border-[#233252] dark:bg-[#0f1728]'>
-      <SidebarHeader className='flex h-[var(--header-height)] items-center justify-center border-b border-[#e6edf7] px-3.5 dark:border-[#233252]'>
+    <Sidebar
+      collapsible='icon'
+      className='border-r border-[#e6edf7] bg-white dark:border-[#233252] dark:bg-[#0f1728]'
+    >
+      <SidebarHeader className='flex h-(--header-height) items-center justify-center border-b border-[#e6edf7] px-3.5 dark:border-[#233252]'>
         <div className='flex w-full items-center gap-2.5 overflow-hidden'>
-          <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#0d9488] to-[#06b6d4] text-xs font-bold text-white shadow-sm'>
+          <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-[#0d9488] to-[#06b6d4] text-xs font-bold text-white shadow-sm'>
             KPC
           </div>
           <div className='min-w-0 group-data-[collapsible=icon]:hidden'>
@@ -40,8 +43,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu className='gap-1'>
                 {group.items.map((item) => {
-                  const isActive =
-                    item.to === '/' ? pathname === '/' : pathname === item.to;
+                  const isActive = item.to === '/' ? pathname === '/' : pathname === item.to;
 
                   return (
                     <SidebarMenuItem key={item.to}>
@@ -49,7 +51,7 @@ export function AppSidebar() {
                         tooltip={item.label}
                         isActive={isActive}
                         className={cn(
-                          'h-[38px] w-full rounded-[11px] px-3 py-2 text-[13.5px] font-medium transition-all duration-150',
+                          'h-9.5 w-full rounded-[11px] px-3 py-2 text-[13.5px] font-medium transition-all duration-150',
                           isActive
                             ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30 hover:bg-primary hover:text-primary-foreground data-active:bg-primary data-active:text-primary-foreground [&>svg]:text-primary-foreground'
                             : 'text-primary hover:bg-primary/10 hover:text-primary [&>svg]:text-primary/75 hover:[&>svg]:text-primary'
@@ -58,14 +60,16 @@ export function AppSidebar() {
                       >
                         <item.icon
                           className={cn(
-                            'size-[18px] shrink-0 transition-colors',
+                            'size-4.5 shrink-0 transition-colors',
                             isActive ? 'text-primary-foreground' : 'text-primary/75'
                           )}
                         />
                         <span
                           className={cn(
                             'truncate',
-                            isActive ? 'font-medium text-primary-foreground' : 'text-primary font-medium'
+                            isActive
+                              ? 'font-medium text-primary-foreground'
+                              : 'text-primary font-medium'
                           )}
                         >
                           {item.label}
