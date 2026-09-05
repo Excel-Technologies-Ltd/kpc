@@ -8,6 +8,8 @@ frappe.ui.form.on("Tank Measurement", {
 
 	refresh(frm) {
 		kpc.workflow_progress.render(frm);
+
+		kpc.dip_gauge.add_toolbar_icon(frm);
 	},
 
 	journey_ref(frm) {

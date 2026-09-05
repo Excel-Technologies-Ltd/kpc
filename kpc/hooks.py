@@ -15,11 +15,12 @@ app_license = "MIT"
 # app_include_css = "/assets/kpc/css/kpc.css"
 
 # Defines kpc.workflow_progress.render(frm) - a "Golden Thread progress"
-# section shown on every step doctype's own form (see each doctype's own
-# <name>.js calling it from refresh()). Pure function definitions only, no
-# side effects on load, so including it app-wide (rather than per-doctype
-# via doctype_js) is safe.
-app_include_js = "/assets/kpc/js/workflow_progress.js"
+# section shown on every step doctype's own form - and kpc.dip_gauge.open(frm)
+# - the interactive Tank Measurement dip gauge dialog (see each doctype's
+# own <name>.js calling these from refresh()). Pure function definitions
+# only, no side effects on load, so including them app-wide (rather than
+# per-doctype via doctype_js) is safe.
+app_include_js = ["/assets/kpc/js/workflow_progress.js", "/assets/kpc/js/dip_gauge.js"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/kpc/css/kpc.css"
