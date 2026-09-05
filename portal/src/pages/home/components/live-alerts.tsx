@@ -1,4 +1,3 @@
-import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +14,7 @@ import {
   ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 interface AIAlertDoc {
   name: string;
