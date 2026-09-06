@@ -9,7 +9,7 @@ const MainProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <FrappeProvider
       enableSocket={false}
-      url='http://localhost:8001'
+      
       {...(VITE_FRAPPE_URL && VITE_FRAPPE_TOKEN
         ? {
             url: VITE_FRAPPE_URL,
