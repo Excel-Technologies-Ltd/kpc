@@ -1,8 +1,4 @@
-import {
-  ALLOCATION_DOCTYPE,
-  INVOICE_DOCTYPE,
-  TARIFF_DOCTYPE,
-} from '@/constants/doctype.string';
+import { ALLOCATION_DOCTYPE, INVOICE_DOCTYPE, TARIFF_DOCTYPE } from '@/constants/doctype.string';
 import type { Allocation } from '@/types/PetroleumOperations/Allocation';
 import type { Invoice } from '@/types/PetroleumOperations/Invoice';
 import type { Tariff } from '@/types/PetroleumOperations/Tariff';

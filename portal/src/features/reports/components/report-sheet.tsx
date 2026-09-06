@@ -41,13 +41,7 @@ function ToolButton({ tool }: { tool: ReportTool }) {
   );
 }
 
-export function ReportSheet({
-  meta,
-  children,
-}: {
-  meta: ReportMeta;
-  children: ReactNode;
-}) {
+export function ReportSheet({ meta, children }: { meta: ReportMeta; children: ReactNode }) {
   return (
     <Card className='border-border/80 from-card via-sky-50/20 to-teal-50/10 overflow-hidden bg-linear-to-br shadow-[0_10px_40px_-24px_rgba(15,23,42,0.2)] dark:via-sky-950/15 dark:to-teal-950/10'>
       <CardContent className='space-y-4 p-4 md:p-5'>

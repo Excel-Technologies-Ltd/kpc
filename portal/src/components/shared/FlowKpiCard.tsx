@@ -154,7 +154,9 @@ export function FlowKpiCard({
                 <span className='font-mono text-xl sm:text-2xl 2xl:text-3xl font-black tracking-tight text-white truncate'>
                   <AnimatedCounter value={value} />
                 </span>
-                {unit ? <span className='text-xs font-semibold text-white/50 shrink-0'>{unit}</span> : null}
+                {unit ? (
+                  <span className='text-xs font-semibold text-white/50 shrink-0'>{unit}</span>
+                ) : null}
               </>
             )}
           </div>

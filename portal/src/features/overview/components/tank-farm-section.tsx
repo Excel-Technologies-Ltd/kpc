@@ -46,20 +46,23 @@ function statusMeta(state: string): {
 }
 
 export function TankFarmSection() {
-  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>(OIL_TANK_DOCTYPE, {
-    fields: [
-      'name',
-      'tank_name',
-      'tank_code',
-      'terminal',
-      'product',
-      'current_state',
-      'capacity_kl',
-      'safe_fill_capacity_kl',
-      'reference_height_mm',
-    ],
-    limit: 100,
-  });
+  const { data: tanks, isLoading: tanksLoading } = useFrappeGetDocList<OilTankDoc>(
+    OIL_TANK_DOCTYPE,
+    {
+      fields: [
+        'name',
+        'tank_name',
+        'tank_code',
+        'terminal',
+        'product',
+        'current_state',
+        'capacity_kl',
+        'safe_fill_capacity_kl',
+        'reference_height_mm',
+      ],
+      limit: 100,
+    }
+  );
 
   const { data: measurements, isLoading: measurementsLoading } =
     useFrappeGetDocList<TankMeasurementDoc>(TANK_MEASUREMENT_DOCTYPE, {

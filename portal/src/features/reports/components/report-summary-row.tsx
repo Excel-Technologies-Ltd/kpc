@@ -16,10 +16,7 @@ export function ReportSummaryRow({ items }: { items: ReportSummary[] }) {
       {items.map((s) => (
         <div
           key={s.label}
-          className={cn(
-            'rounded-xl border bg-linear-to-br p-3.5 shadow-sm',
-            TONE[s.tone]
-          )}
+          className={cn('rounded-xl border bg-linear-to-br p-3.5 shadow-sm', TONE[s.tone])}
         >
           <div className='text-muted-foreground text-[11px] font-medium'>{s.label}</div>
           <div className='text-foreground mt-1 font-mono text-xl font-bold tracking-tight tabular-nums'>

@@ -9,8 +9,7 @@ const TONE_CLASS: Record<StatusTone, string> = {
   alarm:
     'border-rose-200/80 bg-rose-50 text-rose-700 ring-1 ring-rose-100 dark:border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-500/20',
   info: 'border-sky-200/80 bg-sky-50 text-sky-700 ring-1 ring-sky-100 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-500/20',
-  neutral:
-    'border-border/80 bg-muted/50 text-muted-foreground ring-1 ring-border/40',
+  neutral: 'border-border/80 bg-muted/50 text-muted-foreground ring-1 ring-border/40',
 };
 
 export function StatusBadge({

@@ -1,4 +1,4 @@
-export const FRAPPE_LOGIN = '/#login';
+export const URLLogin = () => '/login';
 
 export const URLOverview = () => '/';
 export const URLPipelineFlow = () => '/pipeline-flow';

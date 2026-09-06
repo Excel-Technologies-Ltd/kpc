@@ -4,7 +4,11 @@ import { ROUTE_INCIDENTS, ROUTE_STATIONS } from '../data/dummy';
 
 export function IncidentRouteMap() {
   const { theme } = useTheme();
-  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
   const line = isDark ? '#334155' : '#cbd5e1';
   const ink = isDark ? '#94a3b8' : '#64748b';
   const primary = isDark ? '#33c9b7' : '#0d9488';
