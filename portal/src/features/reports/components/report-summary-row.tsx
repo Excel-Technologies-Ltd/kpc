@@ -1,14 +1,5 @@
 import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
-import {
-  Activity,
-  AlertTriangle,
-  Droplets,
-  Fuel,
-  Gauge,
-  Layers,
-  Target,
-  TrendingUp,
-} from 'lucide-react';
+import { AlertTriangle, Droplets, Fuel, Gauge, Layers, Target, TrendingUp } from 'lucide-react';
 import type { ReportSummary } from '../data/dummy';
 
 const COLOR_MAP: Record<ReportSummary['tone'], string> = {
