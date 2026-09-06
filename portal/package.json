@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --base=/portal --host",
     "build": "vite build --base=/assets/kpc/portal/ && yarn copy-html-entry",
     "lint": "eslint .",
     "preview": "vite preview",

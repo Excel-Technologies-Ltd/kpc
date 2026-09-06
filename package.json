@@ -1,13 +1,13 @@
 {
   "name": "kpc",
   "version": "1.0.0",
-  "description": "An end-to-end Petroleum Operations Platform for Kenya Pipeline Company (KPC) \u2014 built on [Frappe](https://frappeframework.com) and integrated with standard ArcApps Accounts and Stock.",
+  "description": "An end-to-end Petroleum Operations Platform for Kenya Pipeline Company (KPC) — built on [Frappe](https://frappeframework.com) and integrated with standard ArcApps Accounts and Stock.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "(cd dashboard && yarn install) && (cd portal && yarn install)",
-    "build": "(cd dashboard && yarn build) && (cd portal && yarn build)",
-    "dev": "(cd dashboard && yarn dev) && (cd portal && yarn dev)"
+    "postinstall": "cd portal && yarn install",
+    "build": "cd portal && yarn install && yarn build",
+    "dev": "cd portal && yarn install && yarn dev"
   },
   "repository": {
     "type": "git",

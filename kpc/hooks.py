@@ -279,4 +279,4 @@ before_job = ["kpc.compat.patch_get_desk_link"]
 # 	"kpc.auth.validate"
 # ]
 
-website_route_rules = [{'from_route': '/portal/<path:app_path>', 'to_route': 'portal'}, {'from_route': '/dashboard/<path:app_path>', 'to_route': 'dashboard'},]
+website_route_rules = [{'from_route': '/portal/<path:app_path>', 'to_route': 'portal'}]
