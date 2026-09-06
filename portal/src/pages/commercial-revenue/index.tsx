@@ -13,7 +13,7 @@ export default function CommercialRevenue() {
   return (
     <CommercialRevenueRefreshProvider>
       <CommercialMetricsProvider>
-        <div className='mx-auto container space-y-4'>
+        <div className='w-full min-w-0 space-y-4'>
           <AnimatedSection>
             <CommercialPageHeader />
           </AnimatedSection>

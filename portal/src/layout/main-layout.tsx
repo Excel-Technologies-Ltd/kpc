@@ -7,9 +7,9 @@ export default function MainLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className='bg-transparent'>
+      <SidebarInset className='bg-transparent min-w-0'>
         <SiteHeader />
-        <div className='flex-1 overflow-auto p-4 md:p-6'>
+        <div className='flex-1 min-w-0 overflow-x-clip p-4 md:p-6'>
           <Outlet />
         </div>
       </SidebarInset>
