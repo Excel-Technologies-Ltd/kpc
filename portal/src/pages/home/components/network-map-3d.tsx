@@ -1,12 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { OIL_TANK_DOCTYPE } from '@/constants/doctype.string';
 import { OrbitControls, Sparkles, Text } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useFrappeGetDocList } from 'frappe-react-sdk';
-import { Gauge, Radio, Waves } from 'lucide-react';
+import { Activity, Gauge, Radio, Waves } from 'lucide-react';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { usePipelineScadaNetwork } from '../hooks/use-pipeline-scada-network';
 
 // Kenya Geographic Depot Data with Lat/Long mapped to 3D Coordinates
 export interface TerminalNode3D {
@@ -22,8 +21,10 @@ export interface TerminalNode3D {
   currentStockKL: number;
   fillPct: number;
   color: string;
+  status?: string;
   isPumpStation?: boolean;
 }
+
 
 const KENYA_TERMINALS: TerminalNode3D[] = [
   {
@@ -862,33 +863,60 @@ function ResponsiveCameraAdjuster() {
 }
 
 export function NetworkMap3D() {
-  const [selectedTank, setSelectedTank] = useState<TerminalNode3D>(KENYA_TERMINALS[0]);
+  const { data: scadaData, isLoading: scadaLoading } = usePipelineScadaNetwork();
 
-  // Fetch real Oil Tank records from Frappe if available
-  const { data: dbTanks } = useFrappeGetDocList(OIL_TANK_DOCTYPE, {
-    fields: ['name', 'tank_name', 'terminal', 'safe_fill_capacity_kl', 'current_state'],
-    limit: 20,
-  });
+  // Merge live Frappe backend data with the calibrated 3D geo-spatial positions
+  const terminals: TerminalNode3D[] = useMemo(() => {
+    if (!scadaData || !scadaData.terminals || scadaData.terminals.length === 0) {
+      return KENYA_TERMINALS;
+    }
 
-  // Merge live Frappe tank counts & capacities with 3D geo nodes
-  const terminals = useMemo(() => {
-    return KENYA_TERMINALS.map((t) => {
-      if (dbTanks && dbTanks.length > 0) {
-        const matchingDb = dbTanks.find(
-          (db: any) =>
-            db.name === t.id || db.terminal === t.terminal || db.tank_name?.includes(t.code)
-        );
-        if (matchingDb) {
-          const cap = Number(matchingDb.safe_fill_capacity_kl) || t.capacityKL;
-          return {
-            ...t,
-            capacityKL: cap,
-          };
-        }
+    // Build lookup map of backend terminals by code/name
+    const backendMap = new Map<string, any>();
+    scadaData.terminals.forEach((term) => {
+      backendMap.set(term.terminal_code, term);
+      if (term.terminal_code === 'NBO-01') {
+        backendMap.set('NBI-01', term);
+        backendMap.set('NBI-T01', term);
       }
-      return t;
     });
-  }, [dbTanks]);
+
+    return KENYA_TERMINALS.map((base) => {
+      const match =
+        backendMap.get(base.code) ||
+        backendMap.get(base.terminal) ||
+        backendMap.get(base.id);
+
+      if (match) {
+        const capacity = match.total_capacity_kl > 0 ? match.total_capacity_kl : base.capacityKL;
+        const currentStock = match.current_stock_kl > 0 ? match.current_stock_kl : base.currentStockKL;
+        const fillPct = match.total_capacity_kl > 0 ? match.fill_pct : base.fillPct;
+
+        return {
+          ...base,
+          name: match.terminal_name || base.name,
+          lat: match.latitude && Math.abs(match.latitude) > 0 ? match.latitude : base.lat,
+          lng: match.longitude && Math.abs(match.longitude) > 0 ? match.longitude : base.lng,
+          product: match.primary_product || base.product,
+          capacityKL: capacity,
+          currentStockKL: currentStock,
+          fillPct: fillPct,
+          status: match.status || 'Active In-Service',
+        };
+      }
+
+      return base;
+    });
+  }, [scadaData]);
+
+  const [selectedCode, setSelectedCode] = useState<string>('MSA-01');
+
+  const selectedTank = useMemo(() => {
+    return terminals.find((t) => t.code === selectedCode || t.id === selectedCode) || terminals[0];
+  }, [terminals, selectedCode]);
+
+  const telemetry = scadaData?.telemetry;
+  const segments = scadaData?.segments;
 
   return (
     <Card className='w-full overflow-hidden border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
@@ -903,7 +931,7 @@ export function NetworkMap3D() {
               className='gap-1 border-blue-200 bg-blue-50 text-[11px] text-[#4361ee] dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300'
             >
               <Radio className='size-3 animate-pulse text-emerald-500' />
-              Live 3D SCADA Flow
+              {scadaData ? 'Live Backend SCADA' : 'Live 3D SCADA Flow'}
             </Badge>
           </div>
           <p className='text-xs text-[#5c6b85] dark:text-muted-foreground'>
@@ -917,15 +945,31 @@ export function NetworkMap3D() {
           <div className='inline-flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
             <Waves className='size-3.5 shrink-0 text-[#4361ee]' />
             <span className='whitespace-nowrap'>
-              Trunk: <b className='text-[#132038] dark:text-white'>Line 5</b>
+              Trunk:{' '}
+              <b className='text-[#132038] dark:text-white'>
+                {telemetry?.trunk_name || 'Line 5'}
+              </b>
             </span>
           </div>
           <div className='inline-flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
             <Gauge className='size-3.5 shrink-0 text-emerald-500' />
             <span className='whitespace-nowrap'>
-              Flow: <b className='text-[#132038] dark:text-white'>1,240 m³/h</b>
+              Flow:{' '}
+              <b className='text-[#132038] dark:text-white'>
+                {telemetry?.flow_rate_m3h
+                  ? `${telemetry.flow_rate_m3h.toLocaleString()} m³/h`
+                  : '1,240 m³/h'}
+              </b>
             </span>
           </div>
+          {telemetry?.pressure_bar ? (
+            <div className='hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
+              <Activity className='size-3.5 shrink-0 text-cyan-500' />
+              <span className='whitespace-nowrap'>
+                Pressure: <b className='text-[#132038] dark:text-white'>{telemetry.pressure_bar.toFixed(1)} bar</b>
+              </span>
+            </div>
+          ) : null}
         </div>
       </CardHeader>
 
@@ -955,11 +999,11 @@ export function NetworkMap3D() {
               {/* Quick Select Terminal Pills */}
               <div className='flex flex-wrap items-center gap-1 pt-0.5'>
                 {terminals.map((t) => {
-                  const isActive = selectedTank.id === t.id;
+                  const isActive = selectedTank.code === t.code || selectedTank.id === t.id;
                   return (
                     <button
                       key={t.id}
-                      onClick={() => setSelectedTank(t)}
+                      onClick={() => setSelectedCode(t.code)}
                       className={`cursor-pointer rounded-md px-1.5 py-0.5 text-[10.5px] font-bold transition-all ${
                         isActive
                           ? 'bg-[#4361ee] text-white shadow-2xs'
@@ -973,7 +1017,7 @@ export function NetworkMap3D() {
               </div>
             </div>
 
-            {/* Card 2: Designated Product */}
+            {/* Card 2: Designated Product & Live State */}
             <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-[#e6edf7] bg-white p-3 shadow-2xs dark:border-[#233252] dark:bg-[#0f1728]'>
               <div>
                 <span className='text-[10px] font-semibold text-[#5c6b85] dark:text-slate-400'>
@@ -985,7 +1029,7 @@ export function NetworkMap3D() {
               </div>
               <div className='flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400'>
                 <span className='size-2 rounded-full bg-emerald-500 animate-pulse' />
-                Active In-Service
+                {selectedTank.status || 'Active In-Service'}
               </div>
             </div>
 
@@ -1019,14 +1063,14 @@ export function NetworkMap3D() {
                 <div
                   className='h-full rounded-full transition-all duration-500'
                   style={{
-                    width: `${selectedTank.fillPct}%`,
+                    width: `${Math.min(100, Math.max(0, selectedTank.fillPct))}%`,
                     backgroundColor: selectedTank.color,
                   }}
                 />
               </div>
               <div className='flex items-center justify-between text-[10px] text-[#5c6b85] dark:text-slate-400'>
                 <span>
-                  Ullage: {(selectedTank.capacityKL - selectedTank.currentStockKL).toLocaleString()}{' '}
+                  Ullage: {Math.max(0, selectedTank.capacityKL - selectedTank.currentStockKL).toLocaleString()}{' '}
                   m³
                 </span>
                 <span>Safe: 95%</span>
@@ -1059,50 +1103,73 @@ export function NetworkMap3D() {
               <KenyaTerrainPlane />
 
               {/* 2. 3D Oil Pipeline Tubes with Active Flow Streams */}
-              <Pipeline3DTube
-                start={terminals[0].pos} // Mombasa
-                end={terminals[1].pos} // Mtito Andei
-                color='#10b981'
-                active={true}
-              />
-              <Pipeline3DTube
-                start={terminals[1].pos} // Mtito Andei
-                end={terminals[2].pos} // Sultan Hamud
-                color='#10b981'
-                active={true}
-              />
-              <Pipeline3DTube
-                start={terminals[2].pos} // Sultan Hamud
-                end={terminals[3].pos} // Nairobi
-                color='#f43f5e' // Watch segment
-                active={true}
-              />
-              <Pipeline3DTube
-                start={terminals[3].pos} // Nairobi
-                end={terminals[4].pos} // Nakuru
-                color='#10b981'
-                active={true}
-              />
-              <Pipeline3DTube
-                start={terminals[4].pos} // Nakuru
-                end={terminals[5].pos} // Eldoret
-                color='#f59e0b'
-                active={false} // Standby
-              />
-              <Pipeline3DTube
-                start={terminals[4].pos} // Nakuru
-                end={terminals[6].pos} // Kisumu
-                color='#06b6d4'
-                active={true}
-              />
+              {segments && segments.length > 0 ? (
+                segments.map((seg) => {
+                  const startNode = terminals.find(
+                    (t) => t.code === seg.from_node || t.terminal === seg.from_node || t.id.startsWith(seg.from_node)
+                  );
+                  const endNode = terminals.find(
+                    (t) => t.code === seg.to_node || t.terminal === seg.to_node || t.id.startsWith(seg.to_node)
+                  );
+                  if (!startNode || !endNode) return null;
+                  return (
+                    <Pipeline3DTube
+                      key={seg.id}
+                      start={startNode.pos}
+                      end={endNode.pos}
+                      color={seg.color}
+                      active={seg.is_active}
+                    />
+                  );
+                })
+              ) : (
+                <>
+                  <Pipeline3DTube
+                    start={terminals[0]?.pos || [2.2, 0, 3.79]} // Mombasa
+                    end={terminals[1]?.pos || [0.68, 0, 2.52]} // Mtito Andei
+                    color='#10b981'
+                    active={true}
+                  />
+                  <Pipeline3DTube
+                    start={terminals[1]?.pos || [0.68, 0, 2.52]} // Mtito Andei
+                    end={terminals[2]?.pos || [-0.14, 0, 1.89]} // Sultan Hamud
+                    color='#10b981'
+                    active={true}
+                  />
+                  <Pipeline3DTube
+                    start={terminals[2]?.pos || [-0.14, 0, 1.89]} // Sultan Hamud
+                    end={terminals[3]?.pos || [-0.69, 0, 1.22]} // Nairobi
+                    color={telemetry?.alert_active ? '#f43f5e' : '#10b981'}
+                    active={true}
+                  />
+                  <Pipeline3DTube
+                    start={terminals[3]?.pos || [-0.69, 0, 1.22]} // Nairobi
+                    end={terminals[4]?.pos || [-1.44, 0, 0.28]} // Nakuru
+                    color='#10b981'
+                    active={true}
+                  />
+                  <Pipeline3DTube
+                    start={terminals[4]?.pos || [-1.44, 0, 0.28]} // Nakuru
+                    end={terminals[5]?.pos || [-2.26, 0, -0.48]} // Eldoret
+                    color='#f59e0b'
+                    active={false} // Standby
+                  />
+                  <Pipeline3DTube
+                    start={terminals[4]?.pos || [-1.44, 0, 0.28]} // Nakuru
+                    end={terminals[6]?.pos || [-2.77, 0, 0.08]} // Kisumu
+                    color='#06b6d4'
+                    active={true}
+                  />
+                </>
+              )}
 
               {/* 3. 3D Oil Tanks with Liquid Levels and Floating Tags */}
               {terminals.map((tank) => (
                 <OilTank3D
                   key={tank.id}
                   tank={tank}
-                  isSelected={selectedTank?.id === tank.id}
-                  onSelect={(t) => setSelectedTank(t)}
+                  isSelected={selectedTank?.code === tank.code || selectedTank?.id === tank.id}
+                  onSelect={(t) => setSelectedCode(t.code)}
                 />
               ))}
             </Suspense>
@@ -1126,12 +1193,16 @@ export function NetworkMap3D() {
             <div className='pointer-events-auto flex items-center gap-2 rounded-xl border border-white/10 bg-black/75 px-2.5 py-1.5 text-white/85 backdrop-blur-md sm:px-3'>
               <span className='flex items-center gap-1.5 text-[11px] sm:text-xs'>
                 <span className='size-2 rounded-full bg-emerald-500 animate-pulse' />
-                Line 5 / Line 4 (Active Flow)
+                {telemetry?.status_label || 'Line 5 / Line 4 (Active Flow)'}
               </span>
               <span className='text-white/40'>•</span>
               <span className='flex items-center gap-1.5 text-[11px] sm:text-xs'>
-                <span className='size-2 rounded-full bg-rose-500' />
-                Sultan Hamud (Watch)
+                <span
+                  className={`size-2 rounded-full ${
+                    telemetry?.alert_active ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'
+                  }`}
+                />
+                {telemetry?.watch_segment || 'Sultan Hamud (Watch)'}
               </span>
             </div>
 

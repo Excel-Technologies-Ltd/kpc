@@ -1,6 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bot, Columns3, Download, FileSpreadsheet, FileText, MessageSquare } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import {
+  Bot,
+  Columns3,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  MessageSquare,
+  RefreshCw,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { ReportMeta, ReportTool } from '../data/dummy';
 import { ReportSummaryRow } from './report-summary-row';
@@ -23,7 +33,7 @@ function toolIcon(id: string) {
   }
 }
 
-function ToolButton({ tool }: { tool: ReportTool }) {
+function ToolButton({ tool, onClick }: { tool: ReportTool; onClick?: (id: string) => void }) {
   const Icon = toolIcon(tool.id);
   return (
     <Button
@@ -31,9 +41,7 @@ function ToolButton({ tool }: { tool: ReportTool }) {
       size='sm'
       variant={tool.primary ? 'default' : 'outline'}
       className='h-8 gap-1.5 text-[11px] font-semibold'
-      onClick={() => {
-        /* UI only — wire exports later */
-      }}
+      onClick={() => onClick?.(tool.id)}
     >
       <Icon className='size-3.5' />
       {tool.label}
@@ -43,9 +51,17 @@ function ToolButton({ tool }: { tool: ReportTool }) {
 
 export function ReportSheet({
   meta,
+  isLoading,
+  isLive,
+  onRefresh,
+  onToolClick,
   children,
 }: {
   meta: ReportMeta;
+  isLoading?: boolean;
+  isLive?: boolean;
+  onRefresh?: () => void;
+  onToolClick?: (toolId: string) => void;
   children: ReactNode;
 }) {
   return (
@@ -55,14 +71,39 @@ export function ReportSheet({
           <div>
             <h2 className='text-foreground text-[17px] font-bold tracking-tight'>{meta.title}</h2>
             <p className='text-muted-foreground mt-0.5 text-sm'>{meta.subtitle}</p>
-            <span className='text-muted-foreground mt-2 inline-flex items-center gap-1.5 text-[11px] font-medium'>
-              <span className='bg-emerald-500 size-1.5 animate-pulse rounded-full' />
-              {meta.freshness}
-            </span>
+            <div className='mt-2 flex flex-wrap items-center gap-2'>
+              <span className='text-muted-foreground inline-flex items-center gap-1.5 text-[11px] font-medium'>
+                <span
+                  className={cn(
+                    'size-1.5 rounded-full',
+                    isLive ? 'bg-emerald-500 animate-pulse' : 'bg-sky-500'
+                  )}
+                />
+                {meta.freshness}
+              </span>
+              {isLive ? (
+                <span className='border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded px-1.5 py-0.2 text-[10px] font-semibold border'>
+                  Live Frappe DB
+                </span>
+              ) : null}
+              {onRefresh ? (
+                <Button
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  className='h-5 px-1.5 text-[10.5px] text-muted-foreground hover:text-foreground'
+                >
+                  <RefreshCw className={cn('size-3', isLoading && 'animate-spin')} />
+                  Sync
+                </Button>
+              ) : null}
+            </div>
           </div>
           <div className='flex flex-wrap gap-1.5'>
             {meta.tools.map((t) => (
-              <ToolButton key={t.id} tool={t} />
+              <ToolButton key={t.id} tool={t} onClick={onToolClick} />
             ))}
           </div>
         </div>
@@ -76,9 +117,17 @@ export function ReportSheet({
           </p>
         </div>
 
-        <ReportSummaryRow items={meta.summaries} />
+        <ReportSummaryRow items={meta.summaries} isLoading={isLoading} />
 
-        {children}
+        <div className='relative'>
+          {isLoading && (
+            <div className='absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-xl bg-background/50 backdrop-blur-[1px] text-xs text-muted-foreground'>
+              <Loader2 className='size-4 animate-spin text-primary' />
+              <span>Loading operational metrics...</span>
+            </div>
+          )}
+          {children}
+        </div>
       </CardContent>
     </Card>
   );

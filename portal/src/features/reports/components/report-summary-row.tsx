@@ -1,33 +1,132 @@
-import { cn } from '@/lib/utils';
+import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
+import {
+  Activity,
+  AlertTriangle,
+  Droplets,
+  Fuel,
+  Gauge,
+  Layers,
+  Target,
+  TrendingUp,
+} from 'lucide-react';
 import type { ReportSummary } from '../data/dummy';
 
-const TONE: Record<ReportSummary['tone'], string> = {
-  blue: 'border-sky-200/70 from-sky-50/80 to-card dark:border-sky-500/25 dark:from-sky-950/40',
-  green:
-    'border-emerald-200/70 from-emerald-50/80 to-card dark:border-emerald-500/25 dark:from-emerald-950/40',
-  amber:
-    'border-amber-200/70 from-amber-50/80 to-card dark:border-amber-500/25 dark:from-amber-950/40',
-  rose: 'border-rose-200/70 from-rose-50/80 to-card dark:border-rose-500/25 dark:from-rose-950/40',
+const COLOR_MAP: Record<ReportSummary['tone'], string> = {
+  blue: '#4361ee',
+  green: '#10b981',
+  amber: '#f59e0b',
+  rose: '#f43f5e',
 };
 
-export function ReportSummaryRow({ items }: { items: ReportSummary[] }) {
+function parseValueAndUnit(raw: string): { value: string; unit?: string } {
+  const trimmed = raw.trim();
+  if (trimmed === '—' || trimmed === '-') {
+    return { value: '0' };
+  }
+  if (trimmed.startsWith('KES')) {
+    const val = trimmed.replace('KES', '').trim();
+    return { value: val, unit: 'KES' };
+  }
+  if (trimmed.endsWith('%')) {
+    return { value: trimmed.replace('%', '').trim(), unit: '%' };
+  }
+  if (trimmed.includes('m³/h')) {
+    return { value: trimmed.replace('m³/h', '').trim(), unit: 'm³/h' };
+  }
+  if (trimmed.includes('m³')) {
+    return { value: trimmed.replace('m³', '').trim(), unit: 'm³' };
+  }
+  return { value: trimmed };
+}
+
+function getDeltaType(delta: string): 'up' | 'down' | 'flat' {
+  const d = delta.toLowerCase();
+  if (d.includes('▲') || d.includes('ahead') || d.includes('record') || d.includes('improving')) {
+    return 'up';
+  }
+  if (
+    d.includes('▼') ||
+    d.includes('lagging') ||
+    d.includes('below') ||
+    d.includes('past due') ||
+    d.includes('risk')
+  ) {
+    return 'down';
+  }
+  return 'flat';
+}
+
+function getSummaryIcon(label: string) {
+  const l = label.toLowerCase();
+  if (l.includes('total throughput') || l.includes('volume') || l.includes('stock')) {
+    return <Fuel className='size-4' />;
+  }
+  if (l.includes('attain') || l.includes('target') || l.includes('plan')) {
+    return <Target className='size-4' />;
+  }
+  if (l.includes('flow') || l.includes('rate') || l.includes('velocity')) {
+    return <Gauge className='size-4' />;
+  }
+  if (l.includes('cumulative') || l.includes('mtd') || l.includes('ullage')) {
+    return <Layers className='size-4' />;
+  }
+  if (l.includes('alarm') || l.includes('breach') || l.includes('loss') || l.includes('overdue')) {
+    return <AlertTriangle className='size-4' />;
+  }
+  if (l.includes('revenue') || l.includes('billed') || l.includes('uptime')) {
+    return <TrendingUp className='size-4' />;
+  }
+  return <Droplets className='size-4' />;
+}
+
+function getSummaryDescription(label: string): string {
+  const l = label.toLowerCase();
+  if (l.includes('total throughput')) return 'Volume moved across trunk & branch lines';
+  if (l.includes('plan attainment')) return 'Actual vs scheduled nomination target';
+  if (l.includes('avg flow rate')) return 'Mean line pumping velocity';
+  if (l.includes('cumulative mtd')) return 'Aggregated month-to-date throughput';
+  if (l.includes('physical stock')) return 'Total depot inventory across tanks';
+  if (l.includes('available ullage')) return 'Room to receive incoming batches';
+  if (l.includes('net variance')) return 'Reconciled tolerance variance';
+  if (l.includes('tanks in alarm')) return 'Tanks exceeding safe level thresholds';
+  if (l.includes('system loss')) return 'Network unaccounted-for loss vs throughput';
+  if (l.includes('revenue billed')) return 'Gross tariff billings to OMC customers';
+  return 'Operational pipeline telemetry';
+}
+
+export function ReportSummaryRow({
+  items,
+  isLoading = false,
+}: {
+  items: ReportSummary[];
+  isLoading?: boolean;
+}) {
   return (
-    <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
-      {items.map((s) => (
-        <div
-          key={s.label}
-          className={cn(
-            'rounded-xl border bg-linear-to-br p-3.5 shadow-sm',
-            TONE[s.tone]
-          )}
-        >
-          <div className='text-muted-foreground text-[11px] font-medium'>{s.label}</div>
-          <div className='text-foreground mt-1 font-mono text-xl font-bold tracking-tight tabular-nums'>
-            {s.value}
+    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 min-w-0 items-stretch gap-3'>
+      {items.map((s, index) => {
+        const { value, unit } = parseValueAndUnit(s.value);
+        const deltaType = getDeltaType(s.delta);
+        const color = COLOR_MAP[s.tone] || '#4361ee';
+        const icon = getSummaryIcon(s.label);
+        const description = getSummaryDescription(s.label);
+
+        return (
+          <div key={s.label} className='h-full min-w-0'>
+            <FlowKpiCard
+              title={s.label}
+              value={value}
+              unit={unit}
+              delta={s.delta}
+              deltaType={deltaType}
+              description={description}
+              color={color}
+              icon={icon}
+              delay={index * 0.08}
+              isLoading={isLoading}
+            />
           </div>
-          <div className='text-muted-foreground mt-1 text-[11px]'>{s.delta}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
