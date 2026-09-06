@@ -12,7 +12,7 @@ import {
 
 export default function OverviewPage() {
   return (
-    <div className='mx-auto container space-y-10'>
+    <div className='w-full min-w-0 space-y-10'>
       <HeroKpi />
       <StockMovementCard />
       <ThreadTracker />

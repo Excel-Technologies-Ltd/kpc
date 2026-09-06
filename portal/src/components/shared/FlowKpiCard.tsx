@@ -95,7 +95,7 @@ export function FlowKpiCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className='perspective-distant h-full w-full pt-1 pl-1'
+      className='perspective-distant h-full w-full min-w-0 pt-1 pl-1'
     >
       <motion.div
         ref={cardRef}
@@ -117,7 +117,7 @@ export function FlowKpiCard({
         }}
         whileHover={{ scale: 1.03, y: -4 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className='group relative flex h-42 flex-col justify-between overflow-hidden rounded-2xl border border-white/15 border-l-2 bg-linear-to-b from-[#18233c] via-[#0f1728] to-[#080d16] p-4'
+        className='group relative flex h-42 min-w-0 flex-col justify-between overflow-hidden rounded-2xl border border-white/15 border-l-2 bg-linear-to-b from-[#18233c] via-[#0f1728] to-[#080d16] p-3 sm:p-3.5'
       >
         <div
           className='pointer-events-none absolute -top-10 left-1/2 h-36 w-36 -translate-x-1/2 rounded-full opacity-30 blur-3xl'
@@ -125,15 +125,15 @@ export function FlowKpiCard({
         />
         <div
           style={{ transform: 'translateZ(28px)' }}
-          className='relative z-10 flex min-h-0 flex-1 flex-col space-y-2'
+          className='relative z-10 flex min-h-0 min-w-0 flex-1 flex-col space-y-2'
         >
-          <div className='flex items-center justify-between gap-2'>
-            <div className='flex min-w-0 items-center gap-2'>
+          <div className='flex items-center justify-between gap-2 min-w-0'>
+            <div className='flex min-w-0 items-center gap-1.5'>
               <span
-                className='size-2.5 shrink-0 rounded-full ring-2 ring-white/25'
+                className='size-2 shrink-0 rounded-full ring-2 ring-white/25'
                 style={{ backgroundColor: color }}
               />
-              <span className='truncate text-[11px] font-bold tracking-wider text-white/85 uppercase'>
+              <span className='truncate text-[10.5px] font-bold tracking-wider text-white/85 uppercase'>
                 {title}
               </span>
             </div>
@@ -143,18 +143,18 @@ export function FlowKpiCard({
               </span>
             ) : null}
           </div>
-          <div className='flex items-baseline gap-1'>
+          <div className='flex items-baseline gap-1 min-w-0'>
             {isLoading ? (
               <div className='flex h-9 items-center gap-2'>
-                <div className='h-7 w-24 animate-pulse rounded-md bg-white/20' />
+                <div className='h-7 w-20 animate-pulse rounded-md bg-white/20' />
                 <Loader2 className='size-3.5 animate-spin text-white/50' />
               </div>
             ) : (
               <>
-                <span className='font-mono text-2xl font-black tracking-tight text-white xl:text-3xl'>
+                <span className='font-mono text-xl sm:text-2xl 2xl:text-3xl font-black tracking-tight text-white truncate'>
                   <AnimatedCounter value={value} />
                 </span>
-                {unit ? <span className='text-sm font-semibold text-white/50'>{unit}</span> : null}
+                {unit ? <span className='text-xs font-semibold text-white/50 shrink-0'>{unit}</span> : null}
               </>
             )}
           </div>
@@ -164,7 +164,7 @@ export function FlowKpiCard({
               <div className='h-2.5 w-1/2 animate-pulse rounded bg-white/10' />
             </div>
           ) : (
-            <p className='line-clamp-2 min-h-[2.2em] text-[11px] leading-snug text-white/45'>
+            <p className='line-clamp-2 min-h-[2.2em] text-[10.5px] leading-snug text-white/45'>
               {description}
             </p>
           )}
@@ -175,14 +175,14 @@ export function FlowKpiCard({
           <div
             style={{ transform: 'translateZ(20px)' }}
             className={cn(
-              'relative z-10 mt-auto inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+              'relative z-10 mt-auto inline-flex max-w-full w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-semibold whitespace-nowrap overflow-hidden text-ellipsis',
               deltaType === 'up' && 'bg-emerald-500/20 text-emerald-300',
               deltaType === 'down' && 'bg-rose-500/20 text-rose-300',
               deltaType === 'flat' && 'bg-white/10 text-white/70'
             )}
           >
-            <DeltaIcon className='size-3' />
-            {delta}
+            <DeltaIcon className='size-3 shrink-0' />
+            <span className='truncate'>{delta}</span>
           </div>
         )}
       </motion.div>

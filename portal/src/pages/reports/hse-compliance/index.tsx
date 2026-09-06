@@ -14,7 +14,7 @@ import { TableRow } from '@/components/ui/table';
 
 export default function HseComplianceReport() {
   return (
-    <div className='mx-auto container space-y-4'>
+    <div className='w-full min-w-0 space-y-4'>
       <AnimatedSection>
         <PageHeader
           title='Reports'

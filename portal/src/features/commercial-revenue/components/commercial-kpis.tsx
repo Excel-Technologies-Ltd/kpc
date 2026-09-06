@@ -6,9 +6,9 @@ export function CommercialKpis() {
   const showPlaceholder = isLoading && !hasData;
 
   return (
-    <div className='grid grid-cols-2 items-stretch gap-3 md:grid-cols-3 xl:grid-cols-5'>
+    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 min-w-0 items-stretch gap-3'>
       {metrics.kpis.map((kpi, index) => (
-        <div key={kpi.id} className='h-full'>
+        <div key={kpi.id} className='h-full min-w-0'>
           <FlowKpiCard
             title={kpi.title}
             value={showPlaceholder ? '—' : kpi.value}
