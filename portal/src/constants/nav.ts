@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   ArrowUpRight,
@@ -12,7 +13,6 @@ import {
   Timer,
   TrendingUp,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 
 export type NavItem = {
   to: string;
@@ -32,9 +32,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/', label: 'Executive Command', icon: LayoutDashboard },
       { to: '/pipeline-flow', label: 'Pipeline Flow', icon: Activity },
       { to: '/stock-tank-farm', label: 'Stock & Tank Farm', icon: Columns2 },
-      { to: '/loss-accountability', label: 'Loss & Accountability', icon: Timer },
       { to: '/commercial-revenue', label: 'Commercial & Revenue', icon: TrendingUp },
       { to: '/assets-eam', label: 'Assets & EAM', icon: Sun },
+      { to: '/loss-accountability', label: 'Loss & Accountability', icon: Timer },
       { to: '/hse-integrity', label: 'HSE & Integrity', icon: Shield },
     ],
   },
