@@ -9,14 +9,17 @@ from kpc.petroleum_operations.api.reports import (
 	get_stock_reconciliation_report,
 	get_tariff_revenue_report,
 )
+from kpc.petroleum_operations.api.scada_network import get_pipeline_scada_network
 from kpc.petroleum_operations.api.stock_movement import get_stock_movement
 
 __all__ = [
 	"get_daily_throughput_report",
 	"get_loss_accountability_kpis",
+	"get_pipeline_scada_network",
 	"get_product_loss_report",
 	"get_stock_reconciliation_report",
 	"get_tariff_revenue_report",
 	"get_stock_movement",
 	"get_uptime_and_cost_summary",
 ]
+
