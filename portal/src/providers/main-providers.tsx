@@ -9,7 +9,6 @@ const MainProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <FrappeProvider
       enableSocket={false}
-      
       {...(VITE_FRAPPE_URL && VITE_FRAPPE_TOKEN
         ? {
             url: VITE_FRAPPE_URL,
