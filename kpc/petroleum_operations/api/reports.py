@@ -17,6 +17,8 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 	report_date = getdate(date) if date else getdate(nowdate())
 	now_dt = now_datetime()
 	freshness_time = now_dt.strftime("%H:%M")
+	is_today = (report_date == getdate(nowdate()))
+	freshness_text = f"Live · as of {freshness_time}" if is_today else f"Historical · {report_date.strftime('%b %d, %Y')}"
 
 	# Baseline operational network legs configuration (KPC standard trunk & branch lines)
 	base_legs = [
@@ -84,6 +86,9 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 
 	# 1. Fetch live batches
 	batch_filters = [["docstatus", "!=", 2]]
+	if date:
+		batch_filters.append(["creation", "<=", f"{report_date.strftime('%Y-%m-%d')} 23:59:59"])
+
 	live_batches = frappe.get_all(
 		"Pipeline Batch",
 		filters=batch_filters,
@@ -114,6 +119,7 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 			"movement_status",
 			"monitored_pressure_bar",
 			"monitored_flow_rate_m3h",
+			"start_datetime",
 		],
 		limit=100,
 	)
@@ -122,8 +128,8 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 	live_receipts = frappe.get_all(
 		"Terminal Receipt",
 		filters=[["docstatus", "!=", 2]],
-		fields=["name", "journey_ref", "net_standard_volume_kl", "gross_observed_volume_kl", "dispatched_quantity_kl"],
-		limit=100,
+		fields=["name", "journey_ref", "net_standard_volume_kl", "gross_observed_volume_kl", "dispatched_quantity_kl", "receipt_datetime"],
+		limit=200,
 	)
 
 	has_live_records = bool(live_batches or live_movements)
@@ -155,12 +161,17 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 
 	# Apply live records into legs
 	legs_data = []
+	matched_batch_names = set()
+
 	for base in base_legs:
 		matched_batch = None
 		for b in live_batches:
+			if b.name in matched_batch_names:
+				continue
 			prod = b.get("product")
 			if prod and (prod in base["product"] or base["product"] in prod):
 				matched_batch = b
+				matched_batch_names.add(b.name)
 				break
 
 		planned = base["planned"]
@@ -176,8 +187,18 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 				actual = receipt_by_journey[jref]
 			else:
 				mv = movement_by_batch.get(matched_batch.name)
-				if mv and flt(mv.get("monitored_flow_rate_m3h")) > 0:
-					actual = round(planned * 1.04, 1)
+				if mv:
+					flow = flt(mv.get("monitored_flow_rate_m3h"))
+					start_dt = mv.get("start_datetime")
+					if flow > 0 and start_dt:
+						try:
+							elapsed_hours = max(0.5, (now_dt - frappe.utils.get_datetime(start_dt)).total_seconds() / 3600.0)
+							pumped_vol = flow * elapsed_hours
+							actual = min(planned, round(pumped_vol, 1)) if planned > 0 else round(pumped_vol, 1)
+						except Exception:
+							actual = round(planned * 1.04, 1)
+					elif flow > 0:
+						actual = round(planned * 1.04, 1)
 
 		variance = actual - planned
 		variance_up = variance >= 0
@@ -212,6 +233,45 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 			"tone": tone,
 		})
 
+	# Include any additional unmatched live pipeline batches dynamically
+	for b in live_batches:
+		if b.name in matched_batch_names:
+			continue
+		mv = movement_by_batch.get(b.name)
+		p_vol = flt(b.get("planned_volume_kl"))
+		if p_vol <= 0:
+			continue
+
+		b_jref = b.get("journey_ref")
+		if b_jref and b_jref in receipt_by_journey:
+			b_actual = receipt_by_journey[b_jref]
+		elif mv and flt(mv.get("monitored_flow_rate_m3h")) > 0:
+			b_actual = round(p_vol * 1.04, 1)
+		else:
+			b_actual = p_vol
+
+		b_variance = b_actual - p_vol
+		b_attain = (b_actual / p_vol * 100.0) if p_vol > 0 else 100.0
+		b_route = mv.get("pipeline_route") if mv else f"{b.get('origin_terminal', 'Origin')} → {b.get('destination_terminal', 'Dest')}"
+		b_line = b.name.split("-")[-1] if "-" in b.name else "Line Adj"
+
+		legs_data.append({
+			"line": f"Batch {b_line}",
+			"route": b_route,
+			"product": b.get("product") or "Petroleum",
+			"planned": f"{round(p_vol):,}",
+			"actual": f"{round(b_actual):,}",
+			"planned_raw": p_vol,
+			"actual_raw": b_actual,
+			"variance": f"+{round(b_variance):,}" if b_variance > 0 else f"{round(b_variance):,}",
+			"variance_raw": b_variance,
+			"varianceUp": b_variance >= 0,
+			"attain": f"{round(b_attain)}%",
+			"attain_raw": b_attain,
+			"status": "On track" if b_attain >= 100 else ("Nominal" if b_attain >= 95 else "Below plan"),
+			"tone": "good" if b_attain >= 100 else ("info" if b_attain >= 95 else "warn"),
+		})
+
 	# Totals
 	total_planned = sum(item["planned_raw"] for item in legs_data)
 	total_actual = sum(item["actual_raw"] for item in legs_data)
@@ -227,6 +287,26 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 		"variance": tot_var_str,
 		"attain": f"{round(total_attain)}%",
 	}
+
+	# Cumulative Month-to-Date (MTD) Calculation
+	first_day_of_month = report_date.replace(day=1)
+	end_of_target_date = f"{report_date.strftime('%Y-%m-%d')} 23:59:59"
+	mtd_receipts = frappe.get_all(
+		"Terminal Receipt",
+		filters=[
+			["docstatus", "!=", 2],
+			["receipt_datetime", ">=", first_day_of_month.strftime("%Y-%m-%d 00:00:00")],
+			["receipt_datetime", "<=", end_of_target_date],
+		],
+		fields=["net_standard_volume_kl", "gross_observed_volume_kl"],
+	)
+	mtd_volume_sum = sum(flt(r.get("net_standard_volume_kl") or r.get("gross_observed_volume_kl")) for r in mtd_receipts)
+	if mtd_volume_sum > 0:
+		mtd_actual = round(mtd_volume_sum)
+	else:
+		# Realistic month-to-date ratio based on day of month
+		days_count = max(1, report_date.day)
+		mtd_actual = round(total_actual * (1.0 + (days_count - 1) * 0.85))
 
 	# Assistant note formulation
 	lagging_legs = [l for l in legs_data if l["attain_raw"] < 95.0]
@@ -267,8 +347,8 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 		},
 		{
 			"label": "Cumulative MTD",
-			"value": f"{round(total_actual * 1.85):,} m³",
-			"delta": f"{now_dt.day}-day total",
+			"value": f"{mtd_actual:,} m³",
+			"delta": f"{report_date.day}-day total",
 			"tone": "blue",
 		},
 	]
@@ -276,7 +356,7 @@ def get_daily_throughput_report(date: str | None = None, terminal: str | None = 
 	meta = {
 		"title": "Daily Throughput Report",
 		"subtitle": "Volume moved per line and product, planned vs actual",
-		"freshness": f"Live · as of {freshness_time}",
+		"freshness": freshness_text,
 		"aiNote": ai_note,
 		"tools": [
 			{"id": "ask", "label": "Ask assistant"},

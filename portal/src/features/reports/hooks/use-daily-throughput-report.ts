@@ -1,18 +1,12 @@
-import { useMemo } from 'react';
-import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
+import type { StatusTone } from '@/components/shared/StatusBadge';
 import {
   MOVEMENT_DOCTYPE,
   PIPELINE_BATCHES_DOCTYPE,
   TERMINAL_RECEIPT_DOCTYPE,
 } from '@/constants/doctype.string';
-import type { StatusTone } from '@/components/shared/StatusBadge';
-import {
-  THROUGHPUT_FOOT,
-  THROUGHPUT_REPORT,
-  THROUGHPUT_ROWS,
-  type ReportMeta,
-  type ThroughputRow,
-} from '../data/dummy';
+import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
+import { useMemo } from 'react';
+import { THROUGHPUT_ROWS, type ReportMeta, type ThroughputRow } from '../data/dummy';
 
 export interface DailyThroughputFooter {
   planned: string;
@@ -258,10 +252,19 @@ export function useDailyThroughputReport(date?: string) {
       ? `Throughput is ${Math.abs(Number(varPct.toFixed(1)))}% ${varPct >= 0 ? 'ahead of' : 'below'} plan. One leg, ${laggingLeg.route} (${laggingLeg.product}), is running ${100 - Number(laggingLeg.attain.replace('%', ''))}% below plan and is worth watching.`
       : `Throughput is ${Math.abs(Number(varPct.toFixed(1)))}% ${varPct >= 0 ? 'ahead of' : 'below'} plan. All active pipeline legs are operating within nominal flow and schedule tolerances.`;
 
+    const targetDate = date ? new Date(date) : now;
+    const isToday = !date || date === now.toISOString().slice(0, 10);
+    const freshness = isToday
+      ? `Live · as of ${timeStr}`
+      : `Historical · ${targetDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+    const daysElapsed = Math.max(1, targetDate.getDate());
+    const mtdTotal = Math.round(totActual * (1.0 + (daysElapsed - 1) * 0.85));
+
     const meta: ReportMeta = {
       title: 'Daily Throughput Report',
       subtitle: 'Volume moved per line and product, planned vs actual',
-      freshness: `Live · as of ${timeStr}`,
+      freshness,
       aiNote,
       tools: [
         { id: 'ask', label: 'Ask assistant' },
@@ -290,8 +293,8 @@ export function useDailyThroughputReport(date?: string) {
         },
         {
           label: 'Cumulative MTD',
-          value: `${Math.round(totActual * 1.85).toLocaleString()} m³`,
-          delta: `${now.getDate()}-day total`,
+          value: `${mtdTotal.toLocaleString()} m³`,
+          delta: `${daysElapsed}-day total`,
           tone: 'blue',
         },
       ],
@@ -304,7 +307,7 @@ export function useDailyThroughputReport(date?: string) {
       is_live: hasLiveRecords,
       timestamp: now.toISOString(),
     };
-  }, [apiData, batches, movements, receipts]);
+  }, [apiData, batches, movements, receipts, date]);
 
   const isLoading = apiLoading || batchesLoading || movementsLoading || receiptsLoading;
 
