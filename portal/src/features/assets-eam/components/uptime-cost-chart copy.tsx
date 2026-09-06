@@ -1,10 +1,7 @@
 import { SectionCard } from '@/components/shared/SectionCard';
 import { useTheme } from '@/components/theme-provider';
 import { Button } from '@/components/ui/button';
-import {
-  MAINTENANCE_WORK_ORDER_DOCTYPE,
-  PLANT_ASSET_DOCTYPE,
-} from '@/constants/doctype.string';
+import { MAINTENANCE_WORK_ORDER_DOCTYPE, PLANT_ASSET_DOCTYPE } from '@/constants/doctype.string';
 import { getChartTheme } from '@/lib/chart-theme';
 import { cn } from '@/lib/utils';
 import type { MaintenanceWorkOrder } from '@/types/PetroleumOperations/MaintenanceWorkOrder';

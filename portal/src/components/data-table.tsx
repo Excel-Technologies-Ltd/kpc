@@ -126,9 +126,7 @@ function DataTable<TData>({
       )}
     >
       {tableHeader ? (
-        <CardHeader
-          className={cn('pb-2', soft && 'border-border/60 bg-card/50 border-b')}
-        >
+        <CardHeader className={cn('pb-2', soft && 'border-border/60 bg-card/50 border-b')}>
           {tableHeader}
         </CardHeader>
       ) : null}
@@ -137,8 +135,7 @@ function DataTable<TData>({
         <div
           className={cn(
             'relative',
-            soft &&
-              'border-border/70 bg-card/70 overflow-hidden rounded-xl border shadow-inner'
+            soft && 'border-border/70 bg-card/70 overflow-hidden rounded-xl border shadow-inner'
           )}
         >
           {isLoading && (

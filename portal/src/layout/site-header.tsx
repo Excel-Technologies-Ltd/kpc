@@ -3,10 +3,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { HeaderStatusPills } from '@/layout/header-status-pills';
-import { FRAPPE_LOGIN } from '@/router/routes.url';
+import { isAuthenticated } from '@/lib/auth';
+import { URLLogin } from '@/router/routes.url';
 import { useFrappeAuth } from 'frappe-react-sdk';
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function initialsFromUser(user: string) {
   const local = user.includes('@') ? user.split('@')[0] : user;
@@ -19,6 +21,7 @@ function initialsFromUser(user: string) {
 
 export function SiteHeader() {
   const { currentUser, logout } = useFrappeAuth();
+  const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -26,9 +29,10 @@ export function SiteHeader() {
     try {
       await logout();
     } catch {
-      // still leave the SPA so Frappe session can be cleared
+      // still leave private routes so session can be cleared
     } finally {
-      window.location.href = FRAPPE_LOGIN;
+      setIsLoggingOut(false);
+      navigate(URLLogin(), { replace: true });
     }
   };
 
@@ -47,10 +51,10 @@ export function SiteHeader() {
       <div className='flex items-center gap-2'>
         <HeaderStatusPills />
         <ModeToggle />
-        {currentUser && currentUser !== 'Guest' ? (
+        {isAuthenticated(currentUser) ? (
           <Avatar size='sm'>
             <AvatarFallback className='bg-blue-50 text-xs font-semibold text-[#4361ee]'>
-              {initialsFromUser(currentUser)}
+              {initialsFromUser(currentUser || 'Guest')}
             </AvatarFallback>
           </Avatar>
         ) : null}

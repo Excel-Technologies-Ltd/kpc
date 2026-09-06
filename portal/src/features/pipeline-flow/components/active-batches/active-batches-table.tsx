@@ -219,8 +219,11 @@ export function ActiveBatchesTable() {
     orderBy: { field: 'modified', order: 'desc' },
   });
 
-  const { data: totalCount, isLoading: isLoadingCount, mutate: mutateCount } =
-    useFrappeGetDocCount(PIPELINE_BATCHES_DOCTYPE, filters);
+  const {
+    data: totalCount,
+    isLoading: isLoadingCount,
+    mutate: mutateCount,
+  } = useFrappeGetDocCount(PIPELINE_BATCHES_DOCTYPE, filters);
 
   useRegisterPipelineRefresh(mutateBatches, mutateCount);
   const total = totalCount ?? 0;

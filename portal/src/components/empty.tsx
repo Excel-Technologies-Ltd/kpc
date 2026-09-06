@@ -1,4 +1,9 @@
-import { EmptyDescription, EmptyHeader, Empty as EmptyRoot, EmptyTitle } from '@/components/ui/empty';
+import {
+  EmptyDescription,
+  EmptyHeader,
+  Empty as EmptyRoot,
+  EmptyTitle,
+} from '@/components/ui/empty';
 import { Inbox } from 'lucide-react';
 
 type EmptyProps = {

@@ -51,17 +51,17 @@ function ToolButton({ tool, onClick }: { tool: ReportTool; onClick?: (id: string
 
 export function ReportSheet({
   meta,
-  isLoading,
   isLive,
+  isLoading,
   onRefresh,
   onToolClick,
   children,
 }: {
   meta: ReportMeta;
-  isLoading?: boolean;
-  isLive?: boolean;
-  onRefresh?: () => void;
-  onToolClick?: (toolId: string) => void;
+  isLive: boolean;
+  isLoading: boolean;
+  onRefresh: () => void;
+  onToolClick: (toolId: string) => void;
   children: ReactNode;
 }) {
   return (

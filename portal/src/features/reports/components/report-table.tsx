@@ -35,9 +35,7 @@ export function ReportTable({
           </TableRow>
         </TableHeader>
         <TableBody>{children}</TableBody>
-        {footer ? (
-          <TableFooter className='bg-muted/40 font-semibold'>{footer}</TableFooter>
-        ) : null}
+        {footer ? <TableFooter className='bg-muted/40 font-semibold'>{footer}</TableFooter> : null}
       </Table>
     </div>
   );
