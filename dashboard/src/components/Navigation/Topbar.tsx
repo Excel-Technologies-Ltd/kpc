@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 interface TopbarProps {
   currentUser?: string | null;
@@ -6,6 +7,34 @@ interface TopbarProps {
 
 export const Topbar: React.FC<TopbarProps> = ({ currentUser }) => {
   const [timeStr, setTimeStr] = useState("");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("kpc-theme");
+      if (saved === "light" || saved === "dark") return saved;
+    }
+    return "dark";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    if (theme === "light") {
+      root.classList.add("light");
+      root.classList.remove("dark");
+      document.body.classList.add("light");
+      document.body.classList.remove("dark");
+    } else {
+      root.classList.add("dark");
+      root.classList.remove("light");
+      document.body.classList.add("dark");
+      document.body.classList.remove("light");
+    }
+    localStorage.setItem("kpc-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -41,15 +70,28 @@ export const Topbar: React.FC<TopbarProps> = ({ currentUser }) => {
         <div className="brand-name">KPC · Operations</div>
         <div className="brand-sub">Kenya Pipeline Company</div>
       </div>
-      {/* <div className="thread-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.3-4.3" />
-        </svg>
-        <span className="ph">Trace a Golden Thread — journey_ref, vessel, or customer</span>
-        <span className="kbd">⌘K</span>
-      </div> */}
+
       <div className="top-right">
+        {/* Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--line)] bg-[var(--panel-2)] hover:bg-[var(--panel-3)] text-[var(--text-dim)] hover:text-[var(--text)] transition-all cursor-pointer text-xs font-mono shadow-sm"
+          title={`Switch to ${theme === "dark" ? "Light" : "Dark"} mode`}
+        >
+          {theme === "dark" ? (
+            <>
+              <Sun className="w-3.5 h-3.5 text-[#f0a83c]" />
+              <span className="hidden sm:inline text-xs font-medium">Light</span>
+            </>
+          ) : (
+            <>
+              <Moon className="w-3.5 h-3.5 text-[#6366f1]" />
+              <span className="hidden sm:inline text-xs font-medium">Dark</span>
+            </>
+          )}
+        </button>
+
         <div className="status-pill">
           <span className="dot pulse" /> All systems nominal
         </div>
@@ -59,3 +101,5 @@ export const Topbar: React.FC<TopbarProps> = ({ currentUser }) => {
     </div>
   );
 };
+
+export default Topbar;
