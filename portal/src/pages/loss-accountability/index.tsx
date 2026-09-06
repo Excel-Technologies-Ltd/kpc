@@ -5,9 +5,12 @@ import {
   LossHeatmap,
   LossKpis,
   SegmentAccountabilityTable,
+  useLossKpis,
 } from '@/features/loss-accountability';
 
 export default function LossAccountability() {
+  const { isLive } = useLossKpis();
+
   return (
     <div className='w-full min-w-0 space-y-4'>
       <AnimatedSection>
@@ -17,6 +20,7 @@ export default function LossAccountability() {
           chips={[
             { label: 'Period', value: 'MTD' },
             { label: 'Tolerance', value: '0.20%' },
+            ...(isLive ? [{ label: 'Source', value: 'Live Frappe DB' }] : []),
           ]}
         />
       </AnimatedSection>
