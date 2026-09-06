@@ -3,4 +3,5 @@ export { ReportSheet } from './components/report-sheet';
 export { ReportSummaryRow } from './components/report-summary-row';
 export { ReportTable, ReportTd } from './components/report-table';
 export { useDailyThroughputReport } from './hooks/use-daily-throughput-report';
+export { useStockReconciliationReport } from './hooks/use-stock-reconciliation-report';
 export * from './data/dummy';
