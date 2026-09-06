@@ -42,4 +42,10 @@ export interface MaintenanceWorkOrder {
   execution_status?: 'Not Started' | 'In Progress' | 'Completed';
   /**	Completion Notes : Small Text	*/
   completion_notes?: string;
+  /**	Downtime Hours : Data / Float	*/
+  downtime_hours?: number | string;
+  /**	Maintenance Cost Kes : Data / Currency	*/
+  maintenance_cost_kes?: number | string;
+  /**	Amended From : Link - Maintenance Work Order	*/
+  amended_from?: string;
 }
