@@ -37,12 +37,12 @@ export function SiteHeader() {
   };
 
   return (
-    <header className='sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center justify-between border-b border-[#e6edf7] bg-white px-4 shadow-[0_2px_12px_-8px_rgba(38,64,120,0.2)] dark:border-[#233252] dark:bg-[#0f1728] dark:shadow-none'>
+    <header className='sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center justify-between border-b border-border bg-card px-4 shadow-[0_2px_12px_-8px_rgba(38,64,120,0.2)] dark:shadow-none'>
       <div className='flex items-center gap-2'>
-        <SidebarTrigger className='-ml-1 text-[#5c6b85] hover:text-[#132038]' />
+        <SidebarTrigger className='-ml-1 text-muted-foreground hover:text-foreground' />
         {/* <Separator orientation='vertical' className='mr-2 h-4 bg-[#e6edf7] dark:bg-[#233252]' />
         <div>
-          <p className='text-sm font-semibold text-[#132038] dark:text-foreground'>
+          <p className='text-sm font-semibold text-foreground dark:text-foreground'>
             Petroleum Operations
           </p>
           <p className='text-xs text-[#93a2bd]'>Overview control room</p>
@@ -53,7 +53,7 @@ export function SiteHeader() {
         <ModeToggle />
         {isAuthenticated(currentUser) ? (
           <Avatar size='sm'>
-            <AvatarFallback className='bg-blue-50 text-xs font-semibold text-[#4361ee]'>
+            <AvatarFallback className='bg-blue-50 text-xs font-semibold text-primary'>
               {initialsFromUser(currentUser || 'Guest')}
             </AvatarFallback>
           </Avatar>
@@ -64,7 +64,7 @@ export function SiteHeader() {
           onClick={handleLogout}
           disabled={isLoggingOut}
           aria-label='Log out'
-          className='text-[#5c6b85] hover:bg-[#f6f9fe] hover:text-[#132038]'
+          className='text-muted-foreground hover:bg-muted/60 hover:text-foreground'
         >
           <LogOut className='size-4' />
         </Button>

@@ -226,10 +226,10 @@ export default function ExecutiveCommand() {
   return (
     <div className='w-full min-w-0 space-y-8 pb-12'>
       {/* Top Page Header */}
-      <div className='flex flex-wrap items-end justify-between gap-4 border-b border-[#e6edf7] pb-5 dark:border-[#233252]'>
+      <div className='flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5 '>
         <div>
           <div className='flex items-center gap-2.5'>
-            <h1 className='text-2xl font-extrabold tracking-tight text-[#132038] sm:text-3xl dark:text-foreground'>
+            <h1 className='text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl dark:text-foreground'>
               Executive Command
             </h1>
             <Badge
@@ -240,7 +240,7 @@ export default function ExecutiveCommand() {
               Live Operations
             </Badge>
           </div>
-          <p className='mt-1 text-sm text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='mt-1 text-sm text-muted-foreground dark:text-muted-foreground'>
             The whole Kenya pipeline network on one unified command center.
           </p>
         </div>
@@ -248,20 +248,20 @@ export default function ExecutiveCommand() {
         {/* Live Frappe Status Chips */}
         <div className='flex flex-wrap items-center gap-2 text-xs'>
           {journeyCount !== undefined && (
-            <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
-              Journeys <b className='text-[#132038] dark:text-white'>{journeyCount}</b>
+            <div className='rounded-lg border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground shadow-xs dark:text-slate-300'>
+              Journeys <b className='text-foreground dark:text-white'>{journeyCount}</b>
             </div>
           )}
           {shipmentCount !== undefined && (
-            <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
-              Shipments <b className='text-[#132038] dark:text-white'>{shipmentCount}</b>
+            <div className='rounded-lg border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground shadow-xs dark:text-slate-300'>
+              Shipments <b className='text-foreground dark:text-white'>{shipmentCount}</b>
             </div>
           )}
-          <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
-            Shift <b className='text-[#132038] dark:text-white'>Day A</b>
+          <div className='rounded-lg border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground shadow-xs dark:text-slate-300'>
+            Shift <b className='text-foreground dark:text-white'>Day A</b>
           </div>
-          <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
-            Updated <b className='text-[#132038] dark:text-white'>just now</b>
+          <div className='rounded-lg border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground shadow-xs dark:text-slate-300'>
+            Updated <b className='text-foreground dark:text-white'>just now</b>
           </div>
         </div>
       </div>
@@ -270,8 +270,8 @@ export default function ExecutiveCommand() {
       <section className='space-y-3'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
-            <Sparkles className='size-4 text-[#4361ee]' />
-            <h2 className='text-sm font-bold tracking-wide uppercase text-[#5c6b85] dark:text-slate-400'>
+            <Sparkles className='size-4 text-primary' />
+            <h2 className='text-sm font-bold tracking-wide uppercase text-muted-foreground dark:text-slate-400'>
               Operational KPIs · Interactive 3D
             </h2>
           </div>

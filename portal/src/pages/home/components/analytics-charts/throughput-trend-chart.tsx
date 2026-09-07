@@ -219,16 +219,16 @@ export function ThroughputTrendChart() {
   }, [points, paddingTop, chartH]);
 
   return (
-    <Card className='flex h-full flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
-      <CardHeader className='flex flex-row items-center justify-between border-b border-[#e6edf7] pb-3 dark:border-[#233252]'>
+    <Card className='flex h-full flex-col justify-between border-border bg-card shadow-sm '>
+      <CardHeader className='flex flex-row items-center justify-between border-b border-border pb-3 '>
         <div>
           <div className='flex items-center gap-2'>
             <TrendingUp className='size-4 text-[#3b82f6]' />
-            <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
+            <CardTitle className='text-base font-bold text-foreground dark:text-foreground'>
               Throughput trend
             </CardTitle>
           </div>
-          <p className='text-xs text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='text-xs text-muted-foreground dark:text-muted-foreground'>
             Daily pumped volume across Nairobi &amp; Western trunk lines
           </p>
         </div>
@@ -241,7 +241,7 @@ export function ThroughputTrendChart() {
               ? `${(totalVolume / 1000).toFixed(1)}k m³ total`
               : `${Math.round(totalVolume).toLocaleString()} m³ total`}
           </Badge>
-          <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>7 days</span>
+          <span className='text-xs font-semibold text-muted-foreground dark:text-slate-400'>7 days</span>
         </div>
       </CardHeader>
 

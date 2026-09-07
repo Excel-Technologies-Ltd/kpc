@@ -7,10 +7,10 @@ import { ProductFlow3D } from './product-flow-3d';
 export function ProductFlowDiagram() {
   return (
     <AnimatedSection delay={0.15}>
-      <Card className='transition-shadow hover:shadow-md'>
+      <Card className='border-border bg-card transition-shadow hover:shadow-md'>
         <CardHeader className='pb-2'>
           <div className='flex items-center gap-2'>
-            <CardTitle className='text-[14.5px]'>Product flow</CardTitle>
+            <CardTitle className='text-[14.5px] text-foreground'>Product flow</CardTitle>
             <FlowInfoButton guideKey='flow-sankey' />
             <span className='text-muted-foreground ml-auto text-[11px] font-medium'>
               source → destination

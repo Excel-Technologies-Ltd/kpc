@@ -226,16 +226,16 @@ export function RevenueVsTargetChart() {
   const isPositiveVariance = Number(variancePct) >= 0;
 
   return (
-    <Card className='flex h-full flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
-      <CardHeader className='flex flex-row items-center justify-between border-b border-[#e6edf7] pb-3 dark:border-[#233252]'>
+    <Card className='flex h-full flex-col justify-between border-border bg-card shadow-sm '>
+      <CardHeader className='flex flex-row items-center justify-between border-b border-border pb-3 '>
         <div>
           <div className='flex items-center gap-2'>
             <BarChart3 className='size-4 text-[#0cb878]' />
-            <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
+            <CardTitle className='text-base font-bold text-foreground dark:text-foreground'>
               Revenue vs target
             </CardTitle>
           </div>
-          <p className='text-xs text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='text-xs text-muted-foreground dark:text-muted-foreground'>
             Month-to-date tariff billing performance vs capacity plan
           </p>
         </div>
@@ -250,7 +250,7 @@ export function RevenueVsTargetChart() {
           >
             {isPositiveVariance ? `+${variancePct}%` : `${variancePct}%`} vs plan
           </Badge>
-          <span className='text-xs font-semibold text-[#5c6b85] dark:text-slate-400'>
+          <span className='text-xs font-semibold text-muted-foreground dark:text-slate-400'>
             {unitLabel}
           </span>
         </div>
