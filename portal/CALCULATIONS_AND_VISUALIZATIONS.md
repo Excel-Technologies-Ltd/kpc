@@ -137,19 +137,69 @@ The command center dashboard displays network-wide health, lines in operation, f
 
 ### 2.1 The 4 Core Metrics Explained
 
-#### 1. Throughput Today ($m^3$)
-- **Plain English**: Total clean fuel volume received into terminal storage tanks today since midnight.
-- **DocType**: `Terminal Receipt`
-- **Fields Used**: `net_standard_volume_kl`, `gross_observed_volume_kl`, `posting_date`
-- **API Call Hook**:
-  ```typescript
-  const { data: receipts } = useFrappeGetDocList('Terminal Receipt', {
-    fields: ['net_standard_volume_kl', 'gross_observed_volume_kl'],
-    filters: [['posting_date', '=', todayDate]],
-  });
-  ```
-- **Calculation**:
-  $$\text{Throughput} = \sum (\text{net\_standard\_volume\_kl})$$
+#### 1. Throughput Today ($m^3$) — Full Human-Readable Breakdown
+
+##### A. What Does This Formula Actually Mean?
+The formula:
+$$\text{Throughput} = \sum (\text{net\_standard\_volume\_kl})$$
+
+Here is every single part translated into plain English:
+- **Throughput**: The total volume of refined petroleum delivered into terminal storage tanks across the entire country today since midnight (00:00).
+- **$\sum$ (Sigma Symbol)**: A mathematical symbol that simply means **"Add them all up"** (take the sum of all rows).
+- **`net_standard_volume_kl`**:
+  - **`net`**: The clean product volume after subtracting any water/sediment bottom at the tank base.
+  - **`standard`**: Temperature-normalized volume at **$15^\circ\text{C}$** (using ASTM Table 54B). Because warm fuel expands and cool fuel contracts, standardizing to $15^\circ\text{C}$ guarantees fair, accurate measurement.
+  - **`volume_kl`**: Measured in **Kilolitres (KL)**. Since $1\text{ KL} = 1,000\text{ Litres} = 1\text{ Cubic Meter } (m^3)$, **$1\text{ KL}$ is exactly equal to $1\text{ m}^3$**!
+
+---
+
+##### B. Real-World Worked Example
+Imagine today is **September 7, 2026**. During the day, 3 fuel deliveries arrive and finish pumping into terminal tanks:
+
+| Receipt Doc Number | Line & Route | Product Grade | Raw Meter Reading (`gross_observed_volume_kl`) | Normalized Volume (`net_standard_volume_kl`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **`TR-2026-00142`** | Line 5 (Mombasa → Nairobi) | Automotive Gas Oil (AGO Diesel) | $4,910.0\text{ KL}$ (measured at $26^\circ\text{C}$) | **$4,850.25\text{ KL}$** (at $15^\circ\text{C}$) |
+| **`TR-2026-00143`** | Line 1 (Mombasa → Nairobi) | Premium Motor Spirit (PMS Petrol) | $3,165.0\text{ KL}$ (measured at $24^\circ\text{C}$) | **$3,120.50\text{ KL}$** (at $15^\circ\text{C}$) |
+| **`TR-2026-00144`** | Line 4 (Nakuru → Kisumu) | Jet A-1 (Aviation Fuel) | $1,572.0\text{ KL}$ (measured at $22^\circ\text{C}$) | **$1,559.25\text{ KL}$** (at $15^\circ\text{C}$) |
+
+**Step-by-Step Addition**:
+$$\text{Total Throughput} = \text{Receipt 1} + \text{Receipt 2} + \text{Receipt 3}$$
+$$\text{Total Throughput} = 4,850.25\text{ KL} + 3,120.50\text{ KL} + 1,559.25\text{ KL} = \mathbf{9,530.00\text{ KL}}$$
+
+Since $1\text{ KL} = 1\text{ m}^3$, the final result is:
+$$\mathbf{9,530\text{ m}^3}$$
+
+---
+
+##### C. How the Portal Code Executes It (Plain English Code Walkthrough)
+In `portal/src/pages/home/index.tsx`, the frontend requests all receipts logged today and adds them up:
+
+```typescript
+// 1. Fetch live receipts from the Frappe database
+const { data: receipts } = useFrappeGetDocList('Terminal Receipt', {
+  fields: ['net_standard_volume_kl', 'gross_observed_volume_kl'],
+  filters: [['posting_date', '=', todayDate]],
+});
+
+// 2. Loop through every receipt and add up the volumes
+let totalThroughput = 0;
+
+for (const receipt of receipts) {
+  // Use net standard volume at 15°C.
+  // Fallback: If lab density test isn't finished yet, use gross meter volume.
+  const volume = Number(receipt.net_standard_volume_kl) || Number(receipt.gross_observed_volume_kl) || 0;
+  
+  totalThroughput = totalThroughput + volume;
+}
+
+// Result: 9,530 m³
+```
+
+##### D. What the Operator Sees on Screen
+- **KPI Card Title**: `Throughput today`
+- **Main Big Value**: **`9,530 m³`** (formatted with commas)
+- **Subtitle / Badge**: **`▲ 3 active batches`** (shows how many receipts made up this number)
+- **Status Color**: Blue card with an upward trend indicator.
 
 #### 2. Network Line Fill ($m^3$)
 - **Plain English**: How much fuel is physically sitting inside all trunk lines and storage tanks across Kenya right now.
