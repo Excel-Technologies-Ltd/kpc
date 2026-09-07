@@ -26,6 +26,7 @@
    - [5.5 HSE & Compliance Report (`/reports/hse-compliance`)](#55-hse--compliance-report)
 6. [3D SCADA Digital Twin & Spatial Topology](#6-3d-scada-digital-twin--spatial-topology)
 7. [Core Calculation Formulas & Business Logic](#7-core-calculation-formulas--business-logic)
+   - 💡 **[Dedicated Data Visualization & Calculation Logic Guide (Plain English)](./CALCULATIONS_AND_VISUALIZATIONS.md)**
 8. [Backend API Reference](#8-backend-api-reference)
 9. [Development, Build & Deployment Guide](#9-development-build--deployment-guide)
 
@@ -277,6 +278,8 @@ The 3D Canvas uses a calibrated Three.js coordinate system mapped precisely to K
 ---
 
 ## 7. Core Calculation Formulas & Business Logic
+
+> 💡 **For a comprehensive, beginner-friendly guide with worked examples, unit conversions, visual representations, and alarm thresholds, see the dedicated [Calculations and Visualizations Guide](./CALCULATIONS_AND_VISUALIZATIONS.md).**
 
 ### Volume Temperature Correction (ASTM D1250 / Table 54B)
 $$VCF_{15} = \exp\left(-\alpha_{15} \times \Delta T \times (1 + 0.8 \times \alpha_{15} \times \Delta T)\right)$$
