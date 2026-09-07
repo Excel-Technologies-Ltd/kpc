@@ -323,15 +323,15 @@ export function Kpi3DCard({
     y.set(0);
   };
 
-  // 50% refined color-coded left thickness extrusion shadow
+  // Accent extrusion + softer ambient shadow (depth boosted in dark via className)
   const custom3DThicknessShadow = `
     -1.5px 2px 0 0 ${color},
-    -3px 4px 0 0 ${color}cc,
-    -5px 6px 0 0 ${color}88,
-    -7px 8px 0 0 ${color}44,
-    -10px 12px 20px rgba(0, 0, 0, 0.55),
-    0 18px 36px -8px rgba(0, 0, 0, 0.75),
-    inset 0 1.2px 1.5px rgba(255, 255, 255, 0.32)
+    -3px 4px 0 0 ${color}99,
+    -5px 6px 0 0 ${color}55,
+    -7px 8px 0 0 ${color}33,
+    -10px 12px 20px rgba(15, 23, 42, 0.14),
+    0 18px 36px -8px rgba(15, 23, 42, 0.18),
+    inset 0 1.2px 1.5px rgba(255, 255, 255, 0.45)
   `;
 
   return (
@@ -349,21 +349,25 @@ export function Kpi3DCard({
         }}
         whileHover={{ scale: 1.025, y: -4 }}
         transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className='group relative flex h-90 w-full flex-col justify-between overflow-hidden rounded-[24px] border border-white/20 border-l-2 bg-linear-to-b from-[#18233c] via-[#0f1728] to-[#080d16] p-4 transition-all duration-200 hover:border-white/40'
+        className={cn(
+          'group relative flex h-90 w-full flex-col justify-between overflow-hidden rounded-[24px] border border-l-2 p-4 transition-all duration-200',
+          'border-border/80 bg-linear-to-b from-card via-card to-muted/40 hover:border-border',
+          'dark:border-white/20 dark:from-[#18233c] dark:via-[#0f1728] dark:to-[#080d16] dark:hover:border-white/40'
+        )}
       >
         {/* 3D Physical Back-Plate Slab with base color glow */}
         <div
           style={{
             transform: 'translateZ(-10px)',
             borderColor: `${color}35`,
-            background: `linear-gradient(135deg, ${color}15, #080d16 70%)`,
+            background: `linear-gradient(135deg, ${color}18, transparent 70%)`,
           }}
-          className='pointer-events-none absolute inset-0 rounded-[24px] border shadow-xl'
+          className='pointer-events-none absolute inset-0 rounded-[24px] border shadow-xl dark:opacity-100'
         />
 
         {/* Ambient colored background radial glow */}
         <div
-          className='pointer-events-none absolute -top-12 left-1/2 -translate-x-1/2 h-48 w-48 rounded-full blur-3xl opacity-35'
+          className='pointer-events-none absolute -top-12 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full opacity-20 blur-3xl dark:opacity-35'
           style={{ background: color }}
         />
 
@@ -375,10 +379,10 @@ export function Kpi3DCard({
           {/* Row 1: Title */}
           <div className='flex items-center gap-2'>
             <div
-              className='size-2.5 shrink-0 rounded-full shadow-md ring-2 ring-white/25'
+              className='size-2.5 shrink-0 rounded-full shadow-md ring-2 ring-foreground/15 dark:ring-white/25'
               style={{ backgroundColor: color }}
             />
-            <span className='truncate text-xs font-bold uppercase tracking-wider text-white/85 drop-shadow-sm'>
+            <span className='text-foreground/80 dark:text-white/85 truncate text-xs font-bold tracking-wider uppercase drop-shadow-sm'>
               {title}
             </span>
           </div>
@@ -387,12 +391,12 @@ export function Kpi3DCard({
           <div className='flex flex-col items-start justify-between gap-1.5 pt-0.5'>
             {isLoading ? (
               <div className='flex h-9 items-center gap-2'>
-                <div className='h-7 w-28 animate-pulse rounded-md bg-white/20' />
-                <Loader2 className='size-3.5 animate-spin text-white/50' />
+                <div className='bg-muted-foreground/20 dark:bg-white/20 h-7 w-28 animate-pulse rounded-md' />
+                <Loader2 className='text-muted-foreground dark:text-white/50 size-3.5 animate-spin' />
               </div>
             ) : (
               <div className='flex items-baseline gap-1'>
-                <span className='font-mono text-2xl font-black tracking-tight text-white drop-shadow-md xl:text-3xl'>
+                <span className='text-foreground dark:text-white font-mono text-2xl font-black tracking-tight drop-shadow-md xl:text-3xl'>
                   <AnimatedCounter value={value} />
                 </span>
                 {unit && (
@@ -408,16 +412,16 @@ export function Kpi3DCard({
 
             {/* Delta Pill (or Loader) */}
             {isLoading ? (
-              <div className='h-4.5 w-20 animate-pulse rounded-full bg-white/15' />
+              <div className='bg-muted-foreground/15 dark:bg-white/15 h-4.5 w-20 animate-pulse rounded-full' />
             ) : (
               <div
                 className={cn(
-                  'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-sm backdrop-blur-md',
+                  'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold whitespace-nowrap shadow-sm backdrop-blur-md',
                   deltaType === 'up'
-                    ? 'border border-emerald-400/30 bg-emerald-500/20 text-emerald-300'
+                    ? 'border border-emerald-500/25 bg-emerald-500/15 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/20 dark:text-emerald-300'
                     : deltaType === 'down'
-                      ? 'border border-rose-400/30 bg-rose-500/20 text-rose-300'
-                      : 'border border-white/20 bg-white/10 text-white/90'
+                      ? 'border border-rose-500/25 bg-rose-500/15 text-rose-700 dark:border-rose-400/30 dark:bg-rose-500/20 dark:text-rose-300'
+                      : 'border-border bg-muted text-muted-foreground dark:border-white/20 dark:bg-white/10 dark:text-white/90 border'
                 )}
               >
                 {deltaType === 'up' && <TrendingUp className='size-3 shrink-0' />}
@@ -432,7 +436,7 @@ export function Kpi3DCard({
         {/* 3D Floating Canvas (translateZ: 60px) */}
         <div
           style={{ transform: 'translateZ(60px)' }}
-          className='relative flex-1 min-h-35 cursor-grab active:cursor-grabbing'
+          className='relative min-h-35 flex-1 cursor-grab active:cursor-grabbing'
         >
           <Canvas
             dpr={[1, 2]}
@@ -450,13 +454,12 @@ export function Kpi3DCard({
           style={{
             transform: 'translateZ(42px)',
             background: gradient,
-            border: '1px solid rgba(255, 255, 255, 0.26)',
           }}
           className={cn(
-            'relative z-20 rounded-2xl p-3 text-white shadow-xl backdrop-blur-md transition-transform duration-200 group-hover:scale-[1.01]'
+            'relative z-20 rounded-2xl border border-white/30 p-3 text-white shadow-xl backdrop-blur-md transition-transform duration-200 group-hover:scale-[1.01] dark:border-white/26'
           )}
         >
-          <p className='line-clamp-2 text-[11.5px] font-medium leading-relaxed text-white/95 drop-shadow-xs'>
+          <p className='line-clamp-2 text-[11.5px] leading-relaxed font-medium text-white/95 drop-shadow-xs'>
             {description}
           </p>
         </div>

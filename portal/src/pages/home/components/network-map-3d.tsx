@@ -1,11 +1,112 @@
 import { Badge } from '@/components/ui/badge';
+import { useTheme } from '@/components/theme-provider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { OrbitControls, Sparkles, Text } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Activity, Gauge, Radio, Waves } from 'lucide-react';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { usePipelineScadaNetwork } from '../hooks/use-pipeline-scada-network';
+
+/** Resolved light/dark for Three.js materials (system theme → prefers-color-scheme). */
+function useIsDarkScene() {
+  const { theme } = useTheme();
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
+  );
+
+  useEffect(() => {
+    const resolve = () => {
+      if (theme === 'dark') return true;
+      if (theme === 'light') return false;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+    setIsDark(resolve());
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => setIsDark(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [theme]);
+
+  return isDark;
+}
+
+type ScenePalette = {
+  canvasClear: string;
+  ground: string;
+  gridMajor: string;
+  gridMinor: string;
+  continent: string;
+  continentEmissive: string;
+  kenya: string;
+  kenyaEmissive: string;
+  kenyaBorder: string;
+  kenyaWire: string;
+  water: string;
+  waterEmissive: string;
+  labelPrimary: string;
+  labelSecondary: string;
+  labelMuted: string;
+  equator: string;
+  sparkles: string;
+  rimLight: string;
+  tankDialIdle: string;
+  textOutline: string;
+  ambient: number;
+  dirMain: number;
+};
+
+const SCENE_DARK: ScenePalette = {
+  canvasClear: '#04070d',
+  ground: '#060a14',
+  gridMajor: '#334155',
+  gridMinor: '#1e293b',
+  continent: '#0f172a',
+  continentEmissive: '#1e293b',
+  kenya: '#172554',
+  kenyaEmissive: '#1d4ed8',
+  kenyaBorder: '#60a5fa',
+  kenyaWire: '#38bdf8',
+  water: '#0284c7',
+  waterEmissive: '#0369a1',
+  labelPrimary: '#93c5fd',
+  labelSecondary: '#38bdf8',
+  labelMuted: '#475569',
+  equator: '#38bdf8',
+  sparkles: '#60a5fa',
+  rimLight: '#6a8bff',
+  tankDialIdle: '#1e293b',
+  textOutline: '#0a0f1d',
+  ambient: 0.7,
+  dirMain: 2.2,
+};
+
+const SCENE_LIGHT: ScenePalette = {
+  canvasClear: '#e8eef8',
+  ground: '#dbe4f0',
+  gridMajor: '#94a3b8',
+  gridMinor: '#cbd5e1',
+  continent: '#c5d0e0',
+  continentEmissive: '#94a3b8',
+  kenya: '#1d4ed8',
+  kenyaEmissive: '#3b82f6',
+  kenyaBorder: '#2563eb',
+  kenyaWire: '#60a5fa',
+  water: '#0ea5e9',
+  waterEmissive: '#0284c7',
+  labelPrimary: '#1e3a5f',
+  labelSecondary: '#0369a1',
+  labelMuted: '#64748b',
+  equator: '#0284c7',
+  sparkles: '#3b82f6',
+  rimLight: '#93c5fd',
+  tankDialIdle: '#64748b',
+  textOutline: '#f8fafc',
+  ambient: 0.95,
+  dirMain: 1.85,
+};
 
 // Kenya Geographic Depot Data with Lat/Long mapped to 3D Coordinates
 export interface TerminalNode3D {
@@ -24,7 +125,6 @@ export interface TerminalNode3D {
   status?: string;
   isPumpStation?: boolean;
 }
-
 
 const KENYA_TERMINALS: TerminalNode3D[] = [
   {
@@ -234,10 +334,12 @@ function OilTank3D({
   tank,
   isSelected,
   onSelect,
+  palette,
 }: {
   tank: TerminalNode3D;
   isSelected: boolean;
   onSelect: (tank: TerminalNode3D) => void;
+  palette: ScenePalette;
 }) {
   const [hovered, setHovered] = useState(false);
   const tankHeight = tank.isPumpStation ? 0.45 : 0.75;
@@ -312,7 +414,7 @@ function OilTank3D({
         <mesh rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[tankRadius * 0.45, tankRadius * 0.9, 32]} />
           <meshStandardMaterial
-            color={isSelected ? '#10b981' : hovered ? '#4361ee' : '#1e293b'}
+            color={isSelected ? '#10b981' : hovered ? '#4361ee' : palette.tankDialIdle}
             emissive={tank.color}
             emissiveIntensity={isSelected || hovered ? 0.8 : 0.25}
             roughness={0.2}
@@ -330,7 +432,7 @@ function OilTank3D({
           anchorX='center'
           anchorY='middle'
           outlineWidth={0.015}
-          outlineColor='#0a0f1d'
+          outlineColor={palette.textOutline}
         >
           {tank.isPumpStation ? tank.code : `${tank.fillPct}%`}
         </Text>
@@ -345,7 +447,7 @@ function OilTank3D({
           anchorX='center'
           anchorY='middle'
           outlineWidth={0.01}
-          outlineColor='#0a0f1d'
+          outlineColor={palette.textOutline}
         >
           {tank.code}
         </Text>
@@ -355,7 +457,7 @@ function OilTank3D({
 }
 
 // 3D Full Earth Shadow Curvature & Geographic Landmass
-function EarthGlobalShadowCurvature() {
+function EarthGlobalShadowCurvature({ palette }: { palette: ScenePalette }) {
   // World / African continent major landmass contours in accurate spatial projection
   const { africaShape, arabiaShape, madagascarShape } = useMemo(() => {
     // 1. Africa Continent Silhouette (scaled to align with Kenya and South Africa)
@@ -425,20 +527,23 @@ function EarthGlobalShadowCurvature() {
   return (
     <group position={[0, -0.04, 0]}>
       {/* 1. Global Lat/Long Graticule Grid Lines (Equator, Meridians, Tropics) */}
-      <gridHelper args={[48, 48, '#334155', '#1e293b']} position={[0, -0.01, 0]} />
+      <gridHelper
+        args={[48, 48, palette.gridMajor, palette.gridMinor]}
+        position={[0, -0.01, 0]}
+      />
 
       {/* 2. Deep Earth Global Horizon Shadow Plate */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
         <planeGeometry args={[56, 48]} />
-        <meshStandardMaterial color='#060a14' roughness={0.95} metalness={0.05} />
+        <meshStandardMaterial color={palette.ground} roughness={0.95} metalness={0.05} />
       </mesh>
 
       {/* 3. Africa Continent Shadow Silhouette */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
         <shapeGeometry args={[africaShape]} />
         <meshStandardMaterial
-          color='#0f172a'
-          emissive='#1e293b'
+          color={palette.continent}
+          emissive={palette.continentEmissive}
           emissiveIntensity={0.2}
           roughness={0.8}
           metalness={0.2}
@@ -449,8 +554,8 @@ function EarthGlobalShadowCurvature() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
         <shapeGeometry args={[arabiaShape]} />
         <meshStandardMaterial
-          color='#0f172a'
-          emissive='#1e293b'
+          color={palette.continent}
+          emissive={palette.continentEmissive}
           emissiveIntensity={0.15}
           roughness={0.8}
           metalness={0.2}
@@ -461,8 +566,8 @@ function EarthGlobalShadowCurvature() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
         <shapeGeometry args={[madagascarShape]} />
         <meshStandardMaterial
-          color='#0f172a'
-          emissive='#1e293b'
+          color={palette.continent}
+          emissive={palette.continentEmissive}
           emissiveIntensity={0.15}
           roughness={0.8}
           metalness={0.2}
@@ -472,7 +577,7 @@ function EarthGlobalShadowCurvature() {
       {/* 6. Glowing Equator Orbital Line across Earth (0° Lat) */}
       <mesh position={[0, 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[48, 0.04]} />
-        <meshBasicMaterial color='#38bdf8' transparent opacity={0.35} />
+        <meshBasicMaterial color={palette.equator} transparent opacity={0.35} />
       </mesh>
 
       {/* 7. Accurate Geographic Watermark Labels */}
@@ -481,7 +586,7 @@ function EarthGlobalShadowCurvature() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.48}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.22}
         letterSpacing={0.2}
         anchorX='center'
@@ -495,7 +600,7 @@ function EarthGlobalShadowCurvature() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.32}
         fontWeight={700}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.22}
         letterSpacing={0.15}
         anchorX='center'
@@ -509,7 +614,7 @@ function EarthGlobalShadowCurvature() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.28}
         fontWeight={700}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.22}
         letterSpacing={0.15}
         anchorX='center'
@@ -523,7 +628,7 @@ function EarthGlobalShadowCurvature() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.14}
         fontWeight={700}
-        color='#38bdf8'
+        color={palette.equator}
         fillOpacity={0.4}
         letterSpacing={0.12}
         anchorX='center'
@@ -536,7 +641,7 @@ function EarthGlobalShadowCurvature() {
 }
 
 // 3D Kenya Geographic Landmass Highlight & Pipeline Corridor
-function KenyaTerrainPlane() {
+function KenyaTerrainPlane({ palette }: { palette: ScenePalette }) {
   const { kenyaShape, borderPoints, lakeVictoriaShape, lakeTurkanaShape } = useMemo(() => {
     const shape = new THREE.Shape();
 
@@ -630,14 +735,14 @@ function KenyaTerrainPlane() {
   return (
     <group position={[0, -0.01, 0]}>
       {/* 1. Full Earth / Africa Global Shadow Background */}
-      <EarthGlobalShadowCurvature />
+      <EarthGlobalShadowCurvature palette={palette} />
 
       {/* 2. Highlighted Kenya Country Landmass Shape */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <shapeGeometry args={[kenyaShape]} />
         <meshStandardMaterial
-          color='#172554'
-          emissive='#1d4ed8'
+          color={palette.kenya}
+          emissive={palette.kenyaEmissive}
           emissiveIntensity={0.65}
           roughness={0.35}
           metalness={0.65}
@@ -646,21 +751,21 @@ function KenyaTerrainPlane() {
 
       {/* 3. Glowing Neon Kenya Frontier Border Line */}
       <lineLoop geometry={borderLineGeometry}>
-        <lineBasicMaterial color='#60a5fa' linewidth={3} />
+        <lineBasicMaterial color={palette.kenyaBorder} linewidth={3} />
       </lineLoop>
 
       {/* 4. Raised Outer Wireframe Grid for Kenya Landmass */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.008, 0]}>
         <shapeGeometry args={[kenyaShape]} />
-        <meshBasicMaterial color='#38bdf8' transparent opacity={0.18} wireframe />
+        <meshBasicMaterial color={palette.kenyaWire} transparent opacity={0.18} wireframe />
       </mesh>
 
       {/* 5. Indian Ocean Region Shimmer (South-East of Coastline) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[4.6, 0.006, 3.2]}>
         <planeGeometry args={[4.2, 5.5]} />
         <meshStandardMaterial
-          color='#0369a1'
-          emissive='#0284c7'
+          color={palette.waterEmissive}
+          emissive={palette.water}
           emissiveIntensity={0.45}
           roughness={0.2}
           metalness={0.8}
@@ -673,8 +778,8 @@ function KenyaTerrainPlane() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
         <shapeGeometry args={[lakeVictoriaShape]} />
         <meshStandardMaterial
-          color='#0284c7'
-          emissive='#0369a1'
+          color={palette.water}
+          emissive={palette.waterEmissive}
           emissiveIntensity={0.65}
           roughness={0.2}
           metalness={0.7}
@@ -687,8 +792,8 @@ function KenyaTerrainPlane() {
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]}>
         <shapeGeometry args={[lakeTurkanaShape]} />
         <meshStandardMaterial
-          color='#0284c7'
-          emissive='#0369a1'
+          color={palette.water}
+          emissive={palette.waterEmissive}
           emissiveIntensity={0.65}
           roughness={0.2}
           metalness={0.7}
@@ -703,7 +808,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.32}
         fontWeight={900}
-        color='#93c5fd'
+        color={palette.labelPrimary}
         fillOpacity={0.65}
         letterSpacing={0.16}
         anchorX='center'
@@ -717,7 +822,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.16}
         fontWeight={800}
-        color='#38bdf8'
+        color={palette.labelSecondary}
         fillOpacity={0.75}
         letterSpacing={0.12}
         anchorX='center'
@@ -731,7 +836,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.15}
         fontWeight={800}
-        color='#38bdf8'
+        color={palette.labelSecondary}
         fillOpacity={0.75}
         letterSpacing={0.1}
         anchorX='center'
@@ -745,7 +850,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.13}
         fontWeight={800}
-        color='#38bdf8'
+        color={palette.labelSecondary}
         fillOpacity={0.7}
         letterSpacing={0.1}
         anchorX='center'
@@ -759,7 +864,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.12}
         fontWeight={800}
-        color='#64748b'
+        color={palette.labelMuted}
         fillOpacity={0.6}
         letterSpacing={0.08}
         anchorX='center'
@@ -774,7 +879,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.18}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.35}
         letterSpacing={0.14}
         anchorX='center'
@@ -788,7 +893,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.18}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.35}
         letterSpacing={0.14}
         anchorX='center'
@@ -802,7 +907,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.18}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.35}
         letterSpacing={0.14}
         anchorX='center'
@@ -816,7 +921,7 @@ function KenyaTerrainPlane() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.18}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.35}
         letterSpacing={0.14}
         anchorX='center'
@@ -863,7 +968,9 @@ function ResponsiveCameraAdjuster() {
 }
 
 export function NetworkMap3D() {
-  const { data: scadaData, isLoading: scadaLoading } = usePipelineScadaNetwork();
+  const isDark = useIsDarkScene();
+  const palette = isDark ? SCENE_DARK : SCENE_LIGHT;
+  const { data: scadaData } = usePipelineScadaNetwork();
 
   // Merge live Frappe backend data with the calibrated 3D geo-spatial positions
   const terminals: TerminalNode3D[] = useMemo(() => {
@@ -883,13 +990,12 @@ export function NetworkMap3D() {
 
     return KENYA_TERMINALS.map((base) => {
       const match =
-        backendMap.get(base.code) ||
-        backendMap.get(base.terminal) ||
-        backendMap.get(base.id);
+        backendMap.get(base.code) || backendMap.get(base.terminal) || backendMap.get(base.id);
 
       if (match) {
         const capacity = match.total_capacity_kl > 0 ? match.total_capacity_kl : base.capacityKL;
-        const currentStock = match.current_stock_kl > 0 ? match.current_stock_kl : base.currentStockKL;
+        const currentStock =
+          match.current_stock_kl > 0 ? match.current_stock_kl : base.currentStockKL;
         const fillPct = match.total_capacity_kl > 0 ? match.fill_pct : base.fillPct;
 
         return {
@@ -919,22 +1025,22 @@ export function NetworkMap3D() {
   const segments = scadaData?.segments;
 
   return (
-    <Card className='w-full overflow-hidden border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
-      <CardHeader className='flex flex-col gap-3 border-b border-[#e6edf7] p-3.5 pb-3 sm:p-5 sm:pb-3.5 sm:flex-row sm:items-center sm:justify-between dark:border-[#233252]'>
+    <Card className='w-full overflow-hidden border-border bg-card shadow-sm '>
+      <CardHeader className='flex flex-col gap-3 border-b border-border p-3.5 pb-3 sm:p-5 sm:pb-3.5 sm:flex-row sm:items-center sm:justify-between '>
         <div className='min-w-0 space-y-1'>
           <div className='flex flex-wrap items-center gap-2'>
-            <CardTitle className='text-base font-bold text-[#132038] sm:text-lg dark:text-foreground'>
+            <CardTitle className='text-base font-bold text-foreground sm:text-lg'>
               Kenya 3D Pipeline Network &amp; Tank Farm
             </CardTitle>
             <Badge
               variant='outline'
-              className='gap-1 border-blue-200 bg-blue-50 text-[11px] text-[#4361ee] dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300'
+              className='gap-1 border-blue-200 bg-blue-50 text-[11px] text-primary dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300'
             >
               <Radio className='size-3 animate-pulse text-emerald-500' />
               {scadaData ? 'Live Backend SCADA' : 'Live 3D SCADA Flow'}
             </Badge>
           </div>
-          <p className='text-xs text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='text-xs text-muted-foreground'>
             Real-time oil transit via 3D pipelines from Mombasa Kipevu Port across Nairobi, Nakuru,
             Eldoret &amp; Kisumu
           </p>
@@ -942,20 +1048,17 @@ export function NetworkMap3D() {
 
         {/* Action Controls & Legend */}
         <div className='flex flex-wrap items-center gap-2 text-xs'>
-          <div className='inline-flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
-            <Waves className='size-3.5 shrink-0 text-[#4361ee]' />
+          <div className='inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2.5 py-1 font-medium text-muted-foreground'>
+            <Waves className='size-3.5 shrink-0 text-primary' />
             <span className='whitespace-nowrap'>
-              Trunk:{' '}
-              <b className='text-[#132038] dark:text-white'>
-                {telemetry?.trunk_name || 'Line 5'}
-              </b>
+              Trunk: <b className='text-foreground'>{telemetry?.trunk_name || 'Line 5'}</b>
             </span>
           </div>
-          <div className='inline-flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
+          <div className='inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2.5 py-1 font-medium text-muted-foreground'>
             <Gauge className='size-3.5 shrink-0 text-emerald-500' />
             <span className='whitespace-nowrap'>
               Flow:{' '}
-              <b className='text-[#132038] dark:text-white'>
+              <b className='text-foreground'>
                 {telemetry?.flow_rate_m3h
                   ? `${telemetry.flow_rate_m3h.toLocaleString()} m³/h`
                   : '1,240 m³/h'}
@@ -963,10 +1066,10 @@ export function NetworkMap3D() {
             </span>
           </div>
           {telemetry?.pressure_bar ? (
-            <div className='hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
+            <div className='hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2.5 py-1 font-medium text-muted-foreground'>
               <Activity className='size-3.5 shrink-0 text-cyan-500' />
               <span className='whitespace-nowrap'>
-                Pressure: <b className='text-[#132038] dark:text-white'>{telemetry.pressure_bar.toFixed(1)} bar</b>
+                Pressure: <b className='text-foreground'>{telemetry.pressure_bar.toFixed(1)} bar</b>
               </span>
             </div>
           ) : null}
@@ -975,16 +1078,16 @@ export function NetworkMap3D() {
 
       <CardContent className='space-y-3.5 p-3 sm:p-4'>
         {/* Row 1: Fluid 4-Card Telemetry Grid (1 col on mobile, 2 cols on tablet, 4 cols on desktop) */}
-        <div className='rounded-2xl border border-[#e6edf7] bg-slate-50/80 p-2.5 sm:p-3.5 dark:border-[#233252] dark:bg-[#0a101d]'>
+        <div className='rounded-2xl border border-border bg-muted/80 p-2.5 sm:p-3.5'>
           <div className='grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4'>
             {/* Card 1: Selected Terminal Node & Quick Selector */}
-            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-[#e6edf7] bg-white p-3 shadow-2xs dark:border-[#233252] dark:bg-[#0f1728]'>
+            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-border bg-card p-3 shadow-2xs'>
               <div className='flex items-center justify-between gap-1.5'>
                 <div className='min-w-0'>
-                  <span className='text-[10px] font-bold tracking-wider uppercase text-[#5c6b85] dark:text-slate-400'>
+                  <span className='text-[10px] font-bold tracking-wider uppercase text-muted-foreground'>
                     Terminal Node
                   </span>
-                  <h4 className='truncate text-xs font-extrabold text-[#132038] sm:text-sm dark:text-foreground'>
+                  <h4 className='truncate text-xs font-extrabold text-foreground sm:text-sm'>
                     {selectedTank.name}
                   </h4>
                 </div>
@@ -1007,7 +1110,7 @@ export function NetworkMap3D() {
                       className={`cursor-pointer rounded-md px-1.5 py-0.5 text-[10.5px] font-bold transition-all ${
                         isActive
                           ? 'bg-[#4361ee] text-white shadow-2xs'
-                          : 'border border-[#e6edf7] bg-slate-50 text-[#5c6b85] hover:bg-slate-100 dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300 dark:hover:bg-[#1b2842]'
+                          : 'border border-border bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
                       {t.code}
@@ -1018,12 +1121,12 @@ export function NetworkMap3D() {
             </div>
 
             {/* Card 2: Designated Product & Live State */}
-            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-[#e6edf7] bg-white p-3 shadow-2xs dark:border-[#233252] dark:bg-[#0f1728]'>
+            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-border bg-card p-3 shadow-2xs '>
               <div>
-                <span className='text-[10px] font-semibold text-[#5c6b85] dark:text-slate-400'>
+                <span className='text-[10px] font-semibold text-muted-foreground'>
                   Designated Product
                 </span>
-                <p className='mt-0.5 truncate text-sm font-extrabold text-[#132038] dark:text-foreground'>
+                <p className='mt-0.5 truncate text-sm font-extrabold text-foreground'>
                   {selectedTank.product}
                 </p>
               </div>
@@ -1034,32 +1137,32 @@ export function NetworkMap3D() {
             </div>
 
             {/* Card 3: Live SCADA GPS Coordinates */}
-            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-[#e6edf7] bg-white p-3 shadow-2xs dark:border-[#233252] dark:bg-[#0f1728]'>
+            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-border bg-card p-3 shadow-2xs'>
               <div>
-                <span className='text-[10px] font-semibold text-[#5c6b85] dark:text-slate-400'>
+                <span className='text-[10px] font-semibold text-muted-foreground'>
                   Geo Coordinates
                 </span>
-                <p className='mt-0.5 font-mono text-xs font-bold text-[#132038] sm:text-sm dark:text-foreground'>
+                <p className='mt-0.5 font-mono text-xs font-bold text-foreground sm:text-sm'>
                   {Math.abs(selectedTank.lat).toFixed(4)}° {selectedTank.lat >= 0 ? 'N' : 'S'}
                 </p>
               </div>
-              <p className='font-mono text-xs text-[#5c6b85] dark:text-slate-400'>
+              <p className='font-mono text-xs text-muted-foreground'>
                 {selectedTank.lng.toFixed(4)}° E
               </p>
             </div>
 
             {/* Card 4: Current Stock Fill & Ullage */}
-            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-[#e6edf7] bg-white p-3 shadow-2xs dark:border-[#233252] dark:bg-[#0f1728]'>
+            <div className='flex min-w-0 flex-col justify-between space-y-2 rounded-xl border border-border bg-card p-3 shadow-2xs'>
               <div className='flex items-center justify-between text-xs'>
-                <span className='font-semibold text-[#5c6b85] dark:text-slate-400'>
+                <span className='font-semibold text-muted-foreground'>
                   Stock Fill ({selectedTank.fillPct}%)
                 </span>
-                <span className='font-mono text-[11px] font-bold text-[#132038] dark:text-foreground'>
+                <span className='font-mono text-[11px] font-bold text-foreground'>
                   {selectedTank.currentStockKL.toLocaleString()} /{' '}
                   {selectedTank.capacityKL.toLocaleString()} m³
                 </span>
               </div>
-              <div className='h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800'>
+              <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
                 <div
                   className='h-full rounded-full transition-all duration-500'
                   style={{
@@ -1068,9 +1171,13 @@ export function NetworkMap3D() {
                   }}
                 />
               </div>
-              <div className='flex items-center justify-between text-[10px] text-[#5c6b85] dark:text-slate-400'>
+              <div className='flex items-center justify-between text-[10px] text-muted-foreground'>
                 <span>
-                  Ullage: {Math.max(0, selectedTank.capacityKL - selectedTank.currentStockKL).toLocaleString()}{' '}
+                  Ullage:{' '}
+                  {Math.max(
+                    0,
+                    selectedTank.capacityKL - selectedTank.currentStockKL
+                  ).toLocaleString()}{' '}
                   m³
                 </span>
                 <span>Safe: 95%</span>
@@ -1080,36 +1187,60 @@ export function NetworkMap3D() {
         </div>
 
         {/* Row 2: Full-Width 3D Kenya Pipeline SCADA Network Canvas */}
-        <div className='relative h-95 w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-linear-to-b from-[#0e1628] via-[#090e18] to-[#04070d] shadow-inner sm:h-[460px] md:h-[500px] lg:h-[540px]'>
+        <div
+          className={cn(
+            'relative h-95 w-full min-w-0 overflow-hidden rounded-2xl border shadow-inner sm:h-[460px] md:h-[500px] lg:h-[540px]',
+            'border-border bg-linear-to-b from-slate-100 via-slate-50 to-slate-200',
+            'dark:border-white/10 dark:from-[#0e1628] dark:via-[#090e18] dark:to-[#04070d]'
+          )}
+        >
           <Canvas
+            key={isDark ? 'dark' : 'light'}
             dpr={[1, 2]}
             camera={{ position: [0.4, 7.6, 7.8], fov: 46 }}
             gl={{ antialias: true, powerPreference: 'high-performance' }}
             className='h-full w-full touch-none'
+            onCreated={({ gl }) => {
+              gl.setClearColor(new THREE.Color(palette.canvasClear), 1);
+            }}
           >
+            <color attach='background' args={[palette.canvasClear]} />
             {/* Automatic camera framing controller that reacts to any window or container resize */}
             <ResponsiveCameraAdjuster />
 
-            <ambientLight intensity={0.7} />
-            <directionalLight position={[6, 8, 5]} intensity={2.2} />
-            <directionalLight position={[-6, 4, -4]} intensity={0.9} color='#6a8bff' />
-            <pointLight position={[0.4, 3, 0]} intensity={1.8} color='#4361ee' />
+            <ambientLight intensity={palette.ambient} />
+            <directionalLight position={[6, 8, 5]} intensity={palette.dirMain} />
+            <directionalLight position={[-6, 4, -4]} intensity={0.9} color={palette.rimLight} />
+            <pointLight position={[0.4, 3, 0]} intensity={isDark ? 1.8 : 1.1} color='#4361ee' />
 
             {/* Ambient atmospheric particles */}
-            <Sparkles count={45} scale={14} size={2.5} speed={0.3} color='#60a5fa' opacity={0.6} />
+            <Sparkles
+              count={isDark ? 45 : 28}
+              scale={14}
+              size={isDark ? 2.5 : 2}
+              speed={0.3}
+              color={palette.sparkles}
+              opacity={isDark ? 0.6 : 0.35}
+            />
 
             <Suspense fallback={null}>
               {/* 1. Kenya Topographic Ground */}
-              <KenyaTerrainPlane />
+              <KenyaTerrainPlane palette={palette} />
 
               {/* 2. 3D Oil Pipeline Tubes with Active Flow Streams */}
               {segments && segments.length > 0 ? (
                 segments.map((seg) => {
                   const startNode = terminals.find(
-                    (t) => t.code === seg.from_node || t.terminal === seg.from_node || t.id.startsWith(seg.from_node)
+                    (t) =>
+                      t.code === seg.from_node ||
+                      t.terminal === seg.from_node ||
+                      t.id.startsWith(seg.from_node)
                   );
                   const endNode = terminals.find(
-                    (t) => t.code === seg.to_node || t.terminal === seg.to_node || t.id.startsWith(seg.to_node)
+                    (t) =>
+                      t.code === seg.to_node ||
+                      t.terminal === seg.to_node ||
+                      t.id.startsWith(seg.to_node)
                   );
                   if (!startNode || !endNode) return null;
                   return (
@@ -1168,6 +1299,7 @@ export function NetworkMap3D() {
                 <OilTank3D
                   key={tank.id}
                   tank={tank}
+                  palette={palette}
                   isSelected={selectedTank?.code === tank.code || selectedTank?.id === tank.id}
                   onSelect={(t) => setSelectedCode(t.code)}
                 />
@@ -1190,12 +1322,12 @@ export function NetworkMap3D() {
 
           {/* Bottom 3D Canvas Overlay Controls & Tips */}
           <div className='pointer-events-none absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 text-xs'>
-            <div className='pointer-events-auto flex items-center gap-2 rounded-xl border border-white/10 bg-black/75 px-2.5 py-1.5 text-white/85 backdrop-blur-md sm:px-3'>
+            <div className='pointer-events-auto flex items-center gap-2 rounded-xl border border-border bg-card/90 px-2.5 py-1.5 text-foreground backdrop-blur-md sm:px-3 dark:border-white/10 dark:bg-black/75 dark:text-white/85'>
               <span className='flex items-center gap-1.5 text-[11px] sm:text-xs'>
                 <span className='size-2 rounded-full bg-emerald-500 animate-pulse' />
                 {telemetry?.status_label || 'Line 5 / Line 4 (Active Flow)'}
               </span>
-              <span className='text-white/40'>•</span>
+              <span className='text-muted-foreground/60 dark:text-white/40'>•</span>
               <span className='flex items-center gap-1.5 text-[11px] sm:text-xs'>
                 <span
                   className={`size-2 rounded-full ${
@@ -1206,7 +1338,7 @@ export function NetworkMap3D() {
               </span>
             </div>
 
-            <div className='pointer-events-auto hidden rounded-xl border border-white/10 bg-black/75 px-3 py-1.5 text-[11px] text-white/75 backdrop-blur-md sm:inline'>
+            <div className='pointer-events-auto hidden rounded-xl border border-border bg-card/90 px-3 py-1.5 text-[11px] text-muted-foreground backdrop-blur-md sm:inline dark:border-white/10 dark:bg-black/75 dark:text-white/75'>
               ✦ Drag to orbit • Scroll to zoom • Click any tank
             </div>
           </div>
