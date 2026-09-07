@@ -13,13 +13,24 @@ different ways:
   as a global ``before_submit`` hook (see hooks.py's ``"*"`` doc_events
   entry) and is scoped, internally, to only this app's own doctypes - never
   ArcApps/Frappe core or another installed app.
-- A handful of non-submittable doctypes (Quality Result, Variance, AI
-  Recommendation) model their decision as a ``workflow_state`` transition
-  instead. There is no safe, generic way to detect "this workflow_state
-  change is the approval-shaped one" across arbitrary doctypes, so
+- A handful of non-submittable doctypes (Variance, AI Recommendation) model
+  their decision as a ``workflow_state`` transition instead. There is no
+  safe, generic way to detect "this workflow_state change is the
+  approval-shaped one" across arbitrary doctypes, so
   :func:`assert_not_self_approving` is called explicitly, by each of those
   doctypes, at the exact point they already detect their own decision
   transition - not from a blanket hook.
+
+Quality Result used to be in that same list - its own stamp_approval() called
+assert_not_self_approving() on the Pending -> Accepted/Quarantined
+transition, on the theory that Quality Manager role membership alone
+doesn't stop one specific person from both recording the raw lab result (as
+owner) and then approving their own reading. In practice, on this
+operation's real staffing, the same lab operator legitimately does both -
+same category of single-operator exemption as Tank Measurement/Terminal
+Receipt/Dispatch below, just reached through the workflow_state mechanism
+instead of before_submit. The call was removed directly from
+quality_result.py's stamp_approval(); see that file for the exemption note.
 
 Oil Shipment's own workflow_state is deliberately NOT covered: its states
 are sequential physical-progress milestones (a vessel arriving, discharging,

@@ -7,7 +7,6 @@ from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 from kpc.petroleum_operations.decision_ledger import log_decision
-from kpc.petroleum_operations.sod import assert_not_self_approving
 from kpc.petroleum_operations.utils import assert_journey_ref_immutable, log_journey_step
 
 
@@ -39,14 +38,19 @@ class QualityResult(Document):
 
 	def stamp_approval(self):
 		"""Approval is a workflow transition (Pending -> Accepted/Quarantined),
-		restricted to the Quality Manager role by the Workflow definition -
-		but role membership alone doesn't stop one specific person from both
-		recording the raw lab result (as owner) and then approving their own
-		reading, so assert_not_self_approving closes that gap. This also
-		records who/when for audit, and writes to the immutable Decision
-		Ledger (Phase 6)."""
+		restricted to the Quality Manager role by the Workflow definition.
+
+		Deliberately NOT gated by sod.assert_not_self_approving: on this
+		operation's real staffing, the same lab operator who records the raw
+		result is also the one who accepts/quarantines it - a single-operator
+		call, not a requester/approver handoff. Same reasoning and same
+		exemption as Tank Measurement/Terminal Receipt/Dispatch get from
+		sod.block_self_submit, just reached via workflow_state here instead of
+		submit. See sod.py's module docstring for the fuller writeup.
+
+		This still records who/when for audit, and writes to the immutable
+		Decision Ledger (Phase 6), regardless of who approved it."""
 		if self.has_value_changed("workflow_state") and self.workflow_state in ("Accepted", "Quarantined"):
-			assert_not_self_approving(self, action=self.workflow_state.lower())
 			self.approved_by = frappe.session.user
 			self.approved_on = now_datetime()
 			log_decision(
