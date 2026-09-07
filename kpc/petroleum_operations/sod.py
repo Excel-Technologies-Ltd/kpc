@@ -1,57 +1,52 @@
 # Copyright (c) 2026, ArcApps and contributors
 # For license information, please see license.txt
-"""Segregation of Duties (Phase 6): the person who created a document (its
-``owner``) cannot also be the one who submits or approves it. This is the
-"global app hook preventing document owner from Submitting/Approving their
-own document" called for in the brief.
+"""Segregation of Duties (Phase 6) - DISABLED APP-WIDE by explicit business
+decision. This module's two enforcement functions, :func:`block_self_submit`
+and :func:`assert_not_self_approving`, are no longer wired anywhere - kept
+here, still correct and still tested, only so the control can be re-enabled
+(entirely, or doctype-by-doctype) without rebuilding it from scratch. Nothing
+in this app currently calls either one.
 
-Two complementary mechanisms, because this app models "approval" two
-different ways:
+History, for whoever needs to re-enable this:
+
+Originally, the person who created a document (its ``owner``) could not also
+be the one who submitted or approved it - the "global app hook preventing
+document owner from Submitting/Approving their own document" called for in
+the brief. Two complementary mechanisms existed, because this app models
+"approval" two different ways:
 
 - Most transactional doctypes (Nomination, Reconciliation, Dispatch, ...)
-  model acceptance as a docstatus submit. :func:`block_self_submit` is wired
-  as a global ``before_submit`` hook (see hooks.py's ``"*"`` doc_events
-  entry) and is scoped, internally, to only this app's own doctypes - never
-  ArcApps/Frappe core or another installed app.
-- A handful of non-submittable doctypes (Variance, AI Recommendation) model
-  their decision as a ``workflow_state`` transition instead. There is no
-  safe, generic way to detect "this workflow_state change is the
-  approval-shaped one" across arbitrary doctypes, so
-  :func:`assert_not_self_approving` is called explicitly, by each of those
-  doctypes, at the exact point they already detect their own decision
-  transition - not from a blanket hook.
+  model acceptance as a docstatus submit. :func:`block_self_submit` was wired
+  as a global ``"*": {"before_submit": ...}`` hook in hooks.py, scoped
+  internally (via ``frappe.get_meta(doc.doctype).module``) to only this
+  app's own doctypes - never ArcApps/Frappe core or another installed app.
+- A handful of non-submittable doctypes (Quality Result, Variance, AI
+  Recommendation) modeled their decision as a ``workflow_state`` transition
+  instead, so each called :func:`assert_not_self_approving` explicitly, at
+  the exact point it already detected its own decision transition.
 
-Quality Result used to be in that same list - its own stamp_approval() called
-assert_not_self_approving() on the Pending -> Accepted/Quarantined
-transition, on the theory that Quality Manager role membership alone
-doesn't stop one specific person from both recording the raw lab result (as
-owner) and then approving their own reading. In practice, on this
-operation's real staffing, the same lab operator legitimately does both -
-same category of single-operator exemption as Tank Measurement/Terminal
-Receipt/Dispatch below, just reached through the workflow_state mechanism
-instead of before_submit. The call was removed directly from
-quality_result.py's stamp_approval(); see that file for the exemption note.
+Oil Shipment's own workflow_state was deliberately never covered even while
+this was active: its states are sequential physical-progress milestones (a
+vessel arriving, discharging, being received), normally all logged by the
+same Terminal Operator watching the same physical event in real time - not a
+requester/approver split. The same reasoning was later extended, after a
+live-reported bug, to three submittable doctypes that a wildcard hook had
+caught without meaning to - Tank Measurement, Terminal Receipt, and
+Dispatch - and then to Quality Result's own workflow_state transition, on
+the same "this is genuinely one operator doing one job" grounds.
 
-Oil Shipment's own workflow_state is deliberately NOT covered: its states
-are sequential physical-progress milestones (a vessel arriving, discharging,
-being received), normally all logged by the same Terminal Operator watching
-the same physical event in real time - not a requester/approver split, so a
-self-approval gate there would just block normal operations.
-
-The same reasoning applies to a small, explicit set of *submittable*
-doctypes too - real-time physical-event logs by the same Terminal Operator,
-not a requester/approver split, per BUSINESS_GUIDE.md's own description of
-that role ("takes dip readings ... records receipts and dispatches as they
-happen"): Tank Measurement (a dip reading), Terminal Receipt, and Dispatch.
-These were caught by the wildcard `before_submit` hook anyway (a real bug,
-not an intentional gap - the block was applied to every submittable
-Petroleum Operations doctype without distinguishing the two cases this
-module's own docstring already describes), so a single Terminal Operator
-genuinely could not submit their own dip reading, receipt, or dispatch
-record - exactly the "normal operations" this same reasoning already
-protects Oil Shipment from. Every other submittable doctype (Nomination,
-Allocation, Reconciliation, Invoice, ...) is a real requester/approver
-handoff and keeps the block.
+**Reported live: even with those exemptions, every remaining requester/
+approver doctype - Nomination, Allocation, Reconciliation, Invoice, and the
+two remaining workflow_state doctypes (Variance, AI Recommendation) - still
+required a second person, and the business decision was to remove that
+requirement everywhere rather than continue auditing doctype-by-doctype.**
+The wildcard hook was removed from hooks.py entirely; the explicit
+``assert_not_self_approving()`` calls were removed from
+quality_result.py, variance.py, and ai_recommendation.py. Each of those
+three still stamps ``approved_by``/``approved_on`` and writes its Decision
+Ledger entry exactly as before - only the same-user restriction is gone, so
+the audit trail (who actually approved what, when) is unaffected; it simply
+no longer forbids that person from being the same one who created it.
 """
 
 import frappe
@@ -61,22 +56,18 @@ from frappe import _
 # and every doc_events integration hook in this app run as it. It is not a
 # real, segregated business role, so it is exempt here exactly the way
 # Frappe's own core permission system already exempts Administrator from
-# virtually every other permission check. Every doctype this app cares about
-# also already has System Manager's submit/cancel permission removed
-# (Phases 1-5), so in practice this exemption is never reachable through the
-# desk UI for a real user anyway - it only matters for scripts and hooks
-# that legitimately run as Administrator.
+# virtually every other permission check.
 _EXEMPT_USERS = ("Administrator",)
 
-# Single-Terminal-Operator physical-event logs - see the module docstring
-# above for why these, specifically, get the same exemption Oil Shipment's
-# workflow_state already has, and why every other submittable doctype in
-# this module does not.
+# Single-Terminal-Operator physical-event logs that were exempted from
+# block_self_submit while it was still active - see the module docstring
+# above. Kept only for when/if block_self_submit is rewired.
 _SELF_SUBMIT_EXEMPT_DOCTYPES = ("Tank Measurement", "Terminal Receipt", "Dispatch")
 
 
 def assert_not_self_approving(doc, action: str) -> None:
-	"""Throw if the current user is also this document's ``owner``."""
+	"""Throw if the current user is also this document's ``owner``. Not
+	called from anywhere currently - see the module docstring."""
 	if frappe.session.user in _EXEMPT_USERS:
 		return
 	if doc.owner and doc.owner == frappe.session.user:
@@ -90,12 +81,11 @@ def assert_not_self_approving(doc, action: str) -> None:
 
 
 def block_self_submit(doc, method=None):
-	"""Wired as ``"*": {"before_submit": ...}`` in hooks.py. Scoped here,
-	not in hooks.py, to only this app's own module - a wildcard doc_event
-	fires for every doctype in every installed app, and this must never
-	reach ArcApps's or Frappe's own submittable doctypes (Sales Invoice,
-	Stock Entry, ...), whose documents are routinely created and submitted
-	by the same user as a matter of normal, unrelated business process."""
+	"""Was wired as ``"*": {"before_submit": ...}`` in hooks.py; that entry
+	has been removed, so this is no longer called by anything. Left intact,
+	including its own app-scoping (only this app's own Petroleum Operations
+	doctypes, never ArcApps/Frappe core or another installed app), in case
+	it's rewired later - see the module docstring."""
 	if frappe.get_meta(doc.doctype).module != "Petroleum Operations":
 		return
 	if doc.doctype in _SELF_SUBMIT_EXEMPT_DOCTYPES:

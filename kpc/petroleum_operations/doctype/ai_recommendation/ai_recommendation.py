@@ -6,21 +6,18 @@ from frappe.model.document import Document
 from frappe.utils import now_datetime
 
 from kpc.petroleum_operations.decision_ledger import log_decision
-from kpc.petroleum_operations.sod import assert_not_self_approving
 from kpc.petroleum_operations.utils import log_journey_step
 
 
 class AIRecommendation(Document):
 	def validate(self):
 		if self.has_value_changed("workflow_state") and self.workflow_state in ("Approved", "Rejected"):
-			# SoD: whoever's telemetry/Movement triggered the AI Alert ->
-			# Prediction -> Recommendation cascade (this doc's owner) cannot
-			# also be the one approving/rejecting it - a human other than
-			# the one who raised the alert must make the call. AI
-			# Recommendation cannot execute (a Work Order cannot be raised
-			# from it - see MaintenanceWorkOrder.validate_recommendation_approved)
-			# without exactly this approval.
-			assert_not_self_approving(self, action=self.workflow_state.lower())
+			# Segregation-of-duties self-approval was removed app-wide by
+			# explicit business decision - see sod.py's module docstring. AI
+			# Recommendation still cannot execute (a Work Order cannot be
+			# raised from it - see MaintenanceWorkOrder.validate_recommendation_approved)
+			# without this approval; it's just no longer restricted to a
+			# different user than whoever raised the alert.
 			self.approved_by = frappe.session.user
 			self.approved_on = now_datetime()
 
