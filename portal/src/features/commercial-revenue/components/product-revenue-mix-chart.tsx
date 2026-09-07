@@ -1,6 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTheme } from '@/components/theme-provider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getChartTheme } from '@/lib/chart-theme';
+import { formatMetricValue } from '@/lib/utils';
 import Chart from 'chart.js/auto';
 import { useEffect, useRef } from 'react';
 import { useCommercialMetricsContext } from '../commercial-metrics-context';
@@ -57,12 +58,7 @@ export function ProductRevenueMixChart() {
                 const total = slices.reduce((sum, s) => sum + s.amount, 0) || 1;
                 const val = Number(ctx.raw) || 0;
                 const pct = ((val / total) * 100).toFixed(1);
-                const display =
-                  val >= 1_000_000
-                    ? `KES ${(val / 1_000_000).toFixed(2)}M`
-                    : val >= 1_000
-                      ? `KES ${(val / 1_000).toFixed(1)}k`
-                      : `KES ${Math.round(val).toLocaleString()}`;
+                const display = `KES ${formatMetricValue(val, 2)}`;
                 return `${ctx.label}: ${display} (${pct}%)`;
               },
             },
@@ -95,7 +91,7 @@ export function ProductRevenueMixChart() {
         </p>
       </CardHeader>
       <CardContent>
-        <div className='relative h-[260px]'>
+        <div className='relative h-65'>
           {empty ? (
             <div className='text-muted-foreground absolute inset-0 flex items-center justify-center text-sm'>
               No product mix to show.

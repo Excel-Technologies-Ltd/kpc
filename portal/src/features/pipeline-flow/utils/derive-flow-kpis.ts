@@ -1,3 +1,4 @@
+import { formatMetricValue } from '@/lib/utils';
 import type { Movement } from '@/types/PetroleumOperations/Movement';
 import type { PipelineBatch } from '@/types/PetroleumOperations/PipelineBatch';
 import type { FlowKpi } from '../data/dummy';
@@ -181,7 +182,7 @@ export function deriveFlowKpis(
         deltaType: 'flat',
       },
       'line-pack': {
-        value: formatInt(linePack),
+        value: formatMetricValue(linePack),
         delta: hasAnomalyWatch ? 'watch' : 'nominal',
         deltaType: hasAnomalyWatch ? 'down' : 'flat',
       },

@@ -2,6 +2,7 @@ import { FlowKpiCard, type FlowKpiCardProps } from '@/components/shared/FlowKpiC
 import { MAINTENANCE_WORK_ORDER_DOCTYPE, PLANT_ASSET_DOCTYPE } from '@/constants/doctype.string';
 import { useFrappeGetDocCount } from 'frappe-react-sdk';
 import { Activity, AlertTriangle, ClipboardList, Gauge, Layers } from 'lucide-react';
+import { formatMetricValue } from '@/lib/utils';
 import { useMemo } from 'react';
 
 export function AssetsKpis() {
@@ -73,7 +74,7 @@ export function AssetsKpis() {
   const kpis: FlowKpiCardProps[] = useMemo(() => {
     // 1. Assets Monitored
     const hasAssets = totalAssetsCount !== undefined;
-    const assetVal = hasAssets ? totalAssetsCount.toLocaleString('en-US') : '1,284';
+    const assetVal = hasAssets ? formatMetricValue(totalAssetsCount) : '1.3K';
 
     // 2. Open Work Orders
     const hasWOs = openWOCount !== undefined;
@@ -98,7 +99,7 @@ export function AssetsKpis() {
     const activeAssets = totalAssetsCount && totalAssetsCount > 0 ? totalAssetsCount : 24;
     const totalOperatingHours = activeAssets * 30 * 24;
     if (failures > 0) {
-      mtbfVal = Math.round(totalOperatingHours / failures).toLocaleString('en-US');
+      mtbfVal = formatMetricValue(Math.round(totalOperatingHours / failures));
     }
 
     return [

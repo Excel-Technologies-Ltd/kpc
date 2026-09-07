@@ -710,9 +710,9 @@ def get_stock_reconciliation_report(terminal: str | None = None, date: str | Non
 		freshness_text = f"Live · dip {freshness_time}" if is_today else f"Historical · {report_date.strftime('%b %d, %Y')}"
 
 	# Summaries KPI Cards
-	phys_k_val = f"{tot_phys / 1000.0:.2f}k m³"
-	ullage_k_val = f"{tot_ullage / 1000.0:.2f}k m³"
-	net_var_display = f"{abs(round(tot_var))}– m³" if tot_var < 0 else f"{round(tot_var)} m³"
+	phys_k_val = f"{tot_phys / 1000.0:.2f}K m³"
+	ullage_k_val = f"{tot_ullage / 1000.0:.2f}K m³"
+	net_var_display = f"-{abs(round(tot_var))} m³" if tot_var < 0 else f"{round(tot_var)} m³"
 	alarm_tag = alarming_tanks[0]["tank"] if alarming_tanks else "None"
 
 	summaries = [

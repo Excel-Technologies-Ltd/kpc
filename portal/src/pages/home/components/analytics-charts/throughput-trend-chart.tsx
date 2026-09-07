@@ -4,6 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PIPELINE_BATCHES_DOCTYPE, TERMINAL_RECEIPT_DOCTYPE } from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { TrendingUp } from 'lucide-react';
+import { formatMetricValue } from '@/lib/utils';
 import { useMemo, useState } from 'react';
 
 // ============================================================================
@@ -110,16 +111,10 @@ export function ThroughputTrendChart() {
     }
 
     // Format display strings based on magnitude
-    return days.map((d) => {
-      const display =
-        d.val >= 1000
-          ? `${(d.val / 1000).toFixed(1)}k m³`
-          : `${Math.round(d.val).toLocaleString()} m³`;
-      return {
-        ...d,
-        display,
-      };
-    });
+    return days.map((d) => ({
+      ...d,
+      display: `${formatMetricValue(d.val, 1)} m³`,
+    }));
   }, [receipts, batches]);
 
   // Calculate dynamic scale bounds strictly from live aggregated data
@@ -153,7 +148,7 @@ export function ThroughputTrendChart() {
     const ticks = [];
     for (let i = 4; i >= 0; i--) {
       const val = Math.round(lower + step * i);
-      const label = val >= 1000 ? `${(val / 1000).toFixed(1)}k` : `${val.toLocaleString()} m³`;
+      const label = val >= 1000 ? formatMetricValue(val, 1) : `${val.toLocaleString()} m³`;
       ticks.push({ label, val });
     }
 
@@ -237,9 +232,7 @@ export function ThroughputTrendChart() {
             variant='outline'
             className='border-[#3b82f6]/30 bg-blue-50/60 font-mono text-[11px] font-bold text-[#2563eb] dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300'
           >
-            {totalVolume >= 1000
-              ? `${(totalVolume / 1000).toFixed(1)}k m³ total`
-              : `${Math.round(totalVolume).toLocaleString()} m³ total`}
+            {`${formatMetricValue(totalVolume, 1)} m³ total`}
           </Badge>
           <span className='text-xs font-semibold text-muted-foreground dark:text-slate-400'>7 days</span>
         </div>

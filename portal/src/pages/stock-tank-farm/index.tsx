@@ -11,7 +11,7 @@ import {
 import { StockMovementCard } from '@/features/overview/components/stock-movement-card';
 import { TankFarm3DSection } from '@/features/overview/components/tank-farm-3d-section';
 import { TankReconciliationCard } from '@/features/overview/components/tank-reconciliation-card';
-import { cn } from '@/lib/utils';
+import { cn, formatMetricValue } from '@/lib/utils';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import {
   AlertTriangle,
@@ -270,11 +270,7 @@ export default function StockTankFarmPage() {
         {/* KPI 1: Total Stock */}
         <FlowKpiCard
           title='Total Stored Stock'
-          value={
-            stats.totalStock >= 1000
-              ? `${(stats.totalStock / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-              : Math.round(stats.totalStock).toLocaleString()
-          }
+          value={formatMetricValue(stats.totalStock, 2)}
           unit='m³'
           delta={
             stats.totalCap > 0
@@ -292,11 +288,7 @@ export default function StockTankFarmPage() {
         {/* KPI 2: Available Ullage */}
         <FlowKpiCard
           title='Available Ullage'
-          value={
-            stats.availableUllage >= 1000
-              ? `${(stats.availableUllage / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-              : Math.round(stats.availableUllage).toLocaleString()
-          }
+          value={formatMetricValue(stats.availableUllage, 2)}
           unit='m³'
           delta='Safe room'
           deltaType='up'
@@ -310,11 +302,7 @@ export default function StockTankFarmPage() {
         {/* KPI 3: Movement Today */}
         <FlowKpiCard
           title='Movement Today'
-          value={
-            stats.movementVol >= 1000
-              ? `${(stats.movementVol / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`
-              : Math.round(stats.movementVol).toLocaleString()
-          }
+          value={formatMetricValue(stats.movementVol, 1)}
           unit='m³'
           delta={`${stats.movementCount} logs`}
           deltaType={stats.movementVol > 0 ? 'up' : 'flat'}

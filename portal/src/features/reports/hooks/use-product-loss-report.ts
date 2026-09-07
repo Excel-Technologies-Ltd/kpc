@@ -2,6 +2,7 @@ import type { StatusTone } from '@/components/shared/StatusBadge';
 import { PIPELINE_BATCHES_DOCTYPE, RECONCILIATION_DOCTYPE, VARIANCE_DOCTYPE } from '@/constants/doctype.string';
 import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
+import { formatMetricValue } from '@/lib/utils';
 import {
   LOSS_REPORT,
   LOSS_REPORT_ROWS,
@@ -237,7 +238,7 @@ export function useProductLossReport(period: string = 'MTD') {
         },
         {
           label: 'Volume unaccounted',
-          value: `${Math.round(totLoss).toLocaleString()} m³`,
+          value: `${formatMetricValue(totLoss, 1)} m³`,
           delta: 'under review',
           tone: 'rose',
         },
@@ -249,7 +250,7 @@ export function useProductLossReport(period: string = 'MTD') {
         },
         {
           label: 'Recovered',
-          value: `${recoveredVol.toLocaleString()} m³`,
+          value: `${formatMetricValue(recoveredVol, 1)} m³`,
           delta: 'transmix reprocess',
           tone: 'green',
         },

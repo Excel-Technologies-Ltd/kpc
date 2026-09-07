@@ -6,6 +6,7 @@ import {
 } from '@/constants/doctype.string';
 import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
+import { formatMetricValue } from '@/lib/utils';
 import { THROUGHPUT_ROWS, type ReportMeta, type ThroughputRow } from '../data/dummy';
 
 export interface DailyThroughputFooter {
@@ -275,7 +276,7 @@ export function useDailyThroughputReport(date?: string) {
       summaries: [
         {
           label: 'Total throughput',
-          value: `${Math.round(totActual).toLocaleString()} m³`,
+          value: `${formatMetricValue(totActual, 1)} m³`,
           delta: `${deltaSymbol} ${Math.abs(Number(varPct.toFixed(1)))}% vs plan`,
           tone: 'blue',
         },
@@ -293,7 +294,7 @@ export function useDailyThroughputReport(date?: string) {
         },
         {
           label: 'Cumulative MTD',
-          value: `${mtdTotal.toLocaleString()} m³`,
+          value: `${formatMetricValue(mtdTotal, 1)} m³`,
           delta: `${daysElapsed}-day total`,
           tone: 'blue',
         },

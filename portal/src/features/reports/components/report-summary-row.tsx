@@ -1,4 +1,5 @@
 import { FlowKpiCard } from '@/components/shared/FlowKpiCard';
+import { formatMetricValue } from '@/lib/utils';
 import { AlertTriangle, Droplets, Fuel, Gauge, Layers, Target, TrendingUp } from 'lucide-react';
 import type { ReportSummary } from '../data/dummy';
 
@@ -14,20 +15,57 @@ function parseValueAndUnit(raw: string): { value: string; unit?: string } {
   if (trimmed === '—' || trimmed === '-') {
     return { value: '0' };
   }
+  let unit: string | undefined;
+  let valStr = trimmed;
+
   if (trimmed.startsWith('KES')) {
-    const val = trimmed.replace('KES', '').trim();
-    return { value: val, unit: 'KES' };
+    valStr = trimmed.replace('KES', '').trim();
+    unit = 'KES';
+  } else if (trimmed.endsWith('KES')) {
+    valStr = trimmed.replace(/KES$/i, '').trim();
+    unit = 'KES';
+  } else if (trimmed.endsWith('%')) {
+    valStr = trimmed.replace('%', '').trim();
+    unit = '%';
+  } else if (trimmed.includes('m³/h')) {
+    valStr = trimmed.replace('m³/h', '').trim();
+    unit = 'm³/h';
+  } else if (trimmed.includes('m³')) {
+    valStr = trimmed.replace('m³', '').trim();
+    unit = 'm³';
+  } else if (trimmed.includes('KL')) {
+    valStr = trimmed.replace('KL', '').trim();
+    unit = 'KL';
   }
-  if (trimmed.endsWith('%')) {
-    return { value: trimmed.replace('%', '').trim(), unit: '%' };
+
+  // Normalize negative formats like "60–" or "–60"
+  if (valStr.endsWith('–') || valStr.endsWith('-')) {
+    valStr = '-' + valStr.slice(0, -1).trim();
+  } else if (valStr.startsWith('–')) {
+    valStr = '-' + valStr.slice(1).trim();
   }
-  if (trimmed.includes('m³/h')) {
-    return { value: trimmed.replace('m³/h', '').trim(), unit: 'm³/h' };
+
+  // Normalize numbers with existing suffix (e.g. "108.550k" -> "108.55K", "71.450k" -> "71.45K")
+  const suffixMatch = valStr.match(/^([+-]?\d+(?:\.\d+)?)\s*([kKmMbBtT])$/);
+  if (suffixMatch) {
+    const num = parseFloat(suffixMatch[1]);
+    const suf = suffixMatch[2].toUpperCase();
+    if (suffixMatch[1].includes('.')) {
+      valStr = `${num.toFixed(2)}${suf}`;
+    } else {
+      valStr = `${num}${suf}`;
+    }
+  } else {
+    // Format large raw numbers (e.g. 108,550 m³ -> 108.55K m³, 71,450 m³ -> 71.45K m³)
+    const cleanNum = Number(valStr.replace(/,/g, ''));
+    if (Number.isFinite(cleanNum) && !/[KkMmBbBtT]/.test(valStr)) {
+      if (unit !== '%' && Math.abs(cleanNum) >= 1_000) {
+        valStr = formatMetricValue(cleanNum, 2);
+      }
+    }
   }
-  if (trimmed.includes('m³')) {
-    return { value: trimmed.replace('m³', '').trim(), unit: 'm³' };
-  }
-  return { value: trimmed };
+
+  return { value: valStr, unit };
 }
 
 function getDeltaType(delta: string): 'up' | 'down' | 'flat' {

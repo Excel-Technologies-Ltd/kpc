@@ -9,9 +9,10 @@ import {
   RECONCILIATION_DOCTYPE,
   TERMINAL_RECEIPT_DOCTYPE,
 } from '@/constants/doctype.string';
+import { formatMetricValue } from '@/lib/utils';
 import { useFrappeGetDocCount, useFrappeGetDocList } from 'frappe-react-sdk';
 import { Radio, Sparkles } from 'lucide-react';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   ProductMixChart,
   RevenueVsTargetChart,
@@ -23,7 +24,6 @@ import { LiveAlerts } from './components/live-alerts';
 import { NetworkMap3D } from './components/network-map-3d';
 
 export default function ExecutiveCommand() {
-  const [mapMode, setMapMode] = React.useState<'3d' | '2d'>('3d');
   // 1. Fetch live Frappe counts & document lists
   const { data: journeyCount, isLoading: journeysLoading } = useFrappeGetDocCount(JOURNEY_DOCTYPE);
   const { data: shipmentCount, isLoading: shipmentsLoading } =
@@ -40,7 +40,7 @@ export default function ExecutiveCommand() {
     TERMINAL_RECEIPT_DOCTYPE,
     {
       fields: ['name', 'net_standard_volume_kl', 'gross_observed_volume_kl'],
-      limit: 100,
+      limit: 200,
     }
   );
 
@@ -76,36 +76,21 @@ export default function ExecutiveCommand() {
         0
       );
     }
-    const throughputVal =
-      totalThroughput > 0
-        ? Math.round(totalThroughput).toLocaleString()
-        : receipts && receipts.length === 0
-          ? '0'
-          : '0';
+    const throughputVal = formatMetricValue(totalThroughput);
 
     // 2. Network Line Fill / Capacity
     let totalTankCap = 0;
     if (tanks && tanks.length > 0) {
       totalTankCap = tanks.reduce((sum, t: any) => sum + (Number(t.safe_fill_capacity_kl) || 0), 0);
     }
-    const lineFillVal =
-      totalTankCap >= 1000
-        ? `${Math.round(totalTankCap / 1000)}k`
-        : totalTankCap > 0
-          ? Math.round(totalTankCap).toLocaleString()
-          : '0';
+    const lineFillVal = formatMetricValue(totalTankCap);
 
     // 3. Revenue MTD
     let totalRev = 0;
     if (invoices && invoices.length > 0) {
       totalRev = invoices.reduce((sum, inv: any) => sum + (Number(inv.grand_total) || 0), 0);
     }
-    const revenueVal =
-      totalRev >= 1_000_000
-        ? (totalRev / 1_000_000).toFixed(2)
-        : totalRev > 0
-          ? (totalRev / 1000).toFixed(1)
-          : '0.00';
+    const revenueVal = formatMetricValue(totalRev, 2);
 
     // 4. System Loss: normalized loss variance from real Reconciliation records
     let avgVariance = 0;
@@ -123,8 +108,8 @@ export default function ExecutiveCommand() {
     }
     const lossVal = avgVariance.toFixed(2);
 
-    // 5. Safety / Days since incident
-    const safeDays = permitCount !== undefined && permitCount > 0 ? 214 : 0;
+    // 5. Active System Alarms (Live SCADA/AI Anomaly Alarms)
+    const activeAlarmsVal = String(openAlertsCount ?? 0);
 
     return [
       {
@@ -133,7 +118,9 @@ export default function ExecutiveCommand() {
         value: throughputVal,
         unit: 'm³',
         delta:
-          receipts && receipts.length > 0 ? `${receipts.length} active batches` : '0 batches today',
+          receipts && receipts.length > 0
+            ? `${receipts.length} batches delivered`
+            : '0 batches delivered',
         deltaType: totalThroughput > 0 ? 'up' : 'flat',
         description: 'Total volume pumped across Mombasa–Nairobi trunk lines',
         color: '#4361ee',
@@ -159,7 +146,7 @@ export default function ExecutiveCommand() {
         id: 'revenue',
         title: 'Revenue MTD',
         value: revenueVal,
-        unit: totalRev >= 1_000_000 ? 'KES M' : totalRev > 0 ? 'KES k' : 'KES M',
+        unit: 'KES',
         delta:
           invoices && invoices.length > 0
             ? `${invoices.length} invoices billed`
@@ -191,21 +178,21 @@ export default function ExecutiveCommand() {
       },
       {
         id: 'safety',
-        title: 'Days since incident',
-        value: String(safeDays),
-        unit: 'days',
+        title: 'Active system alarms',
+        value: activeAlarmsVal,
+        unit: 'alarms',
         delta:
           openAlertsCount !== undefined
             ? openAlertsCount === 0
-              ? '✓ 0 active alarms'
-              : `⚠ ${openAlertsCount} active alert(s)`
+              ? '✓ All nominal'
+              : '⚠ Action required'
             : 'System nominal',
         deltaType: openAlertsCount === 0 ? 'up' : 'down',
-        description: 'Zero lost-time injuries (LTI) continuous record',
+        description: 'Real-time SCADA pressure, flow & vibration alarms',
         color: '#f43f5e',
         gradient: 'linear-gradient(135deg, rgba(244, 63, 94, 0.88), rgba(251, 113, 133, 0.75))',
         subColor: '#fda4af',
-        isLoading: permitLoading || alertsLoading,
+        isLoading: alertsLoading,
       },
     ];
   }, [

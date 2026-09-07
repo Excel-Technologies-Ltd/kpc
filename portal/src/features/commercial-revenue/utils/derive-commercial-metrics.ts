@@ -1,7 +1,8 @@
+import { formatMetricValue } from '@/lib/utils';
 import type { Allocation } from '@/types/PetroleumOperations/Allocation';
 import type { Invoice } from '@/types/PetroleumOperations/Invoice';
 import type { Tariff } from '@/types/PetroleumOperations/Tariff';
-import { formatCompactKes, formatVolumeKl } from './format-money';
+import { formatCompactKes } from './format-money';
 
 export type CommercialKpi = {
   id: string;
@@ -216,8 +217,8 @@ export function deriveCommercialMetrics(
     {
       id: 'revenue-mtd',
       title: 'Tariff revenue MTD',
-      value: mtdCompact.value,
-      unit: mtdCompact.unit ? `KES ${mtdCompact.unit}` : 'KES',
+      value: formatMetricValue(revenueMtd, 1),
+      unit: 'KES',
       delta: revenueDelta.delta,
       deltaType: revenueDelta.deltaType,
       description: 'Submitted invoice grand total this month',
@@ -226,8 +227,8 @@ export function deriveCommercialMetrics(
     {
       id: 'billed-total',
       title: 'Billed total',
-      value: billedCompact.value,
-      unit: billedCompact.unit ? `KES ${billedCompact.unit}` : 'KES',
+      value: formatMetricValue(billedTotal, 1),
+      unit: 'KES',
       delta: `${submitted.length} invoices`,
       deltaType: 'flat',
       description: 'All submitted invoices (billed AR proxy)',
@@ -245,7 +246,7 @@ export function deriveCommercialMetrics(
     {
       id: 'volume-mtd',
       title: 'Volume billed MTD',
-      value: formatVolumeKl(volumeMtd),
+      value: formatMetricValue(volumeMtd),
       unit: 'KL',
       delta: 'via allocations',
       deltaType: 'flat',
@@ -255,8 +256,8 @@ export function deriveCommercialMetrics(
     {
       id: 'avg-tariff',
       title: 'Avg tariff',
-      value: tariffCompact.value,
-      unit: tariffCompact.unit ? `KES ${tariffCompact.unit}/KL` : 'KES/KL',
+      value: formatMetricValue(avgTariff, 1),
+      unit: 'KES/KL',
       delta: activeTariffs.length > 0 ? `${activeTariffs.length} active` : 'blended',
       deltaType: 'flat',
       description: 'Mean rate per KL from active tariffs',

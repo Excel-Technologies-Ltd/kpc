@@ -1,5 +1,5 @@
-import { Badge } from '@/components/ui/badge';
 import { useTheme } from '@/components/theme-provider';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { OrbitControls, Sparkles, Text } from '@react-three/drei';
@@ -527,10 +527,7 @@ function EarthGlobalShadowCurvature({ palette }: { palette: ScenePalette }) {
   return (
     <group position={[0, -0.04, 0]}>
       {/* 1. Global Lat/Long Graticule Grid Lines (Equator, Meridians, Tropics) */}
-      <gridHelper
-        args={[48, 48, palette.gridMajor, palette.gridMinor]}
-        position={[0, -0.01, 0]}
-      />
+      <gridHelper args={[48, 48, palette.gridMajor, palette.gridMinor]} position={[0, -0.01, 0]} />
 
       {/* 2. Deep Earth Global Horizon Shadow Plate */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
@@ -1030,7 +1027,7 @@ export function NetworkMap3D() {
         <div className='min-w-0 space-y-1'>
           <div className='flex flex-wrap items-center gap-2'>
             <CardTitle className='text-base font-bold text-foreground sm:text-lg'>
-              Kenya 3D Pipeline Network &amp; Tank Farm
+              Kenya Pipeline Network &amp; Tank Farm
             </CardTitle>
             <Badge
               variant='outline'

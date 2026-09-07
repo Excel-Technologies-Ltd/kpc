@@ -8,7 +8,7 @@
 ## Master Table of Contents
 
 - [Page 1: Executive Command Dashboard (`/` or `/portal`)](#page-1-executive-command-dashboard--or-portal)
-  - [Section 1.1: The 4 Executive 3D KPI Cards](#section-11-the-4-executive-3d-kpi-cards)
+  - [Section 1.1: The 5 Executive 3D KPI Cards](#section-11-the-5-executive-3d-kpi-cards)
   - [Section 1.2: 3D Kenya Pipeline SCADA Network Map](#section-12-3d-kenya-pipeline-scada-network-map)
   - [Section 1.3: Live Operational AI Alerts Stream](#section-13-live-operational-ai-alerts-stream)
   - [Section 1.4: Executive Analytics Charts](#section-14-executive-analytics-charts)
@@ -55,22 +55,22 @@
 The Executive Command view gives directors and station commanders complete oversight of national operations.
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│ TOP 3D KPIS: Throughput Today · Network Line Fill · Revenue MTD · Loss │
-├───────────────────────────────────┬────────────────────────────────────┤
-│ 3D SCADA KENYA PIPELINE MAP       │ LIVE AI ANOMALY ALERTS             │
-│ Live Nodes & Pump Pressure        │ Critical / Watch / Normal Badges   │
-├───────────────────────────────────┴────────────────────────────────────┤
-│ ANALYTICS: 30-Day Throughput · Product Mix · Revenue vs Target         │
-└────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ TOP 3D KPIS: Throughput Today · Line Fill · Revenue MTD · System Loss · Alarms    │
+├───────────────────────────────────┬───────────────────────────────────────────────┤
+│ 3D SCADA KENYA PIPELINE MAP       │ LIVE AI ANOMALY ALERTS                        │
+│ Live Nodes & Pump Pressure        │ Critical / Watch / Normal Badges              │
+├───────────────────────────────────┴───────────────────────────────────────────────┤
+│ ANALYTICS: 30-Day Throughput · Product Mix · Revenue vs Target                    │
+└───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Section 1.1: The 4 Executive 3D KPI Cards
+## Section 1.1: The 5 Executive 3D KPI Cards
 
 ### 1. Throughput Today ($m^3$)
-- **What you see**: A large blue 3D card showing total fuel received today (e.g. **`9,530 m³`**) with a badge (e.g. **`▲ 3 active batches`**).
+- **What you see**: A large blue 3D card showing total fuel received today (e.g. **`637.50K m³`**) with a badge (e.g. **`▲ 20 batches delivered`**).
 - **Everyday Explanation**: Add up the volume of every batch that finished delivering into our depot tanks today.
 - **Data Source**: DocType **`Terminal Receipt`**.
 - **Fields Used**: `net_standard_volume_kl` (preferred volume at $15^\circ\text{C}$), `gross_observed_volume_kl` (raw meter fallback), `posting_date`.
@@ -133,6 +133,29 @@ The Executive Command view gives directors and station commanders complete overs
   - **$\le 0.20\%$ (Normal / Green)**: Below national legal ceiling set by EPRA.
   - **$0.20\% - 0.25\%$ (Watch / Amber)**: Requires meter calibration inspection.
   - **$> 0.25\%$ (Breach / Red)**: Violates regulation; triggers mandatory investigation.
+
+---
+
+### 5. Active System Alarms (Alarms)
+- **What you see**: A rose/crimson 3D card showing the live count of unresolved SCADA anomaly alarms (e.g. **`19 alarms`**) with an actionable status badge (e.g. **`⚠ Action required`** or **`✓ All nominal`**).
+- **Everyday Explanation**: Total number of open operational anomalies flagged across our pipeline network (such as pressure surges, pump vibration warnings, flow meter discrepancies, or batch interface drifts) currently requiring operator attention.
+- **Data Source**: DocType **`AI Alert`**.
+- **Fields Used**: `status`, `severity`, `anomaly_score`, `parameter_breached`, `creation`.
+- **How the Portal Calls Frappe**:
+  ```typescript
+  const { data: openAlertsCount } = useFrappeGetDocCount('AI Alert', [
+    ['status', '=', 'Open'],
+  ]);
+  ```
+- **Step-by-Step Example**:
+  - Live query counts all `AI Alert` records where `status = "Open"`.
+  - Database returns `19`.
+  - **Displayed Value**: **`19`** `alarms`.
+  - **Live Delta Pill**:
+    - If `openAlertsCount === 0`: displays **`✓ All nominal`** (green).
+    - If `openAlertsCount > 0`: displays **`⚠ Action required`** (rose warning).
+- **Bottom Status Description**:
+  `Real-time SCADA pressure, flow & vibration alarms`
 
 ---
 
@@ -218,7 +241,7 @@ This page gives hydraulic engineers and dispatchers a real-time view of batch sl
 | **Throughput today** | `9,530 m³` | `Movement` + `Pipeline Batch` | Sum of planned volumes for batches completed today. |
 | **Avg flow rate** | `794 m³/h` | `Movement.monitored_flow_rate_m3h` | Average pumping speed of active in-transit lines. |
 | **Active batches** | `3 batches` | `Movement` (where status = `In Transit`) | Count of fuel slugs currently traveling in the pipe. |
-| **Line pack** | `28,400 m³` | `Pipeline Batch.planned_volume_kl` | Total volume of fuel currently inside the pipe. |
+| **Line pack** | `118.0K m³` | `Pipeline Batch.planned_volume_kl` | Total volume of fuel currently inside the pipe (formatted with `formatMetricValue`). |
 | **Plan attainment**| `103%` | `Movement` + `Pipeline Batch` | `(Completed Today ÷ Planned Today) × 100`. |
 
 ---

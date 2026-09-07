@@ -1,5 +1,6 @@
 import type { StatusTone } from '@/components/shared/StatusBadge';
 import { OIL_TANK_DOCTYPE, TANK_MEASUREMENT_DOCTYPE } from '@/constants/doctype.string';
+import { formatMetricValue } from '@/lib/utils';
 import { useFrappeGetCall, useFrappeGetDocList } from 'frappe-react-sdk';
 import { useMemo } from 'react';
 import { STOCK_REPORT, STOCK_ROWS, type ReportMeta, type StockRow } from '../data/dummy';
@@ -113,8 +114,28 @@ export function useStockReconciliationReport(terminal?: string, date?: string) {
     // Strategy A: If backend API returned successfully, use it directly
     const res = (apiData?.message || apiData) as StockReconciliationData | undefined;
     if (res?.meta && res?.rows && res?.footer) {
+      const normalizedSummaries = (res.meta.summaries || []).map((s) => {
+        let val = s.value;
+        // Normalize trailing dash e.g. "60– m³" -> "-60 m³"
+        val = val.replace(/(\d+)\s*[–-]\s*(m³|KL)?/g, '-$1 $2').trim();
+        // Normalize 3 decimals or lowercase k e.g. "108.550k m³" -> "108.55K m³"
+        const kMatch = val.match(/^([+-]?\d+(?:\.\d+)?)\s*[kK]\s*(m³|KL)?$/);
+        if (kMatch) {
+          const num = parseFloat(kMatch[1]);
+          const unitStr = kMatch[2] ? ` ${kMatch[2]}` : '';
+          val = `${num.toFixed(2)}K${unitStr}`;
+        }
+        return {
+          ...s,
+          value: val,
+        };
+      });
+
       return {
-        meta: res.meta,
+        meta: {
+          ...res.meta,
+          summaries: normalizedSummaries,
+        },
         rows: res.rows,
         footer: res.footer,
         is_live: Boolean(res.is_live),
@@ -216,8 +237,7 @@ export function useStockReconciliationReport(terminal?: string, date?: string) {
     const alarmCount = alarming.length;
     const alarmTag = alarming[0]?.tank || 'None';
 
-    const netVarDisplay =
-      totVar < 0 ? `${Math.abs(Math.round(totVar))}– m³` : `${Math.round(totVar)} m³`;
+    const netVarDisplay = `${formatMetricValue(totVar, 1)} m³`;
 
     const meta: ReportMeta = {
       ...STOCK_REPORT,
@@ -225,13 +245,13 @@ export function useStockReconciliationReport(terminal?: string, date?: string) {
       summaries: [
         {
           label: 'Total physical stock',
-          value: `${(totPhys / 1000).toFixed(2)}k m³`,
+          value: `${formatMetricValue(totPhys, 2)} m³`,
           delta: `${computedRows.length} tanks`,
           tone: 'green',
         },
         {
           label: 'Available ullage',
-          value: `${(totUllage / 1000).toFixed(2)}k m³`,
+          value: `${formatMetricValue(totUllage, 2)} m³`,
           delta: 'room to receive',
           tone: 'blue',
         },

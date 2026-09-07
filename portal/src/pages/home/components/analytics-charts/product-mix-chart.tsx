@@ -7,6 +7,7 @@ import {
   PIPELINE_BATCHES_DOCTYPE,
 } from '@/constants/doctype.string';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
+import { formatMetricValue } from '@/lib/utils';
 import { Layers, PieChart } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -125,10 +126,7 @@ export function ProductMixChart() {
     const sortedProducts = Array.from(productMap.entries())
       .map(([name, data], idx) => {
         const pct = total > 0 ? Math.round((data.totalVolume / total) * 100) : 0;
-        const volDisplay =
-          data.totalVolume >= 1000
-            ? `${(data.totalVolume / 1000).toFixed(1)}k m³`
-            : `${Math.round(data.totalVolume).toLocaleString()} m³`;
+        const volDisplay = `${formatMetricValue(data.totalVolume, 1)} m³`;
 
         return {
           id: name,
@@ -278,9 +276,7 @@ export function ProductMixChart() {
                       Total Volume
                     </span>
                     <span className='font-mono text-xl font-black text-foreground dark:text-white'>
-                      {totalCapacity >= 1000
-                        ? `${(totalCapacity / 1000).toFixed(1)}k`
-                        : Math.round(totalCapacity).toLocaleString()}
+                      {formatMetricValue(totalCapacity, 1)}
                     </span>
                     <span className='text-[10px] font-semibold text-emerald-600 dark:text-emerald-400'>
                       {products.length} {products.length === 1 ? 'Product' : 'Products'} Active

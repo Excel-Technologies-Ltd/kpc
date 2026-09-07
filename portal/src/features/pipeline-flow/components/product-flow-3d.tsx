@@ -109,71 +109,157 @@ function tubeRadius(strokeWidth: number) {
   return 0.03 + (strokeWidth / 15) * 0.05;
 }
 
-/** Glass/steel pipe + glowing core + beads sliding source → dest (home network style). */
+/** Active Oil Flow Tube with flowing dynamic liquid texture, glass conduit sleeve, and oriented liquid slugs. */
 function FlowTube({
   start,
   end,
   color,
   radius,
+  speedMultiplier = 1.0,
 }: {
   start: [number, number, number];
   end: [number, number, number];
   color: string;
   radius: number;
+  speedMultiplier?: number;
 }) {
   const curve = useMemo(() => {
-    const p1 = new THREE.Vector3(start[0], 0.16, start[2]);
-    const p2 = new THREE.Vector3(end[0], 0.16, end[2]);
+    const p1 = new THREE.Vector3(start[0], 0.18, start[2]);
+    const p2 = new THREE.Vector3(end[0], 0.18, end[2]);
     const mid = new THREE.Vector3(
       (start[0] + end[0]) / 2,
-      0.28 + Math.abs(end[2] - start[2]) * 0.06,
+      0.32 + Math.abs(end[2] - start[2]) * 0.08,
       (start[2] + end[2]) / 2
     );
     return new THREE.CatmullRomCurve3([p1, mid, p2]);
   }, [start, end]);
 
-  const particleCount = 12;
+  // Procedural flowing fluid texture for moving liquid wave pulses
+  const flowTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d')!;
+
+    // Base fluid stream
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.fillRect(0, 0, 512, 64);
+
+    // Flowing fluid pressure waves - gentle, broad hydraulic surges
+    for (let i = 0; i < 2; i++) {
+      const grad = ctx.createLinearGradient(i * 256, 0, (i + 1) * 256, 0);
+      grad.addColorStop(0, 'rgba(255, 255, 255, 0.02)');
+      grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.75)');
+      grad.addColorStop(0.7, 'rgba(255, 255, 255, 0.3)');
+      grad.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(i * 256, 0, 256, 64);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(3, 1);
+    return tex;
+  }, []);
+
+  // 14 dense, nearby active fluid dot points along the conduit
+  const particleCount = 14;
   const particleOffsets = useMemo(
     () => Array.from({ length: particleCount }, (_, i) => i / particleCount),
     [particleCount]
   );
   const particlesRef = useRef<(THREE.Mesh | null)[]>([]);
+  const liquidMeshRef = useRef<THREE.Mesh>(null);
 
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime() * 0.32;
+  // Pipe structural coupling rings along the conduit
+  const couplingPositions = useMemo(() => {
+    return [0.25, 0.5, 0.75].map((t) => ({
+      pt: curve.getPointAt(t),
+      tangent: curve.getTangentAt(t),
+    }));
+  }, [curve]);
+
+  // Calibrated flow speed
+  const flowSpeed = (0.0324 + (radius / 0.08) * 0.0108) * speedMultiplier;
+
+  useFrame(({ clock }, delta) => {
+    // 1. Smoothly advance flowing liquid surface texture
+    flowTexture.offset.x -= delta * flowSpeed * 0.55;
+
+    // 2. Advance and orient moving oil dot points along curve tangent
+    const t = clock.getElapsedTime() * flowSpeed;
+    const upVector = new THREE.Vector3(0, 0, 1);
+
     particlesRef.current.forEach((mesh, i) => {
       if (!mesh) return;
       const offset = (particleOffsets[i]! + t) % 1;
-      mesh.position.copy(curve.getPointAt(offset));
+      const pt = curve.getPointAt(offset);
+      const tangent = curve.getTangentAt(offset);
+
+      mesh.position.copy(pt);
+      mesh.quaternion.setFromUnitVectors(upVector, tangent);
+
+      // Subtle breathing scale with dot-point proportion
+      const pulse = 1 + Math.sin(t * 4 + i) * 0.06;
+      mesh.scale.set(0.9 * pulse, 0.9 * pulse, 1.25 * pulse);
     });
   });
 
   return (
     <group>
+      {/* 1. Outer Crystalline Glass/Steel Pressure Pipe Sleeve */}
       <mesh>
-        <tubeGeometry args={[curve, 40, radius * 2.1, 14, false]} />
+        <tubeGeometry args={[curve, 48, radius * 1.6, 16, false]} />
         <meshPhysicalMaterial
-          color='#60a5fa'
+          color='#94a3b8'
           emissive={color}
-          emissiveIntensity={0.22}
-          roughness={0.1}
-          metalness={0.8}
-          transmission={0.45}
-          thickness={0.2}
+          emissiveIntensity={0.15}
+          roughness={0.08}
+          metalness={0.15}
+          transmission={0.9}
+          thickness={0.25}
           transparent
-          opacity={0.6}
+          opacity={0.32}
+          clearcoat={1.0}
+          clearcoatRoughness={0.1}
         />
       </mesh>
-      <mesh>
-        <tubeGeometry args={[curve, 40, radius, 12, false]} />
+
+      {/* 2. Inner Active Liquid Oil Column with Flowing Texture */}
+      <mesh ref={liquidMeshRef}>
+        <tubeGeometry args={[curve, 48, radius * 0.92, 16, false]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={1.05}
+          emissiveIntensity={1.2}
+          map={flowTexture}
+          emissiveMap={flowTexture}
           roughness={0.2}
-          metalness={0.5}
+          metalness={0.4}
+          transparent
+          opacity={0.88}
         />
       </mesh>
+
+      {/* 3. Metallic Conduit Structural Brackets / Rings */}
+      {couplingPositions.map((c, idx) => {
+        const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), c.tangent);
+        return (
+          <group key={idx} position={c.pt} quaternion={quat}>
+            <mesh>
+              <cylinderGeometry args={[radius * 1.75, radius * 1.75, 0.05, 16]} />
+              <meshStandardMaterial color='#475569' roughness={0.3} metalness={0.9} />
+            </mesh>
+            <mesh>
+              <torusGeometry args={[radius * 1.78, 0.015, 8, 24]} />
+              <meshBasicMaterial color={color} transparent opacity={0.6} />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* 4. High-Luminance Flowing Oil Slugs / Fluid Packets */}
       {particleOffsets.map((_, i) => (
         <mesh
           key={i}
@@ -181,12 +267,13 @@ function FlowTube({
             particlesRef.current[i] = el;
           }}
         >
-          <sphereGeometry args={[Math.max(0.04, radius * 0.95), 12, 12]} />
+          <sphereGeometry args={[radius * 0.9, 12, 12]} />
           <meshStandardMaterial
             color='#ffffff'
             emissive={color}
-            emissiveIntensity={2.4}
-            roughness={0.1}
+            emissiveIntensity={3.6}
+            roughness={0.05}
+            metalness={0.3}
           />
         </mesh>
       ))}
@@ -194,7 +281,7 @@ function FlowTube({
   );
 }
 
-/** Depot / terminal place — cylindrical tank + pad + floating label (network-map language). */
+/** Depot / terminal place — cylindrical tank + pad + floating label with active inflow ripples. */
 function PlaceTank({
   name,
   code,
@@ -215,14 +302,35 @@ function PlaceTank({
   palette: ScenePalette;
 }) {
   const ringRef = useRef<THREE.Mesh>(null);
+  const pulseRingRef = useRef<THREE.Mesh>(null);
+  const fillMeshRef = useRef<THREE.Mesh>(null);
+
   const height = isSource ? 0.72 : 0.55;
   const radius = isSource ? 0.38 : 0.3;
   const fillHeight = height * (fillPct / 100);
 
   useFrame(({ clock }) => {
-    if (!ringRef.current) return;
-    const mat = ringRef.current.material as THREE.MeshBasicMaterial;
-    mat.opacity = 0.35 + Math.sin(clock.getElapsedTime() * 2.4) * 0.25;
+    const elapsed = clock.getElapsedTime();
+
+    // 1. Base status ring breath
+    if (ringRef.current) {
+      const mat = ringRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.35 + Math.sin(elapsed * 1.2) * 0.18;
+    }
+
+    // 2. Active Pump Shockwave Pulse Ring (synced rhythmic pulse)
+    if (pulseRingRef.current) {
+      const pulseT = (elapsed * (isSource ? 0.65 : 0.78)) % 1;
+      const scale = 1 + pulseT * 0.52;
+      pulseRingRef.current.scale.set(scale, scale, 1);
+      const mat = pulseRingRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = Math.max(0, (1 - pulseT) * (isSource ? 0.65 : 0.45));
+    }
+
+    // 3. Fluid level micro-wave ripple
+    if (fillMeshRef.current) {
+      fillMeshRef.current.scale.y = 1 + Math.sin(elapsed * 1.5 + pos[0]) * 0.01;
+    }
   });
 
   return (
@@ -237,6 +345,12 @@ function PlaceTank({
       <mesh ref={ringRef} position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[radius * 1.55, radius * 1.75, 40]} />
         <meshBasicMaterial color={color} transparent opacity={0.45} />
+      </mesh>
+
+      {/* Active Pumping / Fluid Inflow Expanding Pulse Ring */}
+      <mesh ref={pulseRingRef} position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius * 1.35, radius * 1.52, 36]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} />
       </mesh>
 
       {/* Tank shell */}
@@ -254,15 +368,15 @@ function PlaceTank({
         />
       </mesh>
 
-      {/* Product fill */}
-      <mesh position={[0, fillHeight / 2 + 0.06, 0]}>
+      {/* Product fill with active wave motion */}
+      <mesh ref={fillMeshRef} position={[0, fillHeight / 2 + 0.06, 0]}>
         <cylinderGeometry args={[radius * 0.94, radius * 0.94, fillHeight, 24]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.65}
-          roughness={0.2}
-          metalness={0.7}
+          emissiveIntensity={0.75}
+          roughness={0.18}
+          metalness={0.6}
         />
       </mesh>
 
@@ -370,7 +484,7 @@ function FlowGround({ palette }: { palette: ScenePalette }) {
   );
 }
 
-function FlowScene({ palette }: { palette: ScenePalette }) {
+function FlowScene({ palette, speedRate = 1.0 }: { palette: ScenePalette; speedRate?: number }) {
   return (
     <>
       <color attach='background' args={[palette.canvasClear]} />
@@ -410,6 +524,14 @@ function FlowScene({ palette }: { palette: ScenePalette }) {
         const meta = DEST_META[dest.name];
         if (!meta) return null;
         const color = PRODUCT_COLORS[dest.product];
+        const legSpeed =
+          dest.product === 'pms'
+            ? 1.15
+            : dest.product === 'ago'
+              ? 1.0
+              : dest.product === 'jet'
+                ? 0.9
+                : 0.8;
         return (
           <group key={dest.name}>
             <FlowTube
@@ -417,6 +539,7 @@ function FlowScene({ palette }: { palette: ScenePalette }) {
               end={meta.pos}
               color={color}
               radius={tubeRadius(dest.strokeWidth)}
+              speedMultiplier={legSpeed * speedRate}
             />
             <PlaceTank
               name={dest.name}
@@ -440,7 +563,7 @@ function FlowScene({ palette }: { palette: ScenePalette }) {
         minAzimuthAngle={-0.65}
         maxAzimuthAngle={0.65}
         autoRotate
-        autoRotateSpeed={0.28}
+        autoRotateSpeed={0.12}
         target={[0, 0.15, 0]}
       />
     </>
@@ -470,7 +593,7 @@ export function ProductFlow3D() {
         }}
       >
         <Suspense fallback={null}>
-          <FlowScene palette={palette} />
+          <FlowScene palette={palette} speedRate={1.0} />
         </Suspense>
       </Canvas>
       <div className='pointer-events-none absolute bottom-2 left-3 text-[10px] font-medium tracking-wide text-muted-foreground uppercase dark:text-white/40'>
