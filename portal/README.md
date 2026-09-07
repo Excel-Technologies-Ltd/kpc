@@ -300,7 +300,9 @@ $$AHI = 100 - \left(w_1 \cdot \text{Vib} + w_2 \cdot \Delta P + w_3 \cdot \text{
 
 ## 8. Backend API Reference
 
-All endpoints are whitelisted under `kpc.petroleum_operations.api.*`:
+> **Page-wise API map (meeting handout):** see [`docs/PAGE_API_MAP.md`](docs/PAGE_API_MAP.md) for every portal route → DocType vs custom API → fields returned.
+
+All custom endpoints are whitelisted under `kpc.petroleum_operations.api.*` (short and module-qualified paths both work via package `__init__.py` re-exports):
 
 | API Method | File Location | Return Structure |
 | :--- | :--- | :--- |
@@ -309,9 +311,9 @@ All endpoints are whitelisted under `kpc.petroleum_operations.api.*`:
 | `get_stock_reconciliation_report` | `reports.py` | `{ rows: [...], footer: {...}, meta: {...}, is_live: bool }` |
 | `get_product_loss_report` | `reports.py` | `{ rows: [...], footer: {...}, meta: {...}, is_live: bool }` |
 | `get_tariff_revenue_report` | `reports.py` | `{ rows: [...], footer: {...}, meta: {...}, is_live: bool }` |
-| `get_uptime_and_cost_summary` | `asset_metrics.py` | `{ labels: [...], uptime: [...], downtime_cost: [...] }` |
-| `get_loss_accountability_kpis` | `loss_accountability.py` | `{ total_loss_kl: float, epra_breach_count: int, ... }` |
-| `get_stock_movement` | `stock_movement.py` | `{ opening: float, receipts: float, deliveries: float, ... }` |
+| `get_uptime_and_cost_summary` | `asset_metrics.py` | `{ labels: [...], uptime: [...], downtime_cost: [...], total_assets, is_live }` |
+| `get_loss_accountability_kpis` | `loss_accountability.py` | `{ kpis: [...], period, is_live, timestamp }` |
+| `get_stock_movement` | `stock_movement.py` | `{ opening, receipts, deliveries, losses, closing, summary: {...} }` |
 
 ---
 
