@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"kpc-header-quick-access\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Access</b></span>\",\"col\":12}},{\"id\":\"pJEr8MQyDu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Journey (Golden Thread)\",\"col\":12}},{\"id\":\"79arjJOpl8\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Line Break\",\"col\":12}},{\"id\":\"kpc-shortcut-oil-shipment\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Oil Shipment\",\"col\":3}},{\"id\":\"kpc-shortcut-nomination\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nomination\",\"col\":3}},{\"id\":\"kpc-shortcut-movement\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Movement\",\"col\":3}},{\"id\":\"kpc-shortcut-ai-alert\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"AI Alert\",\"col\":3}},{\"id\":\"kpc-shortcut-reconciliation\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Reconciliation\",\"col\":3}},{\"id\":\"kpc-shortcut-invoice\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Invoice\",\"col\":3}},{\"id\":\"kpc-shortcut-financial-posting\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Financial Posting\",\"col\":3}},{\"id\":\"BsYD5eI9G5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"kpc-spacer-1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"kpc-header-thread\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>The Golden Thread</b></span>\",\"col\":12}},{\"id\":\"kpc-card-phase-1---inbound-logistics---storage\",\"type\":\"card\",\"data\":{\"card_name\":\"Inbound Logistics & Storage\",\"col\":4}},{\"id\":\"kpc-card-phase-2---commercial-planning\",\"type\":\"card\",\"data\":{\"card_name\":\"Commercial Planning\",\"col\":4}},{\"id\":\"kpc-card-phase-3---pipeline-operations---ai\",\"type\":\"card\",\"data\":{\"card_name\":\"Pipeline Operations & AI\",\"col\":4}},{\"id\":\"kpc-card-phase-4---reconciliation---outbound\",\"type\":\"card\",\"data\":{\"card_name\":\"Reconciliation & Outbound\",\"col\":4}},{\"id\":\"kpc-card-phase-5---billing---financials\",\"type\":\"card\",\"data\":{\"card_name\":\"Billing & Financials\",\"col\":4}},{\"id\":\"kpc-card-erpnext-integration\",\"type\":\"card\",\"data\":{\"card_name\":\"Integration (Accounts & Stock)\",\"col\":4}}]",
+ "content": "[{\"id\":\"kpc-header-quick-access\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Quick Access</b></span>\",\"col\":12}},{\"id\":\"pJEr8MQyDu\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Journey (Golden Thread)\",\"col\":6}},{\"id\":\"grHS2Vk8Ep\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":6}},{\"id\":\"79arjJOpl8\",\"type\":\"custom_block\",\"data\":{\"custom_block_name\":\"Line Break\",\"col\":12}},{\"id\":\"kpc-shortcut-oil-shipment\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Oil Shipment\",\"col\":3}},{\"id\":\"kpc-shortcut-nomination\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Nomination\",\"col\":3}},{\"id\":\"kpc-shortcut-movement\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Movement\",\"col\":3}},{\"id\":\"kpc-shortcut-ai-alert\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"AI Alert\",\"col\":3}},{\"id\":\"kpc-shortcut-reconciliation\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Reconciliation\",\"col\":3}},{\"id\":\"kpc-shortcut-invoice\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Invoice\",\"col\":3}},{\"id\":\"kpc-shortcut-financial-posting\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Financial Posting\",\"col\":3}},{\"id\":\"BsYD5eI9G5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Delivery Note\",\"col\":3}},{\"id\":\"kpc-spacer-1\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"kpc-header-thread\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>The Golden Thread</b></span>\",\"col\":12}},{\"id\":\"kpc-card-phase-1---inbound-logistics---storage\",\"type\":\"card\",\"data\":{\"card_name\":\"Inbound Logistics & Storage\",\"col\":4}},{\"id\":\"kpc-card-phase-2---commercial-planning\",\"type\":\"card\",\"data\":{\"card_name\":\"Commercial Planning\",\"col\":4}},{\"id\":\"kpc-card-phase-3---pipeline-operations---ai\",\"type\":\"card\",\"data\":{\"card_name\":\"Pipeline Operations & AI\",\"col\":4}},{\"id\":\"kpc-card-phase-4---reconciliation---outbound\",\"type\":\"card\",\"data\":{\"card_name\":\"Reconciliation & Outbound\",\"col\":4}},{\"id\":\"kpc-card-phase-5---billing---financials\",\"type\":\"card\",\"data\":{\"card_name\":\"Billing & Financials\",\"col\":4}},{\"id\":\"kpc-card-erpnext-integration\",\"type\":\"card\",\"data\":{\"card_name\":\"Integration (Accounts & Stock)\",\"col\":4}},{\"id\":\"vIwUMB-cuc\",\"type\":\"spacer\",\"data\":{\"col\":12}}]",
  "creation": "2026-08-20 10:55:09.179899",
  "custom_blocks": [
   {
@@ -611,7 +611,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-09-05 09:40:33.576500",
+ "modified": "2026-09-06 15:40:19.823628",
  "modified_by": "azmin@excelbd.com",
  "module": "Petroleum Operations",
  "name": "KPC",
@@ -630,6 +630,13 @@
    "link_to": "Delivery Note",
    "stats_filter": "[]",
    "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Dashboard",
+   "type": "URL",
+   "url": "https://8670-27-131-12-99.ngrok-free.app/portal"
   },
   {
    "color": "Grey",
