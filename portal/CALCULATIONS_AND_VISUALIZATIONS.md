@@ -137,65 +137,57 @@ The command center dashboard displays network-wide health, lines in operation, f
 
 ### 2.1 The 4 Core Metrics Explained
 
-#### 1. Throughput Today ($m^3$) — Full Human-Readable Breakdown
+#### 1. Throughput Today ($m^3$) — Normal Everyday Person Breakdown
 
-##### A. What Does This Formula Actually Mean?
-The formula:
-$$\text{Throughput} = \sum (\text{net\_standard\_volume\_kl})$$
+##### A. The Simple Idea (No Scientific Math)
+Forget the Greek symbols like $\sum$. In plain everyday words:
 
-Here is every single part translated into plain English:
-- **Throughput**: The total volume of refined petroleum delivered into terminal storage tanks across the entire country today since midnight (00:00).
-- **$\sum$ (Sigma Symbol)**: A mathematical symbol that simply means **"Add them all up"** (take the sum of all rows).
-- **`net_standard_volume_kl`**:
-  - **`net`**: The clean product volume after subtracting any water/sediment bottom at the tank base.
-  - **`standard`**: Temperature-normalized volume at **$15^\circ\text{C}$** (using ASTM Table 54B). Because warm fuel expands and cool fuel contracts, standardizing to $15^\circ\text{C}$ guarantees fair, accurate measurement.
-  - **`volume_kl`**: Measured in **Kilolitres (KL)**. Since $1\text{ KL} = 1,000\text{ Litres} = 1\text{ Cubic Meter } (m^3)$, **$1\text{ KL}$ is exactly equal to $1\text{ m}^3$**!
+> **Today's Throughput = Add up the fuel volume of every delivery received today.**
+
+Think of it like adding up grocery receipts at the end of the day:
+- If a truck delivers 50 boxes in the morning and 30 boxes in the afternoon, your total throughput is $50 + 30 = 80$ boxes.
+- In the pipeline, instead of boxes, we count **cubic meters ($m^3$) of oil** that finish pumping into our storage tanks.
 
 ---
 
-##### B. Real-World Worked Example
-Imagine today is **September 7, 2026**. During the day, 3 fuel deliveries arrive and finish pumping into terminal tanks:
+##### B. Breaking Down the Database Words in Plain English
+In the database, the number is stored under:
+**`net_standard_volume_kl`** on the **`Terminal Receipt`** document.
 
-| Receipt Doc Number | Line & Route | Product Grade | Raw Meter Reading (`gross_observed_volume_kl`) | Normalized Volume (`net_standard_volume_kl`) |
-| :--- | :--- | :--- | :--- | :--- |
-| **`TR-2026-00142`** | Line 5 (Mombasa → Nairobi) | Automotive Gas Oil (AGO Diesel) | $4,910.0\text{ KL}$ (measured at $26^\circ\text{C}$) | **$4,850.25\text{ KL}$** (at $15^\circ\text{C}$) |
-| **`TR-2026-00143`** | Line 1 (Mombasa → Nairobi) | Premium Motor Spirit (PMS Petrol) | $3,165.0\text{ KL}$ (measured at $24^\circ\text{C}$) | **$3,120.50\text{ KL}$** (at $15^\circ\text{C}$) |
-| **`TR-2026-00144`** | Line 4 (Nakuru → Kisumu) | Jet A-1 (Aviation Fuel) | $1,572.0\text{ KL}$ (measured at $22^\circ\text{C}$) | **$1,559.25\text{ KL}$** (at $15^\circ\text{C}$) |
-
-**Step-by-Step Addition**:
-$$\text{Total Throughput} = \text{Receipt 1} + \text{Receipt 2} + \text{Receipt 3}$$
-$$\text{Total Throughput} = 4,850.25\text{ KL} + 3,120.50\text{ KL} + 1,559.25\text{ KL} = \mathbf{9,530.00\text{ KL}}$$
-
-Since $1\text{ KL} = 1\text{ m}^3$, the final result is:
-$$\mathbf{9,530\text{ m}^3}$$
+Here is what each word means to a normal person:
+- **`net`**: Pure fuel only. Any water or dirt that settled at the bottom has already been subtracted.
+- **`standard`**: Measured at standard room temperature ($15^\circ\text{C}$). Fuel expands in hot sunshine (like at Mombasa) and shrinks in the cold (like Nairobi at night). Adjusting to $15^\circ\text{C}$ means everyone pays for the exact same amount of fuel, no matter what the weather is.
+- **`volume_kl`**: Volume in Kilolitres.  
+  $1\text{ Kilolitre (KL)} = 1,000\text{ Litres} = 1\text{ Cubic Meter } (m^3)$.  
+  So **$1\text{ KL}$ is simply $1\text{ m}^3$**. They are the exact same size!
 
 ---
 
-##### C. How the Portal Code Executes It (Plain English Code Walkthrough)
-In `portal/src/pages/home/index.tsx`, the frontend requests all receipts logged today and adds them up:
+##### C. Everyday Example (Adding Up Today's Deliveries)
+Imagine today is **September 7, 2026**. Three pipeline deliveries arrived at our depots today:
 
-```typescript
-// 1. Fetch live receipts from the Frappe database
-const { data: receipts } = useFrappeGetDocList('Terminal Receipt', {
-  fields: ['net_standard_volume_kl', 'gross_observed_volume_kl'],
-  filters: [['posting_date', '=', todayDate]],
-});
-
-// 2. Loop through every receipt and add up the volumes
-let totalThroughput = 0;
-
-for (const receipt of receipts) {
-  // Use net standard volume at 15°C.
-  // Fallback: If lab density test isn't finished yet, use gross meter volume.
-  const volume = Number(receipt.net_standard_volume_kl) || Number(receipt.gross_observed_volume_kl) || 0;
-  
-  totalThroughput = totalThroughput + volume;
-}
-
-// Result: 9,530 m³
+```
+[ Delivery #1 ]  Line 5 (Diesel to Nairobi)      :  4,850 m³
+[ Delivery #2 ]  Line 1 (Petrol to Nairobi)      :  3,120 m³
+[ Delivery #3 ]  Line 4 (Jet Fuel to Kisumu)     :  1,560 m³
+────────────────────────────────────────────────────────────
+TOTAL TODAY   = 4,850 + 3,120 + 1,560            =  9,530 m³
 ```
 
-##### D. What the Operator Sees on Screen
+That's the entire calculation! Just simple addition.
+
+---
+
+##### D. How the Computer Calculates It
+Every time a delivery finishes, Frappe creates a **Terminal Receipt**. The portal looks for today's receipts and adds them together like a cash register:
+
+1. **Step 1**: Find all receipts where the date is today (`posting_date = today`).
+2. **Step 2**: Take the fuel amount from each receipt (`net_standard_volume_kl`).
+3. **Step 3**: Add them together:
+   Total = 4,850 + 3,120 + 1,560 = 9,530 m³
+4. **Backup Rule**: If the lab density test isn't finished yet, the computer temporarily uses the raw flow meter reading (`gross_observed_volume_kl`) so the screen never shows zero.
+
+##### E. What the Operator Sees on Screen
 - **KPI Card Title**: `Throughput today`
 - **Main Big Value**: **`9,530 m³`** (formatted with commas)
 - **Subtitle / Badge**: **`▲ 3 active batches`** (shows how many receipts made up this number)
