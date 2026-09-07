@@ -1,14 +1,93 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useTheme } from '@/components/theme-provider';
 import { OIL_TANK_DOCTYPE, TANK_MEASUREMENT_DOCTYPE } from '@/constants/doctype.string';
 import { cn } from '@/lib/utils';
 import { Html, OrbitControls, Sparkles } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useFrappeGetDocList } from 'frappe-react-sdk';
 import { Boxes, Pause, Play, RotateCcw, Thermometer } from 'lucide-react';
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
+
+/** Resolved light/dark for Three.js materials (system theme → prefers-color-scheme). */
+function useIsDarkScene() {
+  const { theme } = useTheme();
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
+  );
+
+  useEffect(() => {
+    const resolve = () => {
+      if (theme === 'dark') return true;
+      if (theme === 'light') return false;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+    setIsDark(resolve());
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => setIsDark(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [theme]);
+
+  return isDark;
+}
+
+type ScenePalette = {
+  canvasClear: string;
+  gridMajor: string;
+  gridMinor: string;
+  pedestal: string;
+  tankCap: string;
+  shell: string;
+  sparkles: string;
+  ambient: number;
+  dirMain: number;
+  sparkleOpacity: number;
+  shadowOpacity: number;
+  tagText: string;
+  tagBg: string;
+  tagBgSelected: string;
+  tagShadow: string;
+};
+
+const SCENE_DARK: ScenePalette = {
+  canvasClear: '#080d16',
+  gridMajor: '#1a2540',
+  gridMinor: '#101a2c',
+  pedestal: '#141F35',
+  tankCap: '#1c2b4a',
+  shell: '#9db8d9',
+  sparkles: '#33C9B7',
+  ambient: 0.45,
+  dirMain: 1.2,
+  sparkleOpacity: 0.35,
+  shadowOpacity: 0.35,
+  tagText: '#EAF1FA',
+  tagBg: 'rgba(12, 19, 34, 0.92)',
+  tagBgSelected: 'rgba(15, 23, 42, 0.98)',
+  tagShadow: '0 2px 8px rgba(0, 0, 0, 0.45)',
+};
+
+const SCENE_LIGHT: ScenePalette = {
+  canvasClear: '#e8eef8',
+  gridMajor: '#94a3b8',
+  gridMinor: '#cbd5e1',
+  pedestal: '#94a3b8',
+  tankCap: '#64748b',
+  shell: '#64748b',
+  sparkles: '#0d9488',
+  ambient: 0.85,
+  dirMain: 1.35,
+  sparkleOpacity: 0.22,
+  shadowOpacity: 0.18,
+  tagText: '#0f172a',
+  tagBg: 'rgba(255, 255, 255, 0.94)',
+  tagBgSelected: 'rgba(255, 255, 255, 0.98)',
+  tagShadow: '0 2px 10px rgba(15, 23, 42, 0.12)',
+};
 
 interface OilTankDoc {
   name: string;
@@ -87,11 +166,13 @@ function Tank3D({
   position,
   isSelected,
   onSelect,
+  palette,
 }: {
   data: ProcessedTank;
   position: [number, number, number];
   isSelected: boolean;
   onSelect: () => void;
+  palette: ScenePalette;
 }) {
   const liquidRef = useRef<THREE.Mesh>(null);
   const liquidTopRef = useRef<THREE.Mesh>(null);
@@ -130,7 +211,7 @@ function Tank3D({
       {/* Base Pedestal */}
       <mesh position={[0, -height / 2 - 0.15, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[radius + 0.18, radius + 0.28, 0.3, 36]} />
-        <meshStandardMaterial color='#141F35' roughness={0.7} metalness={0.3} />
+        <meshStandardMaterial color={palette.pedestal} roughness={0.7} metalness={0.3} />
       </mesh>
 
       {/* Selected Ground Glow Ring */}
@@ -180,7 +261,7 @@ function Tank3D({
       <mesh renderOrder={1}>
         <cylinderGeometry args={[radius, radius, height, 36, 1, true]} />
         <meshStandardMaterial
-          color='#9db8d9'
+          color={palette.shell}
           transparent
           opacity={isSelected ? 0.32 : 0.22}
           depthWrite={false}
@@ -193,7 +274,7 @@ function Tank3D({
       {/* Tank Top Cap */}
       <mesh position={[0, height / 2 + 0.04, 0]}>
         <cylinderGeometry args={[radius + 0.06, radius + 0.06, 0.08, 36]} />
-        <meshStandardMaterial color='#1c2b4a' roughness={0.4} metalness={0.6} />
+        <meshStandardMaterial color={palette.tankCap} roughness={0.4} metalness={0.6} />
       </mesh>
 
       {/* Status Beacon Sphere */}
@@ -207,10 +288,10 @@ function Tank3D({
         <div
           style={{
             fontSize: '11px',
-            color: '#EAF1FA',
-            background: isSelected ? 'rgba(15, 23, 42, 0.98)' : 'rgba(12, 19, 34, 0.92)',
+            color: palette.tagText,
+            background: isSelected ? palette.tagBgSelected : palette.tagBg,
             border: isSelected ? `2px solid ${data.color}` : `1px solid ${data.color}77`,
-            boxShadow: isSelected ? `0 0 16px ${data.color}cc` : '0 2px 8px rgba(0, 0, 0, 0.45)',
+            boxShadow: isSelected ? `0 0 16px ${data.color}cc` : palette.tagShadow,
             borderRadius: '6px',
             padding: '5px 10px',
             whiteSpace: 'nowrap',
@@ -263,11 +344,13 @@ function Scene3D({
   selectedTankId,
   onSelectTank,
   autoRotate,
+  palette,
 }: {
   tanks: ProcessedTank[];
   selectedTankId: string | null;
   onSelectTank: (id: string) => void;
   autoRotate: boolean;
+  palette: ScenePalette;
 }) {
   const count = tanks.length;
 
@@ -302,9 +385,10 @@ function Scene3D({
 
   return (
     <>
-      <fog attach='fog' args={['#080D16', 10, 30]} />
-      <ambientLight intensity={0.45} />
-      <directionalLight position={[6, 8, 5]} intensity={1.2} castShadow />
+      <color attach='background' args={[palette.canvasClear]} />
+      <fog attach='fog' args={[palette.canvasClear, 10, 30]} />
+      <ambientLight intensity={palette.ambient} />
+      <directionalLight position={[6, 8, 5]} intensity={palette.dirMain} castShadow />
       <pointLight position={[-6, 3, -4]} intensity={0.65} color='#F0A83C' />
       <pointLight position={[6, 3, 4]} intensity={0.65} color='#33C9B7' />
 
@@ -313,15 +397,18 @@ function Scene3D({
         scale={[24, 6, 16]}
         size={2}
         speed={0.25}
-        color='#33C9B7'
-        opacity={0.35}
+        color={palette.sparkles}
+        opacity={palette.sparkleOpacity}
       />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.65, 0]} receiveShadow>
         <planeGeometry args={[44, 32]} />
-        <shadowMaterial opacity={0.35} />
+        <shadowMaterial opacity={palette.shadowOpacity} />
       </mesh>
-      <gridHelper args={[36, 36, '#1a2540', '#101a2c']} position={[0, -1.64, 0]} />
+      <gridHelper
+        args={[36, 36, palette.gridMajor, palette.gridMinor]}
+        position={[0, -1.64, 0]}
+      />
 
       {tanks.map((tank, idx) => (
         <Tank3D
@@ -330,6 +417,7 @@ function Scene3D({
           position={positions[idx]}
           isSelected={selectedTankId === tank.id}
           onSelect={() => onSelectTank(tank.id)}
+          palette={palette}
         />
       ))}
 
@@ -350,6 +438,8 @@ function Scene3D({
 }
 
 export function TankFarm3DSection() {
+  const isDark = useIsDarkScene();
+  const palette = isDark ? SCENE_DARK : SCENE_LIGHT;
   const [selectedTerminal, setSelectedTerminal] = useState<string>('all');
   const [selectedTankId, setSelectedTankId] = useState<string | null>(null);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
@@ -595,22 +685,28 @@ export function TankFarm3DSection() {
         </div>
 
         {/* 3D Viewport Body */}
-        <div className='relative h-120 w-full bg-[#080d16] overflow-hidden border-b border-border isolate'>
+        <div
+          className={cn(
+            'relative h-120 w-full overflow-hidden border-b border-border isolate',
+            'bg-linear-to-b from-slate-100 via-slate-50 to-slate-200',
+            'dark:bg-none dark:bg-[#080d16]'
+          )}
+        >
           {isLoading ? (
-            <div className='flex h-full items-center justify-center text-sm text-slate-400'>
+            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
               <div className='flex items-center gap-2'>
                 <span className='size-2 rounded-full bg-emerald-500 animate-ping' />
                 Loading 3D SCADA scene…
               </div>
             </div>
           ) : filteredTanks.length === 0 ? (
-            <div className='flex h-full items-center justify-center text-sm text-slate-400'>
+            <div className='flex h-full items-center justify-center text-sm text-muted-foreground'>
               No tanks available for the selected terminal filter.
             </div>
           ) : (
             <div className='absolute inset-0'>
               <Canvas
-                key={cameraKey}
+                key={`${cameraKey}-${isDark ? 'dark' : 'light'}`}
                 shadows
                 dpr={[1, 2]}
                 camera={{
@@ -618,6 +714,9 @@ export function TankFarm3DSection() {
                   fov: 40,
                 }}
                 gl={{ antialias: true }}
+                onCreated={({ gl }) => {
+                  gl.setClearColor(new THREE.Color(palette.canvasClear), 1);
+                }}
               >
                 <Suspense fallback={null}>
                   <Scene3D
@@ -625,6 +724,7 @@ export function TankFarm3DSection() {
                     selectedTankId={selectedTankId}
                     onSelectTank={handleTankSelect}
                     autoRotate={autoRotate}
+                    palette={palette}
                   />
                 </Suspense>
               </Canvas>
@@ -632,8 +732,8 @@ export function TankFarm3DSection() {
           )}
 
           {/* Canvas Floating Overlay: Status Legend */}
-          <div className='pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-2 rounded-lg bg-slate-950/80 backdrop-blur-md px-3 py-1.5 border border-slate-800/80 text-[11px] text-slate-300 shadow-md'>
-            <span className='text-slate-400 font-medium'>Status:</span>
+          <div className='pointer-events-none absolute bottom-3 left-3 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-[11px] text-foreground shadow-md backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80 dark:text-slate-300'>
+            <span className='font-medium text-muted-foreground dark:text-slate-400'>Status:</span>
             <div className='flex items-center gap-1.5'>
               <span className='size-2 rounded-full bg-[#33C9B7]' />
               <span>Active</span>
@@ -653,32 +753,34 @@ export function TankFarm3DSection() {
           </div>
 
           {/* Canvas Floating Overlay: Interaction Hint */}
-          <div className='pointer-events-none absolute bottom-3 right-3 rounded-lg bg-slate-950/80 backdrop-blur-md px-3 py-1.5 border border-slate-800/80 text-[11px] text-slate-400 shadow-md'>
+          <div className='pointer-events-none absolute bottom-3 right-3 rounded-lg border border-border bg-card/90 px-3 py-1.5 text-[11px] text-muted-foreground shadow-md backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80 dark:text-slate-400'>
             Drag to orbit · Scroll to zoom · Click tank to inspect
           </div>
 
           {/* Canvas Floating Overlay: Selected Tank Banner */}
           {selectedTank && (
-            <div className='absolute top-3 left-3 flex items-center gap-3 rounded-lg bg-slate-900/95 backdrop-blur-md px-3.5 py-2 border border-slate-700/80 text-xs text-white shadow-lg animate-in fade-in zoom-in-95 duration-150'>
+            <div className='absolute top-3 left-3 flex items-center gap-3 rounded-lg border border-border bg-card/95 px-3.5 py-2 text-xs text-foreground shadow-lg backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 dark:border-slate-700/80 dark:bg-slate-900/95 dark:text-white'>
               <span
                 className='size-2.5 rounded-full shrink-0'
                 style={{ backgroundColor: selectedTank.color }}
               />
               <div>
                 <span className='font-bold'>{selectedTank.code}</span>
-                <span className='text-slate-400 ml-1.5'>({selectedTank.name})</span>
-                <span className='mx-2 text-slate-600'>|</span>
-                <span className='font-mono text-emerald-400 font-semibold'>
+                <span className='ml-1.5 text-muted-foreground dark:text-slate-400'>
+                  ({selectedTank.name})
+                </span>
+                <span className='mx-2 text-muted-foreground/50 dark:text-slate-600'>|</span>
+                <span className='font-mono font-semibold text-emerald-600 dark:text-emerald-400'>
                   {selectedTank.levelPercent}% Fill
                 </span>
-                <span className='text-slate-400 ml-1.5'>
+                <span className='ml-1.5 text-muted-foreground dark:text-slate-400'>
                   · {selectedTank.product} · {selectedTank.temp}
                 </span>
               </div>
               <button
                 type='button'
                 onClick={() => setSelectedTankId(null)}
-                className='ml-2 text-slate-400 hover:text-white text-xs underline cursor-pointer'
+                className='ml-2 cursor-pointer text-xs text-muted-foreground underline hover:text-foreground dark:text-slate-400 dark:hover:text-white'
               >
                 Clear
               </button>

@@ -132,10 +132,7 @@ function attributeInvoiceToProducts(
     return total > 0 ? [{ product: 'Unallocated', amount: total, volumeKl: 0 }] : [];
   }
 
-  const volumeTotal = allocs.reduce(
-    (sum, a) => sum + (Number(a.allocated_quantity_kl) || 0),
-    0
-  );
+  const volumeTotal = allocs.reduce((sum, a) => sum + (Number(a.allocated_quantity_kl) || 0), 0);
 
   if (volumeTotal <= 0) {
     const share = total / allocs.length;
@@ -172,12 +169,8 @@ export function deriveCommercialMetrics(
   const prevYear = prev.getFullYear();
   const prevMonth = prev.getMonth();
 
-  const mtdInvoices = submitted.filter((inv) =>
-    isInMonth(inv.posting_date, thisYear, thisMonth)
-  );
-  const priorInvoices = submitted.filter((inv) =>
-    isInMonth(inv.posting_date, prevYear, prevMonth)
-  );
+  const mtdInvoices = submitted.filter((inv) => isInMonth(inv.posting_date, thisYear, thisMonth));
+  const priorInvoices = submitted.filter((inv) => isInMonth(inv.posting_date, prevYear, prevMonth));
 
   const sumGrand = (list: Invoice[]) =>
     list.reduce((sum, inv) => sum + (Number(inv.grand_total) || 0), 0);
@@ -329,8 +322,7 @@ export function deriveCommercialMetrics(
       const key = monthKey(startOfMonth(d));
       if (!monthKeys.has(key)) continue;
       const product = a.product?.trim() || 'Unknown';
-      const amount =
-        (Number(a.allocated_quantity_kl) || 0) * avgRateForProduct(tariffs, product);
+      const amount = (Number(a.allocated_quantity_kl) || 0) * avgRateForProduct(tariffs, product);
       productsSet.add(product);
       const idx = monthIndex.get(key);
       if (idx != null) {

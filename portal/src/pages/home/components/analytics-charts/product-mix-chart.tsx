@@ -171,16 +171,16 @@ export function ProductMixChart() {
   const active = hoveredProduct ? products.find((p) => p.id === hoveredProduct) : null;
 
   return (
-    <Card className='flex h-full flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
-      <CardHeader className='flex flex-row items-center justify-between border-b border-[#e6edf7] pb-3 dark:border-[#233252]'>
+    <Card className='flex h-full flex-col justify-between border-border bg-card shadow-sm '>
+      <CardHeader className='flex flex-row items-center justify-between border-b border-border pb-3 '>
         <div>
           <div className='flex items-center gap-2'>
             <PieChart className='size-4 text-[#10b981]' />
-            <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
+            <CardTitle className='text-base font-bold text-foreground dark:text-foreground'>
               Product mix
             </CardTitle>
           </div>
-          <p className='text-xs text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='text-xs text-muted-foreground dark:text-muted-foreground'>
             Live fuel product distribution across pipeline network tanks
           </p>
         </div>
@@ -265,19 +265,19 @@ export function ProductMixChart() {
                     >
                       {active.name}
                     </span>
-                    <span className='font-mono text-2xl font-black text-[#132038] dark:text-white'>
+                    <span className='font-mono text-2xl font-black text-foreground dark:text-white'>
                       {active.pct}%
                     </span>
-                    <span className='text-[10.5px] font-medium text-[#5c6b85] dark:text-slate-400'>
+                    <span className='text-[10.5px] font-medium text-muted-foreground dark:text-slate-400'>
                       {active.vol}
                     </span>
                   </>
                 ) : (
                   <>
-                    <span className='text-[11px] font-bold text-[#5c6b85] dark:text-slate-400'>
+                    <span className='text-[11px] font-bold text-muted-foreground dark:text-slate-400'>
                       Total Volume
                     </span>
-                    <span className='font-mono text-xl font-black text-[#132038] dark:text-white'>
+                    <span className='font-mono text-xl font-black text-foreground dark:text-white'>
                       {totalCapacity >= 1000
                         ? `${(totalCapacity / 1000).toFixed(1)}k`
                         : Math.round(totalCapacity).toLocaleString()}
@@ -311,13 +311,13 @@ export function ProductMixChart() {
                         style={{ backgroundColor: p.color }}
                       />
                       <span
-                        className='truncate max-w-27.5 text-xs font-bold text-[#132038] dark:text-foreground'
+                        className='truncate max-w-27.5 text-xs font-bold text-foreground dark:text-foreground'
                         title={p.fullName}
                       >
                         {p.name}
                       </span>
                     </div>
-                    <span className='font-mono text-xs font-bold text-[#5c6b85] dark:text-slate-300'>
+                    <span className='font-mono text-xs font-bold text-muted-foreground dark:text-slate-300'>
                       {p.pct}%
                     </span>
                   </div>

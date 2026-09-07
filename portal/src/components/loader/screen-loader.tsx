@@ -12,10 +12,7 @@ export default function ScreenLoader({
 }: ScreenLoaderProps = {}) {
   return (
     <div
-      className={cn(
-        'bg-background flex min-h-svh w-full items-center justify-center',
-        className
-      )}
+      className={cn('bg-background flex min-h-svh w-full items-center justify-center', className)}
     >
       <div className='text-muted-foreground flex flex-col items-center gap-3'>
         <Spinner className='size-8 text-primary' />

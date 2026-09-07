@@ -131,11 +131,11 @@ export function LiveAlerts() {
   };
 
   return (
-    <Card className='flex h-full min-h-52.5 flex-col justify-between border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
-      <CardHeader className='flex flex-wrap items-center justify-between gap-2 border-b border-[#e6edf7] px-4 py-2.5 shrink-0 dark:border-[#233252]'>
+    <Card className='flex h-full min-h-52.5 flex-col justify-between border-border bg-card shadow-sm '>
+      <CardHeader className='flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-2.5 shrink-0 '>
         <div>
           <div className='flex items-center gap-2'>
-            <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
+            <CardTitle className='text-base font-bold text-foreground dark:text-foreground'>
               Live alerts &amp; telemetry
             </CardTitle>
             <span className='relative flex size-2.5'>
@@ -165,21 +165,21 @@ export function LiveAlerts() {
               />
             </span>
           </div>
-          <p className='mt-0.5 text-xs text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='mt-0.5 text-xs text-muted-foreground dark:text-muted-foreground'>
             Live AI anomaly detection &amp; SCADA telemetry diagnostics
           </p>
         </div>
 
         {/* Severity-Wise Tabs with Grouped API Counts */}
-        <div className='flex items-center gap-1 rounded-xl border border-[#e6edf7] bg-slate-50/80 p-0.5 text-[11px] font-semibold dark:border-[#233252] dark:bg-[#131d31]'>
+        <div className='flex items-center gap-1 rounded-xl border border-border bg-slate-50/80 p-0.5 text-[11px] font-semibold '>
           {/* All Tab */}
           <button
             onClick={() => handleTabChange('all')}
             className={cn(
               'rounded-lg px-2 py-0.5 transition-all cursor-pointer flex items-center gap-1',
               activeTab === 'all'
-                ? 'bg-white font-bold text-[#132038] shadow-xs dark:bg-[#0f1728] dark:text-white'
-                : 'text-[#5c6b85] hover:text-[#132038] dark:text-slate-400'
+                ? 'bg-card font-bold text-foreground shadow-xs dark:text-white'
+                : 'text-muted-foreground hover:text-foreground dark:text-slate-400'
             )}
           >
             All <span className='opacity-80 font-mono'>({counts.all})</span>
@@ -192,7 +192,7 @@ export function LiveAlerts() {
               'rounded-lg px-2 py-0.5 transition-all cursor-pointer flex items-center gap-1',
               activeTab === 'Critical'
                 ? 'bg-rose-600 font-bold text-white shadow-xs'
-                : 'text-[#5c6b85] hover:text-rose-600 dark:text-slate-400'
+                : 'text-muted-foreground hover:text-rose-600 dark:text-slate-400'
             )}
           >
             Critical <span className='font-mono'>({counts.Critical})</span>
@@ -205,7 +205,7 @@ export function LiveAlerts() {
               'rounded-lg px-2 py-0.5 transition-all cursor-pointer flex items-center gap-1',
               activeTab === 'High'
                 ? 'bg-orange-500 font-bold text-white shadow-xs'
-                : 'text-[#5c6b85] hover:text-orange-600 dark:text-slate-400'
+                : 'text-muted-foreground hover:text-orange-600 dark:text-slate-400'
             )}
           >
             High <span className='font-mono'>({counts.High})</span>
@@ -218,7 +218,7 @@ export function LiveAlerts() {
               'rounded-lg px-2 py-0.5 transition-all cursor-pointer flex items-center gap-1',
               activeTab === 'Medium'
                 ? 'bg-amber-500 font-bold text-white shadow-xs'
-                : 'text-[#5c6b85] hover:text-amber-600 dark:text-slate-400'
+                : 'text-muted-foreground hover:text-amber-600 dark:text-slate-400'
             )}
           >
             Medium <span className='font-mono'>({counts.Medium})</span>
@@ -231,7 +231,7 @@ export function LiveAlerts() {
               'rounded-lg px-2 py-0.5 transition-all cursor-pointer flex items-center gap-1',
               activeTab === 'Low'
                 ? 'bg-emerald-600 font-bold text-white shadow-xs'
-                : 'text-[#5c6b85] hover:text-emerald-600 dark:text-slate-400'
+                : 'text-muted-foreground hover:text-emerald-600 dark:text-slate-400'
             )}
           >
             Low <span className='font-mono'>({counts.Low})</span>
@@ -251,12 +251,12 @@ export function LiveAlerts() {
             <div className='mb-3 flex size-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 shadow-xs dark:bg-emerald-950/40 dark:text-emerald-400'>
               <ShieldCheck className='size-6' />
             </div>
-            <h4 className='text-sm font-bold text-[#132038] dark:text-white'>
+            <h4 className='text-sm font-bold text-foreground dark:text-white'>
               {activeTab === 'all'
                 ? 'All Pipeline Operations Nominal'
                 : `No active ${activeTab} severity alerts`}
             </h4>
-            <p className='mt-1 max-w-xs text-xs text-[#5c6b85] dark:text-slate-400'>
+            <p className='mt-1 max-w-xs text-xs text-muted-foreground dark:text-slate-400'>
               {activeTab === 'all'
                 ? 'Pressure, vibration, and flow rate sensors across Line 1, 4 & 5 are operating within certified limits.'
                 : `There are currently 0 alerts categorized as ${activeTab}.`}
@@ -330,7 +330,7 @@ export function LiveAlerts() {
 
                   <div className='min-w-0 flex-1'>
                     <div className='flex items-center gap-1.5 flex-wrap'>
-                      <h5 className='text-xs font-bold text-[#132038] dark:text-foreground truncate'>
+                      <h5 className='text-xs font-bold text-foreground dark:text-foreground truncate'>
                         {title}
                       </h5>
                       <span
@@ -356,7 +356,7 @@ export function LiveAlerts() {
                         </span>
                       )}
                     </div>
-                    <p className='text-[10.5px] font-normal leading-tight text-[#5c6b85] dark:text-slate-300 truncate'>
+                    <p className='text-[10.5px] font-normal leading-tight text-muted-foreground dark:text-slate-300 truncate'>
                       {desc}
                     </p>
                   </div>
@@ -368,7 +368,7 @@ export function LiveAlerts() {
                     <Clock className='size-2.5 text-[#93a2bd]' />
                     {formatTimeAgo(alert.alert_datetime || alert.creation)}
                   </span>
-                  <span className='hidden rounded bg-white px-1.5 py-0.2 text-[9px] font-bold text-[#4361ee] opacity-0 shadow-xs transition-all group-hover:opacity-100 sm:inline-flex items-center gap-0.5 dark:bg-[#131d31] dark:text-blue-300'>
+                  <span className='hidden rounded bg-card px-1.5 py-0.2 text-[9px] font-bold text-primary opacity-0 shadow-xs transition-all group-hover:opacity-100 sm:inline-flex items-center gap-0.5 dark:text-blue-300'>
                     Inspect <ArrowUpRight className='size-2.5' />
                   </span>
                 </div>
@@ -380,17 +380,17 @@ export function LiveAlerts() {
 
       {/* Pagination Footer (Slim & Direct Server API Driven) */}
       {activeCount > 0 && (
-        <CardFooter className='flex items-center justify-between px-3.5 pt-1! pb-1 text-xs shrink-0 dark:border-[#233252]'>
-          <span className='text-[11px] font-medium text-[#5c6b85] dark:text-slate-400'>
+        <CardFooter className='flex items-center justify-between px-3.5 pt-1! pb-1 text-xs shrink-0 '>
+          <span className='text-[11px] font-medium text-muted-foreground dark:text-slate-400'>
             Showing{' '}
-            <b className='text-[#132038] dark:text-white'>
+            <b className='text-foreground dark:text-white'>
               {(currentPage - 1) * ITEMS_PER_PAGE + 1}
             </b>
             –
-            <b className='text-[#132038] dark:text-white'>
+            <b className='text-foreground dark:text-white'>
               {Math.min(currentPage * ITEMS_PER_PAGE, activeCount)}
             </b>{' '}
-            of <b className='text-[#132038] dark:text-white'>{activeCount}</b> alerts
+            of <b className='text-foreground dark:text-white'>{activeCount}</b> alerts
           </span>
 
           <div className='flex items-center gap-1'>
@@ -404,7 +404,7 @@ export function LiveAlerts() {
               <ChevronLeft className='size-3.5' />
             </Button>
 
-            <span className='px-1.5 text-[11px] font-bold text-[#132038] dark:text-slate-300'>
+            <span className='px-1.5 text-[11px] font-bold text-foreground dark:text-slate-300'>
               {currentPage} / {totalPages}
             </span>
 

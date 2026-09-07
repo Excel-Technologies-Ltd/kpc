@@ -89,22 +89,22 @@ export function NetworkMap() {
   const getNode = (id: string) => nodes.find((n) => n.id === id);
 
   return (
-    <Card className='w-full border-[#e6edf7] bg-white shadow-sm dark:border-[#233252] dark:bg-[#0f1728]'>
-      <CardHeader className='flex flex-wrap items-center justify-between gap-3 border-b border-[#e6edf7] pb-3 dark:border-[#233252]'>
+    <Card className='w-full border-border bg-card shadow-sm '>
+      <CardHeader className='flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3 '>
         <div>
           <div className='flex items-center gap-2'>
-            <CardTitle className='text-base font-bold text-[#132038] dark:text-foreground'>
+            <CardTitle className='text-base font-bold text-foreground dark:text-foreground'>
               Network Status
             </CardTitle>
             <Badge
               variant='outline'
-              className='gap-1 border-blue-200 bg-blue-50 text-[#4361ee] dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300'
+              className='gap-1 border-blue-200 bg-blue-50 text-primary dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300'
             >
               <Radio className='size-3 animate-pulse text-emerald-500' />
               Live SCADA Telemetry
             </Badge>
           </div>
-          <p className='mt-0.5 text-xs text-[#5c6b85] dark:text-muted-foreground'>
+          <p className='mt-0.5 text-xs text-muted-foreground dark:text-muted-foreground'>
             Active pipeline flow telemetry across trunk lines (Lines 1 to 6) from Mombasa Port to
             Western Terminals
           </p>
@@ -112,19 +112,19 @@ export function NetworkMap() {
 
         {/* Live Network Quick Stats */}
         <div className='flex flex-wrap items-center gap-2 text-xs'>
-          <div className='flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
-            <Droplets className='size-3.5 text-[#4361ee]' />
-            Flow Rate: <b className='text-[#132038] dark:text-white'>1,240 m³/h</b>
+          <div className='flex items-center gap-1.5 rounded-lg border border-border bg-slate-50 px-2.5 py-1 font-medium text-muted-foreground dark:text-slate-300'>
+            <Droplets className='size-3.5 text-primary' />
+            Flow Rate: <b className='text-foreground dark:text-white'>1,240 m³/h</b>
           </div>
-          <div className='flex items-center gap-1.5 rounded-lg border border-[#e6edf7] bg-slate-50 px-2.5 py-1 font-medium text-[#5c6b85] dark:border-[#233252] dark:bg-[#131d31] dark:text-slate-300'>
+          <div className='flex items-center gap-1.5 rounded-lg border border-border bg-slate-50 px-2.5 py-1 font-medium text-muted-foreground dark:text-slate-300'>
             <Gauge className='size-3.5 text-emerald-500' />
-            Main Trunk Pressure: <b className='text-[#132038] dark:text-white'>64.2 bar</b>
+            Main Trunk Pressure: <b className='text-foreground dark:text-white'>64.2 bar</b>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className='p-4'>
-        <div className='relative h-62.5 w-full overflow-hidden rounded-xl bg-linear-to-b from-[#f8fafc] to-[#eef3fb] p-2 dark:from-[#0a101d] dark:to-[#0f1728]'>
+        <div className='relative h-62.5 w-full overflow-hidden rounded-xl bg-linear-to-b from-muted/40 to-background p-2 dark:from-background dark:to-card'>
           <svg viewBox='0 0 960 250' className='size-full' preserveAspectRatio='xMidYMid meet'>
             {/* Draw segment flow lines */}
             {segments.map((seg, idx) => {
@@ -181,14 +181,14 @@ export function NetworkMap() {
                     <text
                       x={node.x + 16}
                       y={node.y - 4}
-                      className='fill-[#132038] text-[12.5px] font-bold dark:fill-white'
+                      className='fill-foreground text-[12.5px] font-bold'
                     >
                       {node.name}
                     </text>
                     <text
                       x={node.x + 16}
                       y={node.y + 11}
-                      className='fill-[#5c6b85] text-[10.5px] font-medium dark:fill-slate-400'
+                      className='fill-muted-foreground text-[10.5px] font-medium'
                     >
                       {node.stock}
                     </text>
@@ -225,7 +225,7 @@ export function NetworkMap() {
           </svg>
 
           {/* Map legend */}
-          <div className='absolute bottom-3 left-4 flex flex-wrap items-center gap-3.5 rounded-lg bg-white/85 px-3 py-1.5 text-[11px] font-medium text-[#5c6b85] shadow-xs backdrop-blur-sm dark:bg-black/65 dark:text-slate-300'>
+          <div className='absolute bottom-3 left-4 flex flex-wrap items-center gap-3.5 rounded-lg bg-card/90 px-3 py-1.5 text-[11px] font-medium text-muted-foreground shadow-xs backdrop-blur-sm'>
             <span className='flex items-center gap-1.5'>
               <span className='size-2 rounded-full bg-emerald-500' /> Normal Flow (Line 1, 4, 5, 6)
             </span>

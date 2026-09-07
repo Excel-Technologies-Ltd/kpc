@@ -2,10 +2,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-  formatUpdatedAgo,
-  usePipelineFlowRefresh,
-} from '../pipeline-flow-refresh';
+import { formatUpdatedAgo, usePipelineFlowRefresh } from '../pipeline-flow-refresh';
 
 export function FlowPageHeader() {
   const { refresh, isRefreshing, lastUpdatedAt } = usePipelineFlowRefresh();
@@ -26,8 +23,7 @@ export function FlowPageHeader() {
       </div>
       <div className='flex flex-wrap items-center gap-2'>
         <span className='border-border bg-card text-muted-foreground inline-flex items-center rounded-lg border px-3 py-1.5 text-[11.5px] font-medium'>
-          Updated{' '}
-          <b className='text-foreground ml-1'>{formatUpdatedAgo(lastUpdatedAt, now)}</b>
+          Updated <b className='text-foreground ml-1'>{formatUpdatedAgo(lastUpdatedAt, now)}</b>
         </span>
         <Button
           type='button'

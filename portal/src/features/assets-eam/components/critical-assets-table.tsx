@@ -1,10 +1,7 @@
 import DataTable from '@/components/data-table';
 import { StatusBadge, type StatusTone } from '@/components/shared/StatusBadge';
 import { Button } from '@/components/ui/button';
-import {
-  MAINTENANCE_WORK_ORDER_DOCTYPE,
-  PLANT_ASSET_DOCTYPE,
-} from '@/constants/doctype.string';
+import { MAINTENANCE_WORK_ORDER_DOCTYPE, PLANT_ASSET_DOCTYPE } from '@/constants/doctype.string';
 import { cn } from '@/lib/utils';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useFrappeGetDocList } from 'frappe-react-sdk';

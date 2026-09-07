@@ -49,10 +49,7 @@ export function FlowKpis() {
 
   useRegisterPipelineRefresh(mutateMovements, mutateBatches);
 
-  const kpis = useMemo(
-    () => deriveFlowKpis(movements ?? [], batches ?? []),
-    [movements, batches]
-  );
+  const kpis = useMemo(() => deriveFlowKpis(movements ?? [], batches ?? []), [movements, batches]);
 
   const isLoading = movementsLoading || batchesLoading;
 

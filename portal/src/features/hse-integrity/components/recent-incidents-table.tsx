@@ -51,9 +51,7 @@ const columns: ColumnDef<IncidentRow>[] = [
   {
     header: 'Status',
     accessorKey: 'status',
-    cell: ({ row }) => (
-      <StatusBadge label={row.original.status} tone={row.original.statusTone} />
-    ),
+    cell: ({ row }) => <StatusBadge label={row.original.status} tone={row.original.statusTone} />,
   },
 ];
 

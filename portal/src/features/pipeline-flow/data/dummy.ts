@@ -67,8 +67,7 @@ export const INFO_GUIDES: Record<InfoGuideKey, InfoGuide> = {
       },
       {
         term: 'Line pack',
-        definition:
-          'Proxy for product in the line: sum of planned volumes for in-transit batches.',
+        definition: 'Proxy for product in the line: sum of planned volumes for in-transit batches.',
         source: 'Movement (In Transit) + Pipeline Batch.planned_volume_kl',
       },
       {

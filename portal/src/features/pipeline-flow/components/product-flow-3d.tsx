@@ -1,8 +1,91 @@
+import { useTheme } from '@/components/theme-provider';
+import { cn } from '@/lib/utils';
 import { OrbitControls, Sparkles, Text } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Suspense, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { FLOW_DESTINATIONS, PRODUCT_COLORS, type FlowDestination } from '../data/dummy';
+
+/** Resolved light/dark for Three.js materials (system theme → prefers-color-scheme). */
+function useIsDarkScene() {
+  const { theme } = useTheme();
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true
+  );
+
+  useEffect(() => {
+    const resolve = () => {
+      if (theme === 'dark') return true;
+      if (theme === 'light') return false;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    };
+    setIsDark(resolve());
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => setIsDark(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [theme]);
+
+  return isDark;
+}
+
+type ScenePalette = {
+  canvasClear: string;
+  ground: string;
+  gridMajor: string;
+  gridMinor: string;
+  axis: string;
+  labelMuted: string;
+  pad: string;
+  tankDialIdle: string;
+  textOutline: string;
+  sparkles: string;
+  rimLight: string;
+  ambient: number;
+  dirMain: number;
+  pointIntensity: number;
+  sparkleOpacity: number;
+  sparkleCount: number;
+};
+
+const SCENE_DARK: ScenePalette = {
+  canvasClear: '#080d16',
+  ground: '#060a14',
+  gridMajor: '#334155',
+  gridMinor: '#1e293b',
+  axis: '#38bdf8',
+  labelMuted: '#475569',
+  pad: '#334155',
+  tankDialIdle: '#1e293b',
+  textOutline: '#0a0f1d',
+  sparkles: '#60a5fa',
+  rimLight: '#6a8bff',
+  ambient: 0.7,
+  dirMain: 1.9,
+  pointIntensity: 1.5,
+  sparkleOpacity: 0.55,
+  sparkleCount: 36,
+};
+
+const SCENE_LIGHT: ScenePalette = {
+  canvasClear: '#e8eef8',
+  ground: '#dbe4f0',
+  gridMajor: '#94a3b8',
+  gridMinor: '#cbd5e1',
+  axis: '#0284c7',
+  labelMuted: '#64748b',
+  pad: '#94a3b8',
+  tankDialIdle: '#64748b',
+  textOutline: '#f8fafc',
+  sparkles: '#3b82f6',
+  rimLight: '#93c5fd',
+  ambient: 0.95,
+  dirMain: 1.7,
+  pointIntensity: 1.05,
+  sparkleOpacity: 0.32,
+  sparkleCount: 22,
+};
 
 /** Compact place layout — source west, depots east (like trunk → inland). */
 const SOURCE = {
@@ -120,6 +203,7 @@ function PlaceTank({
   color,
   fillPct,
   isSource = false,
+  palette,
 }: {
   name: string;
   code: string;
@@ -128,6 +212,7 @@ function PlaceTank({
   color: string;
   fillPct: number;
   isSource?: boolean;
+  palette: ScenePalette;
 }) {
   const ringRef = useRef<THREE.Mesh>(null);
   const height = isSource ? 0.72 : 0.55;
@@ -145,7 +230,7 @@ function PlaceTank({
       {/* Concrete pad */}
       <mesh position={[0, 0.03, 0]}>
         <cylinderGeometry args={[radius * 1.55, radius * 1.65, 0.06, 32]} />
-        <meshStandardMaterial color='#334155' roughness={0.75} metalness={0.2} />
+        <meshStandardMaterial color={palette.pad} roughness={0.75} metalness={0.2} />
       </mesh>
 
       {/* Status ring */}
@@ -191,7 +276,7 @@ function PlaceTank({
       <mesh position={[0, height + 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[radius * 0.35, radius * 0.92, 28]} />
         <meshStandardMaterial
-          color='#1e293b'
+          color={palette.tankDialIdle}
           emissive={color}
           emissiveIntensity={0.4}
           roughness={0.25}
@@ -209,7 +294,7 @@ function PlaceTank({
         anchorX='center'
         anchorY='middle'
         outlineWidth={0.012}
-        outlineColor='#0a0f1d'
+        outlineColor={palette.textOutline}
         maxWidth={radius * 2.2}
         textAlign='center'
       >
@@ -226,7 +311,7 @@ function PlaceTank({
         anchorX='center'
         anchorY='middle'
         outlineWidth={0.008}
-        outlineColor='#0a0f1d'
+        outlineColor={palette.textOutline}
       >
         {role ?? code}
       </Text>
@@ -234,22 +319,25 @@ function PlaceTank({
   );
 }
 
-function FlowGround() {
+function FlowGround({ palette }: { palette: ScenePalette }) {
   return (
     <group>
       {/* Deep plate */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
         <planeGeometry args={[16, 10]} />
-        <meshStandardMaterial color='#060a14' roughness={0.95} metalness={0.05} />
+        <meshStandardMaterial color={palette.ground} roughness={0.95} metalness={0.05} />
       </mesh>
 
       {/* Lat/long style grid (home network surface) */}
-      <gridHelper args={[14, 28, '#334155', '#1e293b']} position={[0, 0.001, 0]} />
+      <gridHelper
+        args={[14, 28, palette.gridMajor, palette.gridMinor]}
+        position={[0, 0.001, 0]}
+      />
 
       {/* Soft center highlight strip (source → destinations axis) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
         <planeGeometry args={[7.5, 0.06]} />
-        <meshBasicMaterial color='#38bdf8' transparent opacity={0.22} />
+        <meshBasicMaterial color={palette.axis} transparent opacity={0.22} />
       </mesh>
 
       <Text
@@ -257,7 +345,7 @@ function FlowGround() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.16}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.35}
         letterSpacing={0.12}
         anchorX='center'
@@ -270,7 +358,7 @@ function FlowGround() {
         rotation={[-Math.PI / 2, 0, 0]}
         fontSize={0.16}
         fontWeight={800}
-        color='#475569'
+        color={palette.labelMuted}
         fillOpacity={0.35}
         letterSpacing={0.12}
         anchorX='center'
@@ -282,26 +370,30 @@ function FlowGround() {
   );
 }
 
-function FlowScene() {
+function FlowScene({ palette }: { palette: ScenePalette }) {
   return (
     <>
-      <color attach='background' args={['#080d16']} />
-      <fog attach='fog' args={['#080d16', 9, 20]} />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[5, 7, 4]} intensity={1.9} />
-      <directionalLight position={[-5, 3, -3]} intensity={0.75} color='#6a8bff' />
-      <pointLight position={[SOURCE.pos[0], 2.2, SOURCE.pos[2]]} intensity={1.5} color='#4361ee' />
+      <color attach='background' args={[palette.canvasClear]} />
+      <fog attach='fog' args={[palette.canvasClear, 9, 20]} />
+      <ambientLight intensity={palette.ambient} />
+      <directionalLight position={[5, 7, 4]} intensity={palette.dirMain} />
+      <directionalLight position={[-5, 3, -3]} intensity={0.75} color={palette.rimLight} />
+      <pointLight
+        position={[SOURCE.pos[0], 2.2, SOURCE.pos[2]]}
+        intensity={palette.pointIntensity}
+        color='#4361ee'
+      />
 
       <Sparkles
-        count={36}
+        count={palette.sparkleCount}
         scale={[11, 2.5, 6]}
         size={2.2}
         speed={0.28}
-        color='#60a5fa'
-        opacity={0.55}
+        color={palette.sparkles}
+        opacity={palette.sparkleOpacity}
       />
 
-      <FlowGround />
+      <FlowGround palette={palette} />
 
       <PlaceTank
         name={SOURCE.name}
@@ -311,6 +403,7 @@ function FlowScene() {
         color={SOURCE.color}
         fillPct={SOURCE.fillPct}
         isSource
+        palette={palette}
       />
 
       {FLOW_DESTINATIONS.map((dest: FlowDestination) => {
@@ -332,6 +425,7 @@ function FlowScene() {
               pos={meta.pos}
               color={color}
               fillPct={meta.fillPct}
+              palette={palette}
             />
           </group>
         );
@@ -354,19 +448,32 @@ function FlowScene() {
 }
 
 export function ProductFlow3D() {
+  const isDark = useIsDarkScene();
+  const palette = isDark ? SCENE_DARK : SCENE_LIGHT;
+
   return (
-    <div className='relative h-80 w-full overflow-hidden rounded-xl border border-white/10 bg-linear-to-b from-[#0e1628] via-[#090e18] to-[#04070d] shadow-inner'>
+    <div
+      className={cn(
+        'relative h-80 w-full overflow-hidden rounded-xl border shadow-inner',
+        'border-border bg-linear-to-b from-slate-100 via-slate-50 to-slate-200',
+        'dark:border-white/10 dark:from-[#0e1628] dark:via-[#090e18] dark:to-[#04070d]'
+      )}
+    >
       <Canvas
+        key={isDark ? 'dark' : 'light'}
         dpr={[1, 1.75]}
         camera={{ position: [0.35, 4.6, 6.4], fov: 40 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         className='h-full w-full touch-none'
+        onCreated={({ gl }) => {
+          gl.setClearColor(new THREE.Color(palette.canvasClear), 1);
+        }}
       >
         <Suspense fallback={null}>
-          <FlowScene />
+          <FlowScene palette={palette} />
         </Suspense>
       </Canvas>
-      <div className='pointer-events-none absolute bottom-2 left-3 text-[10px] font-medium tracking-wide text-white/40 uppercase'>
+      <div className='pointer-events-none absolute bottom-2 left-3 text-[10px] font-medium tracking-wide text-muted-foreground uppercase dark:text-white/40'>
         Source → destinations · live flow
       </div>
     </div>

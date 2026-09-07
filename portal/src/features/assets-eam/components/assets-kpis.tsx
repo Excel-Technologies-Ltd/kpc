@@ -1,8 +1,5 @@
 import { FlowKpiCard, type FlowKpiCardProps } from '@/components/shared/FlowKpiCard';
-import {
-  MAINTENANCE_WORK_ORDER_DOCTYPE,
-  PLANT_ASSET_DOCTYPE,
-} from '@/constants/doctype.string';
+import { MAINTENANCE_WORK_ORDER_DOCTYPE, PLANT_ASSET_DOCTYPE } from '@/constants/doctype.string';
 import { useFrappeGetDocCount } from 'frappe-react-sdk';
 import { Activity, AlertTriangle, ClipboardList, Gauge, Layers } from 'lucide-react';
 import { useMemo } from 'react';

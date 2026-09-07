@@ -1,4 +1,5 @@
 import { FrappeProvider } from 'frappe-react-sdk';
+import { Toaster } from 'sonner';
 import { ThemeProvider } from '../components/theme-provider';
 import { TooltipProvider } from '../components/ui/tooltip';
 
@@ -31,7 +32,10 @@ const MainProviders = ({ children }: { children: React.ReactNode }) => {
       }}
     >
       <ThemeProvider defaultTheme='system' storageKey='kpc-theme'>
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster richColors closeButton position='bottom-center' />
+        </TooltipProvider>
       </ThemeProvider>
     </FrappeProvider>
   );

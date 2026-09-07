@@ -32,10 +32,8 @@ jobs:
           export APPS_JSON='[
             {"url": "https://github.com/frappe/erpnext", "branch": "version-14"},
             {"url": "https://github.com/Excel-Technologies-Ltd/KPC.git", "branch": "master"},
-            {
-              "url": "https://gitlab.com/excel.azmin/whitelabel.git",
-              "branch": "main"
-            }
+            {"url": "https://gitlab.com/excel.azmin/whitelabel.git","branch": "main"},
+            {"url": "https://github.com/excel-azmin/frappe_crewai.git", "branch": "master"}
           ]
           '
 
@@ -47,7 +45,7 @@ jobs:
           --build-arg FRAPPE_PATH=https://github.com/frappe/frappe \
           --build-arg FRAPPE_BRANCH=v14.64.0 \
           --build-arg PYTHON_VERSION=3.11.9 \
-          --build-arg NODE_VERSION=20.19.2  \
+          --build-arg NODE_VERSION=22 \
           --build-arg APPS_JSON_BASE64="$APPS_JSON_BASE64" \
           --tag arcapps/kpc:latest \
           --file images/custom/Containerfile \

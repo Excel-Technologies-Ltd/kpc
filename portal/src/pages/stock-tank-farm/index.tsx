@@ -198,7 +198,7 @@ export default function StockTankFarmPage() {
   return (
     <div className='w-full min-w-0 space-y-8 pb-16'>
       {/* Top Header */}
-      <div className='flex flex-wrap items-end justify-between gap-4 border-b border-[#e6edf7] pb-5 dark:border-[#233252]'>
+      <div className='flex flex-wrap items-end justify-between gap-4 border-b border-border pb-5 '>
         <div>
           <div className='flex items-center gap-2.5'>
             <div className='flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400'>
@@ -206,7 +206,7 @@ export default function StockTankFarmPage() {
             </div>
             <div>
               <div className='flex items-center gap-2'>
-                <h1 className='text-2xl font-extrabold tracking-tight text-[#132038] sm:text-3xl dark:text-foreground'>
+                <h1 className='text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl dark:text-foreground'>
                   Stock &amp; Tank Farm
                 </h1>
                 <Badge
@@ -217,7 +217,7 @@ export default function StockTankFarmPage() {
                   Live SCADA Gauging
                 </Badge>
               </div>
-              <p className='mt-0.5 text-xs text-[#5c6b85] sm:text-sm dark:text-muted-foreground'>
+              <p className='mt-0.5 text-xs text-muted-foreground sm:text-sm dark:text-muted-foreground'>
                 Tank capacity, live liquid level dips, ullage diagnostics &amp; depot reconciliation
                 across Kenya trunk terminals.
               </p>
@@ -227,9 +227,9 @@ export default function StockTankFarmPage() {
 
         {/* Live Status Chips & Actions */}
         <div className='flex flex-wrap items-center gap-2 text-xs'>
-          <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
+          <div className='rounded-lg border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground shadow-xs dark:text-slate-300'>
             Monitored Tanks{' '}
-            <b className='text-[#132038] dark:text-white'>
+            <b className='text-foreground dark:text-white'>
               {tanksLoading ? (
                 <span className='ml-1 inline-block size-3 animate-spin rounded-full border-2 border-[#4361ee] border-t-transparent align-middle' />
               ) : (
@@ -237,9 +237,9 @@ export default function StockTankFarmPage() {
               )}
             </b>
           </div>
-          <div className='rounded-lg border border-[#e6edf7] bg-white px-3 py-1.5 font-medium text-[#5c6b85] shadow-xs dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-300'>
+          <div className='rounded-lg border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground shadow-xs dark:text-slate-300'>
             Active Terminals{' '}
-            <b className='text-[#132038] dark:text-white'>
+            <b className='text-foreground dark:text-white'>
               {tanksLoading ? (
                 <span className='ml-1 inline-block size-3 animate-spin rounded-full border-2 border-[#4361ee] border-t-transparent align-middle' />
               ) : (
@@ -252,11 +252,11 @@ export default function StockTankFarmPage() {
             size='sm'
             disabled={tanksLoading || measLoading}
             onClick={() => reloadTanks()}
-            className='h-8 gap-1.5 border-[#e6edf7] bg-white text-xs font-semibold text-[#132038] shadow-xs hover:bg-slate-50 dark:border-[#233252] dark:bg-[#0f1728] dark:text-slate-200 cursor-pointer disabled:opacity-60'
+            className='h-8 gap-1.5 border-border bg-card text-xs font-semibold text-foreground shadow-xs hover:bg-slate-50 dark:text-slate-200 cursor-pointer disabled:opacity-60'
           >
             <RefreshCw
               className={cn(
-                'size-3.5 text-[#4361ee]',
+                'size-3.5 text-primary',
                 (tanksLoading || measLoading) && 'animate-spin'
               )}
             />

@@ -20,16 +20,16 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible='icon'
-      className='border-r border-[#e6edf7] bg-white dark:border-[#233252] dark:bg-[#0f1728]'
+      className='border-r border-border bg-card '
     >
-      <SidebarHeader className='flex h-(--header-height) items-center justify-center border-b border-[#e6edf7] px-3.5 dark:border-[#233252]'>
+      <SidebarHeader className='flex h-(--header-height) items-center justify-center border-b border-border px-3.5 '>
         <div className='flex w-full items-center gap-2.5 overflow-hidden'>
           <div className='flex size-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-[#0d9488] to-[#06b6d4] text-xs font-bold text-white shadow-sm'>
             KPC
           </div>
           <div className='min-w-0 group-data-[collapsible=icon]:hidden'>
             <p className='truncate text-sm font-bold text-primary'>KPC Dashboard</p>
-            <p className='truncate text-xs text-[#93a2bd]'>Operations</p>
+            <p className='truncate text-xs text-muted-foreground'>Operations</p>
           </div>
         </div>
       </SidebarHeader>
@@ -37,7 +37,7 @@ export function AppSidebar() {
       <SidebarContent className='gap-3 px-2 py-2'>
         {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.title} className='p-0'>
-            <SidebarGroupLabel className='px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[1.3px] text-[#93a2bd] group-data-[collapsible=icon]:hidden'>
+            <SidebarGroupLabel className='px-2.5 py-1 text-[10.5px] font-semibold uppercase tracking-[1.3px] text-muted-foreground group-data-[collapsible=icon]:hidden'>
               {group.title}
             </SidebarGroupLabel>
             <SidebarGroupContent>
