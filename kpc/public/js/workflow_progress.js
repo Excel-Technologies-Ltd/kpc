@@ -19,6 +19,18 @@
 frappe.provide("kpc.workflow_progress");
 
 kpc.workflow_progress.render = function (frm) {
+	// refresh(frm) fires more than once per form lifecycle (load, after
+	// save, reload) and this callback is async, so without removing our own
+	// previous section first, a second refresh() before/after the first
+	// frappe.call resolves stacks up a duplicate "Workflow Progress" panel -
+	// frm.dashboard.add_section() has no built-in dedup the way
+	// frm.add_custom_button()'s container gets from Frappe's own
+	// clear_custom_buttons() before every doctype refresh.
+	if (frm.dashboard.$kpc_workflow_progress_section) {
+		frm.dashboard.$kpc_workflow_progress_section.remove();
+		frm.dashboard.$kpc_workflow_progress_section = null;
+	}
+
 	if (!frm.doc.journey_ref || frm.is_new()) {
 		return;
 	}
@@ -27,6 +39,15 @@ kpc.workflow_progress.render = function (frm) {
 		method: "kpc.petroleum_operations.utils.get_workflow_progress",
 		args: { journey_ref: frm.doc.journey_ref },
 		callback: function (r) {
+			// A later refresh() may have already fired (and removed/rebuilt
+			// this section again) by the time this call comes back - remove
+			// whatever's there right now too, not just what was there when
+			// this call started, so an out-of-order response can't stack a
+			// second copy alongside the newer one.
+			if (frm.dashboard.$kpc_workflow_progress_section) {
+				frm.dashboard.$kpc_workflow_progress_section.remove();
+				frm.dashboard.$kpc_workflow_progress_section = null;
+			}
 			if (!r.message || !r.message.steps || !r.message.steps.length) {
 				return;
 			}
@@ -107,5 +128,10 @@ kpc.workflow_progress._show = function (frm, data) {
 		"</div>" +
 		"</div>";
 
-	frm.dashboard.add_section(html, __("Workflow Progress"));
+	// add_section() returns the section's body element, not the row that
+	// also holds its header - .closest(".row") is what render() above
+	// actually needs to remove to take the whole panel (heading included)
+	// out cleanly next time, not just its contents.
+	const $body = frm.dashboard.add_section(html, __("Workflow Progress"));
+	frm.dashboard.$kpc_workflow_progress_section = $body.closest(".row");
 };
